@@ -1,0 +1,27 @@
+﻿<src:SkinableWindow x:Class="ArtContentManager.Forms.frmFileMaintenance"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:src="clr-namespace:ArtContentManager.Forms"
+        Title="Art Content Manager : File Maintenance" Height="511.828" Width="519.355">
+    <Grid Background="{DynamicResource stdFormBackground}">
+        <TabControl x:Name="tabFileMaintenance" HorizontalAlignment="Left" Height="427" Margin="32,28,0,0" VerticalAlignment="Top" Width="441">
+            <TabItem x:Name="tiScan" Header="Scan">
+                <Grid Background="#FFE5E5E5" Margin="0,-1,-2,-29">
+                    <TextBox x:Name="txtScanRoot" TextWrapping="Wrap" Text="" Margin="34,50,41,306" TextChanged="txtScanRoot_TextChanged"/>
+                    <Button x:Name="btnBrowseScanRoot" Content="..." HorizontalAlignment="Left" Margin="401,44,0,0" VerticalAlignment="Top" Width="26" RenderTransformOrigin="2.516,1.894" Click="btnBrowseScanRoot_Click"/>
+                    <Label x:Name="lblScanRoot" Content="Select the root folder to scan :" HorizontalAlignment="Left" Height="29" Margin="24,10,0,0" VerticalAlignment="Top" Width="212"/>
+                    <Button x:Name="btnScan" Content="Scan" HorizontalAlignment="Left" Height="48" Margin="34,188,0,0" VerticalAlignment="Top" Width="97" Click="btnScan_Click"/>
+                    <ProgressBar x:Name="pbgScan" HorizontalAlignment="Left" Height="28" Margin="0,373,0,0" VerticalAlignment="Top" Width="437"/>
+                    <StatusBar x:Name="stsScan" HorizontalAlignment="Left" Height="39" Margin="0,329,0,0" VerticalAlignment="Top" Width="437">
+                        <Label x:Name="lblStatusMessage" Content="" Height="29" Width="427" FontSize="10"/>
+                    </StatusBar>
+                    <Button x:Name="btnScanCancel" Content="Cancel Scan" HorizontalAlignment="Left" Height="48" Margin="299,188,0,0" VerticalAlignment="Top" Width="97" Click="btnScanCancel_Click" IsEnabled="False"/>
+                    <CheckBox x:Name="chkDeepScan" Content="Deep Scan" HorizontalAlignment="Left" Height="21" Margin="34,141,0,0" VerticalAlignment="Top" Width="119"/>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="tiFileList" Header="List">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</src:SkinableWindow>

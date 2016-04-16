@@ -1,0 +1,11 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="StdGridBrush">
+        <Setter Property="LinearGradientBrush.EndPoint" Value="0.5,1" />
+        <Setter Property="LinearGradientBrush.StartPoint" Value="0.5,1" />
+        <Setter Property="GradientStop.Color" Value="Black" />
+        <Setter Property="GradientStop.Offset" Value="0" />
+        <Setter Property="GradientStop.Color" Value="#FF6A86E6" />
+        <Setter Property="GradientStop.Offset" Value="1" />
+    </Style>
+</ResourceDictionary>

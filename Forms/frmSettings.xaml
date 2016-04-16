@@ -1,0 +1,26 @@
+﻿<src:SkinableWindow x:Class="ArtContentManager.Forms.frmSettings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:src="clr-namespace:ArtContentManager.Forms"
+        Title="Art Content Manager : Settings" Height="338" Width="502">
+    <Grid Background="{DynamicResource stdFormBackground}">
+        <TabControl HorizontalAlignment="Left" Height="259" Margin="25,22,0,0" VerticalAlignment="Top" Width="439">
+            <TabItem Header="System Functions">
+                <Grid Background="#FFE5E5E5" Margin="0,1,0,-1">
+                    <Button x:Name="btnReset" Content="Reset Database" HorizontalAlignment="Left" Height="41" Margin="25,25,0,0" VerticalAlignment="Top" Width="104" Click="btnReset_Click"/>
+                    <TextBox x:Name="txtWorkFolder" HorizontalAlignment="Left" Height="62" Margin="25,115,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="385" TextChanged="txtWorkFolder_TextChanged"/>
+                    <Label x:Name="lblWorkFolder" Content="Work Folder Location:-" HorizontalAlignment="Left" Height="29" Margin="25,81,0,0" VerticalAlignment="Top" Width="176"/>
+                    <Button x:Name="btnBrowseWorkFolder" Content="Browse" HorizontalAlignment="Left" Height="19" Margin="315,81,0,0" VerticalAlignment="Top" Width="95" Click="btnBrowseWorkFolder_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Skins">
+                <Grid Background="#FFE5E5E5">
+                    <ComboBox x:Name="cboSkin" Margin="10,10,16,189" ItemsSource="{StaticResource Skins}" DisplayMemberPath="Name" SelectedValuePath="URIPath" SelectedValue="{Binding URIPath}">
+                    </ComboBox>
+                    <Button x:Name="btnApplySkin" Margin="327,181,16,10" Click="btnApplySkin_Click" Content="Apply Skin" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</src:SkinableWindow>
