@@ -5,20 +5,26 @@
         Title="Art Content Manager : Control Panel" Height="491" Width="525" Closing="frmMainWindow_Closing">
     <Grid Margin="0,0,2,-3" Background="{DynamicResource stdFormBackground}">
        <Label x:Name="lblTitle" Content="Art Content Manager" HorizontalAlignment="Left" Height="52" Margin="157,28,0,0" VerticalAlignment="Top" Width="202" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18"/>
-       <Button x:Name="btnFiles" HorizontalAlignment="Left" Height="95" Margin="75,138,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}" Click="btnFiles_Click">
+       <Button x:Name="btnFiles" HorizontalAlignment="Left" Height="95" Margin="75,113,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}" Click="btnFiles_Click">
             <StackPanel Height="68" Width="100" AllowDrop="True">
                 <Image Source="..\Images/Files.jpg" Height="66" />
             </StackPanel>
         </Button>
-        <Button x:Name="btnArt" HorizontalAlignment="Left" Height="95" Margin="334,138,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}">
+        <Button x:Name="btnArt" HorizontalAlignment="Left" Height="95" Margin="334,113,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}">
             <StackPanel Height="67" Width="77">
                 <Image Source="..\Images/Palette.jpg" />
             </StackPanel>
         </Button>
         <Label x:Name="lblFiles" Content="Files" HorizontalAlignment="Left" Height="52" Margin="75,80,0,0" VerticalAlignment="Top" Width="120" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18"/>
         <Label x:Name="lblArt" Content="Art" HorizontalAlignment="Left" Height="52" Margin="334,80,0,0" VerticalAlignment="Top" Width="120" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18"/>
-        <Label x:Name="lblSettings" Content="Settings" HorizontalAlignment="Left" Height="52" Margin="197,256,0,0" VerticalAlignment="Top" Width="120" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18"/>
-        <Button x:Name="btnSettings" HorizontalAlignment="Left" Height="95" Margin="186,290,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}" Click="btnSettings_Click">
+        <Label x:Name="lblOrganisation" Content="Organisation" HorizontalAlignment="Left" Height="52" Margin="75,256,0,0" VerticalAlignment="Top" Width="120" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18"/>
+        <Label x:Name="lblSettings" Content="Settings" HorizontalAlignment="Left" Height="52" Margin="334,256,0,0" VerticalAlignment="Top" Width="120" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18"/>
+        <Button x:Name="btnOrganisation" HorizontalAlignment="Left" Height="95" Margin="75,290,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}" Click="btnOrganisation_Click">
+            <StackPanel Height="68" Width="100" AllowDrop="True">
+                <Image Source="/ArtContentManager;component/Images/Organisation.jpg" Height="66" />
+            </StackPanel>
+        </Button>
+        <Button x:Name="btnSettings" HorizontalAlignment="Left" Height="95" Margin="334,290,0,0" VerticalAlignment="Top" Width="120" Background="{x:Null}" Click="btnSettings_Click">
             <StackPanel Height="68" Width="100" AllowDrop="True">
                 <Image Source="/ArtContentManager;component/Images/settings-icon.jpg" Height="66" />
             </StackPanel>

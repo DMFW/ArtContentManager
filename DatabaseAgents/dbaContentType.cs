@@ -13,8 +13,8 @@ namespace ArtContentManager.DatabaseAgents
 
         public dbaContentType()
         {
-
+            
         }
-
     }
 }
+

@@ -56,10 +56,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Content\ContentType.cs" />
     <Compile Include="Content\File.cs" />
     <Compile Include="Content\Skin.cs" />
     <Compile Include="DatabaseAgents\dbaContentType.cs" />
     <Compile Include="DatabaseAgents\dbaFile.cs" />
+    <Compile Include="Forms\frmOrganisation.xaml.cs">
+      <DependentUpon>frmOrganisation.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Forms\frmSettings.xaml.cs">
       <DependentUpon>frmSettings.xaml</DependentUpon>
     </Compile>
@@ -88,6 +92,10 @@
       <DependentUpon>frmMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Forms\frmOrganisation.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Forms\frmSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -152,7 +160,9 @@
   <ItemGroup>
     <Resource Include="ACM_log.txt" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Images\Organisation.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

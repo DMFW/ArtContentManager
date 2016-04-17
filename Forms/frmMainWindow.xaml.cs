@@ -46,6 +46,12 @@ namespace ArtContentManager.Forms
             frmFileMaintenance.ShowDialog();
         }
 
+        private void btnOrganisation_Click(object sender, RoutedEventArgs e)
+        {
+            frmSettings = new frmSettings();
+            frmSettings.ShowDialog();
+        }
+
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
             frmSettings = new frmSettings();
