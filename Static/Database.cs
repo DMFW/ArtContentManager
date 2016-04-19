@@ -166,10 +166,11 @@ namespace ArtContentManager.Static
 
                 // Tags (These are free floating concepts)
                 // SpecialTypes (These are fixed reserved data elements)
-                // FileRoles (These are also semi-fixed but are re-ordered in the reset by WorkFlowOrder)
                 // SpecialFiles (These are fixed reserved data elements)
-                // FileRoleExtensionsPrimary  (These are semi-fixed and re-ordered with FileRoles)
-                // FileRoleExtensionsSecondary (These are semi-fixed and re-ordered with FileRoles)
+
+                // ProcessRoles (These are semi-fixed but are re-ordered in the reset by WorkFlowOrder)
+                // ProcessRoleExtensionsPrimary  (These are semi-fixed and re-ordered with ProcessRoles)
+                // ProcessRoleExtensionsSecondary (These are semi-fixed and re-ordered with ProcessRoles)
 
                 string sqlArtProductCredits = "TRUNCATE TABLE ArtProductCredits";
                 SqlCommand cmdArtProductCredits = new SqlCommand(sqlArtProductCredits, _DB);
@@ -185,6 +186,10 @@ namespace ArtContentManager.Static
 
                 cmdArt.CommandText = "DBCC CHECKIDENT (Art,RESEED, 0)";
                 cmdArt.ExecuteNonQuery();
+
+                string sqlProductInstaller = "TRUNCATE TABLE ProductInstaller";
+                SqlCommand cmdProductInstaller = new SqlCommand(sqlProductInstaller, _DB);
+                cmdProductInstaller.ExecuteNonQuery();
 
                 string sqlProductFilesTruncate = "TRUNCATE TABLE ProductFiles";
                 SqlCommand cmdProductFiles = new SqlCommand(sqlProductFilesTruncate, _DB);
@@ -240,25 +245,40 @@ namespace ArtContentManager.Static
                 cmdFiles.CommandText = "DBCC CHECKIDENT (Files,RESEED, 0)";
                 cmdFiles.ExecuteNonQuery();
 
-                // Sort the FileRoles by work flow order and description and rewrite then
+                // Sort the ProcessRoles by work flow order and description and rewrite then
                 // so that we get a more logical ordering in the table.
                 // This is self indulgent because it is not strictly necessary but what
                 // is a database tidy operation for, if not to please the designer? So humour me.
 
                 // This is not going to work (yet) until the dataset is extended to take care of
-                // the FileRoleExtensionsPrimary and FileRoleExtensionsSecondary tables
+                // the ProcessRoleExtensionsPrimary and ProcessRoleExtensionsSecondary tables
 
-                string sqlReorderFileRoles = "Select * from FileRoles Order By WorkFlowOrder, RoleDescription";
-                SqlCommand cmdReorderFileRoles = new SqlCommand(sqlReorderFileRoles, _DB);
+                string sqlProcessRoles = "Select * from ProcessRoles Order By WorkFlowOrder, RoleDescription " +
+                                      "Left Join ProcessRolesExtensionsPrimary on ProcessRoles.RoleID = ProcessRoleExtensionsPrimary.RoleID " +
+                                      "Left Join ProcessRolesExtensionsSecondary  on ProcessRoles.RoleID = ProcessRoleExtensionsSecondary.RoleID";
 
-                DataSet dsFileRoles = new DataSet("FileRoles");
+                SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DB);
 
-                SqlDataAdapter daFileRoles = new SqlDataAdapter();
-                daFileRoles.TableMappings.Add("Table", "FileRoles");
-                daFileRoles.SelectCommand = cmdReorderFileRoles;
-                daFileRoles.Fill(dsFileRoles);
+                DataSet dsProcessRole = new DataSet("ProcessRoles");
 
-                DataTable tblFileRoles = dsFileRoles.Tables["FileRoles"];
+                SqlDataAdapter daProcessRoles = new SqlDataAdapter();
+                daProcessRoles.TableMappings.Add("Table", "ProcessRoles");
+                daProcessRoles.TableMappings.Add("Table", "ProcessRoleExtensionsPrimary");
+                daProcessRoles.TableMappings.Add("Table", "ProcessRoleExtensionsSecondary");
+
+                DataColumn parentColumn =
+                    dsProcessRole.Tables["ProcessRoles"].Columns["RoleID"];
+                DataColumn childColumn =
+                    dsProcessRole.Tables["ProcessRolesExtensionsPrimary"].Columns["RoleID"];
+                DataRelation relation =
+                    new System.Data.DataRelation("ProcessRolePrimaryExtension",
+                    parentColumn, childColumn);
+                dsProcessRole.Relations.Add(relation);
+
+                daProcessRoles.SelectCommand = cmdProcessRoles;
+                daProcessRoles.Fill(dsProcessRole);
+
+                DataTable tblFileRoles = dsProcessRole.Tables["ProcessRoles"];
 
                 // A delete will go here but only once I've confirmed the write works
 
