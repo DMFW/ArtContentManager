@@ -25,7 +25,8 @@ namespace ArtContentManager.Static
         {
             try
             {
-                _DB = new SqlConnection("Data Source=(LocalDB)\\v11.0;AttachDbFilename=D:\\SQLServer\\MSSQL11.SQLEXPRESS\\MSSQL\\DATA\\ArtProducts.mdf;Integrated Security=True;Connect Timeout=30;MultipleActiveResultSets=true");
+                string dbConnection = Properties.Settings.Default.DatabaseConnection;
+                _DB = new SqlConnection(dbConnection);
                 _DB.Open();
                 Trace.WriteLine("Database opened");
                 return true;
@@ -161,6 +162,10 @@ namespace ArtContentManager.Static
             try
             {
 
+                DataColumn parentColumn;
+                DataColumn childColumn;
+                DataRelation relation;
+
                 // This routine resets the database to "empty", except for the following code type entries
                 // which are preserved across the reset as neutral and applicable to all re-populations.
 
@@ -180,7 +185,7 @@ namespace ArtContentManager.Static
                 SqlCommand cmdArtTags = new SqlCommand(sqlArtTags, _DB);
                 cmdArtTags.ExecuteNonQuery();
 
-                string sqlArt = "TRUNCATE TABLE Art";
+                string sqlArt = "DELETE FROM Art";
                 SqlCommand cmdArt = new SqlCommand(sqlArt, _DB);
                 cmdArt.ExecuteNonQuery();
 
@@ -215,7 +220,7 @@ namespace ArtContentManager.Static
                 SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DB);
                 cmdContentSpecialTypes.ExecuteNonQuery();
 
-                string sqlDefinitionGroupID = "TRUNCATE TABLE DefinitionGroupID";
+                string sqlDefinitionGroupID = "DELETE FROM DefinitionGroupID";
                 SqlCommand cmdDefinitionGroupID = new SqlCommand(sqlDefinitionGroupID, _DB);
                 cmdDefinitionGroupID.ExecuteNonQuery();
 
@@ -223,11 +228,11 @@ namespace ArtContentManager.Static
                 SqlCommand cmdProductGroupMembers = new SqlCommand(sqlProductGroupMembers, _DB);
                 cmdProductGroupMembers.ExecuteNonQuery();
 
-                string sqlProductGroups = "TRUNCATE TABLE ProductGroups";
+                string sqlProductGroups = "DELETE FROM ProductGroups";
                 SqlCommand cmdProductGroups = new SqlCommand(sqlProductGroups, _DB);
                 cmdProductGroups.ExecuteNonQuery();
 
-                string sqlProducts = "TRUNCATE TABLE Products";
+                string sqlProducts = "DELETE FROM Products";
                 SqlCommand cmdProducts = new SqlCommand(sqlProducts, _DB);
                 cmdProducts.ExecuteNonQuery();
 
@@ -238,7 +243,7 @@ namespace ArtContentManager.Static
                 SqlCommand cmdFileLocations = new SqlCommand(sqlFileLocationsTruncate, _DB);
                 cmdFileLocations.ExecuteNonQuery();
 
-                string sqlFilesTruncate = "TRUNCATE TABLE Files";
+                string sqlFilesTruncate = "DELETE FROM Files";
                 SqlCommand cmdFiles = new SqlCommand(sqlFilesTruncate, _DB);
                 cmdFiles.ExecuteNonQuery();
 
@@ -253,43 +258,56 @@ namespace ArtContentManager.Static
                 // This is not going to work (yet) until the dataset is extended to take care of
                 // the ProcessRoleExtensionsPrimary and ProcessRoleExtensionsSecondary tables
 
-                string sqlProcessRoles = "Select * from ProcessRoles Order By WorkFlowOrder, RoleDescription " +
+                string sqlProcessRoles = "Select * from ProcessRoles " +
                                       "Left Join ProcessRolesExtensionsPrimary on ProcessRoles.RoleID = ProcessRoleExtensionsPrimary.RoleID " +
-                                      "Left Join ProcessRolesExtensionsSecondary  on ProcessRoles.RoleID = ProcessRoleExtensionsSecondary.RoleID";
+                                      "Left Join ProcessRolesExtensionsSecondary  on ProcessRoles.RoleID = ProcessRoleExtensionsSecondary.RoleID " +
+                                      "Order By ProcessRoles.WorkFlowOrder, ProcessRoles.RoleDescription";
 
                 SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DB);
 
                 DataSet dsProcessRole = new DataSet("ProcessRoles");
 
                 SqlDataAdapter daProcessRoles = new SqlDataAdapter();
-                daProcessRoles.TableMappings.Add("Table", "ProcessRoles");
-                daProcessRoles.TableMappings.Add("Table", "ProcessRoleExtensionsPrimary");
-                daProcessRoles.TableMappings.Add("Table", "ProcessRoleExtensionsSecondary");
+                daProcessRoles.TableMappings.Add("ProcessRoles", "ProcessRoles");
+                daProcessRoles.TableMappings.Add("ProcessRoleExtensionsPrimary", "ProcessRoleExtensionsPrimary");
+                daProcessRoles.TableMappings.Add("ProcessRoleExtensionsSecondary", "ProcessRoleExtensionsSecondary");
 
-                DataColumn parentColumn =
-                    dsProcessRole.Tables["ProcessRoles"].Columns["RoleID"];
-                DataColumn childColumn =
-                    dsProcessRole.Tables["ProcessRolesExtensionsPrimary"].Columns["RoleID"];
-                DataRelation relation =
-                    new System.Data.DataRelation("ProcessRolePrimaryExtension",
-                    parentColumn, childColumn);
+                parentColumn = dsProcessRole.Tables["ProcessRoles"].Columns["RoleID"];
+
+                childColumn = dsProcessRole.Tables["ProcessRolesExtensionsPrimary"].Columns["RoleID"];
+                relation = new System.Data.DataRelation("ProcessRolePrimaryExtension", parentColumn, childColumn);
+                dsProcessRole.Relations.Add(relation);
+
+                childColumn = dsProcessRole.Tables["ProcessRolesExtensionsSecondary"].Columns["RoleID"];
+                relation = new System.Data.DataRelation("ProcessRoleSecondaryExtension", parentColumn, childColumn);
                 dsProcessRole.Relations.Add(relation);
 
                 daProcessRoles.SelectCommand = cmdProcessRoles;
                 daProcessRoles.Fill(dsProcessRole);
 
-                DataTable tblFileRoles = dsProcessRole.Tables["ProcessRoles"];
+                DataTable tblProcessRoles = dsProcessRole.Tables["ProcessRoles"];
 
                 // A delete will go here but only once I've confirmed the write works
 
-                using (SqlBulkCopy bulkCopy =
-                           new SqlBulkCopy(_DB))
-                {
-                    bulkCopy.DestinationTableName =
-                        "dbo.FileRoles";
+                string sqlProcessRoleInsert = "INSERT INTO ProcessRoles (RoleDescription, WorkFlowOrder) VALUES (? , ?)";
+                SqlCommand cmdProcessRoleInsert = new SqlCommand(sqlProcessRoleInsert, _DB);
 
-                    bulkCopy.WriteToServer(tblFileRoles);
+
+                foreach (DataRow drFileRole in tblProcessRoles.Rows)
+                {
+                    Console.Write(drFileRole["WorkFlowOrder"].ToString() + "," + drFileRole["RoleDescription"].ToString());
                 }
+
+                // Bulk copy would be nice but we need to handle the changes keys which are the point of the reorganisation
+
+                // using (SqlBulkCopy bulkCopy =
+                //           new SqlBulkCopy(_DB))
+                // {
+                //    bulkCopy.DestinationTableName =
+                //        "dbo.FileRoles";
+                //
+                //    bulkCopy.WriteToServer(tblFileRoles);
+                // }
 
                 MessageBox.Show("Database reset complete");
             }

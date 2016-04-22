@@ -11,5 +11,8 @@
     <Setting Name="WorkFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="DatabaseConnection" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Data Source=UKBAINSWS009203\SQLEXPRESS;AttachDbFilename=C:\Program Files\Microsoft SQL Server\MSSQL12.SQLEXPRESS\MSSQL\DATA\ArtProducts.mdf;Integrated Security=True;Connect Timeout=30;MultipleActiveResultSets=true</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
