@@ -162,10 +162,6 @@ namespace ArtContentManager.Static
             try
             {
 
-                DataColumn parentColumn;
-                DataColumn childColumn;
-                DataRelation relation;
-
                 // This routine resets the database to "empty", except for the following code type entries
                 // which are preserved across the reset as neutral and applicable to all re-populations.
 
@@ -250,64 +246,7 @@ namespace ArtContentManager.Static
                 cmdFiles.CommandText = "DBCC CHECKIDENT (Files,RESEED, 0)";
                 cmdFiles.ExecuteNonQuery();
 
-                // Sort the ProcessRoles by work flow order and description and rewrite then
-                // so that we get a more logical ordering in the table.
-                // This is self indulgent because it is not strictly necessary but what
-                // is a database tidy operation for, if not to please the designer? So humour me.
-
-                // This is not going to work (yet) until the dataset is extended to take care of
-                // the ProcessRoleExtensionsPrimary and ProcessRoleExtensionsSecondary tables
-
-                string sqlProcessRoles = "Select * from ProcessRoles " +
-                                      "Left Join ProcessRolesExtensionsPrimary on ProcessRoles.RoleID = ProcessRoleExtensionsPrimary.RoleID " +
-                                      "Left Join ProcessRolesExtensionsSecondary  on ProcessRoles.RoleID = ProcessRoleExtensionsSecondary.RoleID " +
-                                      "Order By ProcessRoles.WorkFlowOrder, ProcessRoles.RoleDescription";
-
-                SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DB);
-
-                DataSet dsProcessRole = new DataSet("ProcessRoles");
-
-                SqlDataAdapter daProcessRoles = new SqlDataAdapter();
-                daProcessRoles.TableMappings.Add("ProcessRoles", "ProcessRoles");
-                daProcessRoles.TableMappings.Add("ProcessRoleExtensionsPrimary", "ProcessRoleExtensionsPrimary");
-                daProcessRoles.TableMappings.Add("ProcessRoleExtensionsSecondary", "ProcessRoleExtensionsSecondary");
-
-                parentColumn = dsProcessRole.Tables["ProcessRoles"].Columns["RoleID"];
-
-                childColumn = dsProcessRole.Tables["ProcessRolesExtensionsPrimary"].Columns["RoleID"];
-                relation = new System.Data.DataRelation("ProcessRolePrimaryExtension", parentColumn, childColumn);
-                dsProcessRole.Relations.Add(relation);
-
-                childColumn = dsProcessRole.Tables["ProcessRolesExtensionsSecondary"].Columns["RoleID"];
-                relation = new System.Data.DataRelation("ProcessRoleSecondaryExtension", parentColumn, childColumn);
-                dsProcessRole.Relations.Add(relation);
-
-                daProcessRoles.SelectCommand = cmdProcessRoles;
-                daProcessRoles.Fill(dsProcessRole);
-
-                DataTable tblProcessRoles = dsProcessRole.Tables["ProcessRoles"];
-
-                // A delete will go here but only once I've confirmed the write works
-
-                string sqlProcessRoleInsert = "INSERT INTO ProcessRoles (RoleDescription, WorkFlowOrder) VALUES (? , ?)";
-                SqlCommand cmdProcessRoleInsert = new SqlCommand(sqlProcessRoleInsert, _DB);
-
-
-                foreach (DataRow drFileRole in tblProcessRoles.Rows)
-                {
-                    Console.Write(drFileRole["WorkFlowOrder"].ToString() + "," + drFileRole["RoleDescription"].ToString());
-                }
-
-                // Bulk copy would be nice but we need to handle the changes keys which are the point of the reorganisation
-
-                // using (SqlBulkCopy bulkCopy =
-                //           new SqlBulkCopy(_DB))
-                // {
-                //    bulkCopy.DestinationTableName =
-                //        "dbo.FileRoles";
-                //
-                //    bulkCopy.WriteToServer(tblFileRoles);
-                // }
+                ReorganiseProcessRoles();
 
                 MessageBox.Show("Database reset complete");
             }
@@ -319,5 +258,148 @@ namespace ArtContentManager.Static
 
         }
 
+        private static void ReorganiseProcessRoles()
+        {
+
+            // Sort the ProcessRoles by work flow order and description and rewrite then
+            // so that we get a more logical ordering in the table.
+            // This is self indulgent because it is not strictly necessary but what
+            // is a database tidy operation for, if not to please the designer? So humour me.
+
+            // This is not going to work (yet) until the dataset is extended to take care of
+            // the ProcessRoleExtensionsPrimary and ProcessRoleExtensionsSecondary tables
+
+            DataColumn parentColumn;
+            DataColumn childColumn;
+            DataRelation relation;
+
+            try
+            {
+                #region LoadDataSet
+
+                string sqlProcessRoles = "Select * from ProcessRoles Order By ProcessRoles.WorkFlowOrder, ProcessRoles.RoleDescription";
+                string sqlProcessRoleExtensionsPrimary = "Select * from ProcessRoleExtensionsPrimary";
+                string sqlProcessRoleExtensionsSecondary = "Select * from ProcessRoleExtensionsSecondary";
+
+                SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DB);
+                SqlCommand cmdProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimary, _DB);
+                SqlCommand cmdProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondary, _DB);
+
+                DataSet dsProcessRoleSet = new DataSet("ProcessRoleSet");
+
+                SqlDataAdapter daProcessRoles = new SqlDataAdapter();
+                // daProcessRoles.TableMappings.Add("ProcessRoles", "ProcessRoles");
+                daProcessRoles.SelectCommand = cmdProcessRoles;
+                daProcessRoles.Fill(dsProcessRoleSet,"ProcessRoles");
+
+                SqlDataAdapter daProcessRoleExtensionsPrimary = new SqlDataAdapter();
+                // daProcessRoleExtensionsPrimary.TableMappings.Add("ProcessRoleExtensionsPrimary", "ProcessRoleExtensionsPrimary");
+                daProcessRoleExtensionsPrimary.SelectCommand = cmdProcessRoleExtensionsPrimary;
+                daProcessRoleExtensionsPrimary.Fill(dsProcessRoleSet, "ProcessRoleExtensionsPrimary");
+
+                SqlDataAdapter daProcessRoleExtensionsSecondary = new SqlDataAdapter();
+                // daProcessRoleExtensionsSecondary.TableMappings.Add("ProcessRoleExtensionsSecondary", "ProcessRoleExtensionsSecondary");
+                daProcessRoleExtensionsSecondary.SelectCommand = cmdProcessRoleExtensionsSecondary;
+                daProcessRoleExtensionsSecondary.Fill(dsProcessRoleSet, "ProcessRoleExtensionsSecondary");
+
+                parentColumn = dsProcessRoleSet.Tables["ProcessRoles"].Columns["RoleID"];
+
+                childColumn = dsProcessRoleSet.Tables["ProcessRoleExtensionsPrimary"].Columns["RoleID"];
+                relation = new System.Data.DataRelation("ProcessRolePrimaryExtension", parentColumn, childColumn);
+                dsProcessRoleSet.Relations.Add(relation);
+
+                childColumn = dsProcessRoleSet.Tables["ProcessRoleExtensionsSecondary"].Columns["RoleID"];
+                relation = new System.Data.DataRelation("ProcessRoleSecondaryExtension", parentColumn, childColumn);
+                dsProcessRoleSet.Relations.Add(relation);
+
+                #endregion
+
+                #region PhysicalDelete
+
+                string sqlProcessRoleExtensionsPrimaryDelete = "DELETE FROM ProcessRoleExtensionsPrimary";
+                SqlCommand cmdDeleteProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimaryDelete, _DB);
+                cmdDeleteProcessRoleExtensionsPrimary.ExecuteNonQuery();
+
+                string sqlProcessRoleExtensionsSecondaryDelete = "DELETE FROM ProcessRoleExtensionsSecondary";
+                SqlCommand cmdDeleteProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondaryDelete, _DB);
+                cmdDeleteProcessRoleExtensionsSecondary.ExecuteNonQuery();
+
+                string sqlProcessRolesDelete = "DELETE FROM ProcessRoles";
+                SqlCommand cmdDeleteProcessRoles = new SqlCommand(sqlProcessRolesDelete, _DB);
+                cmdDeleteProcessRoles.ExecuteNonQuery();
+
+                string sqlProcessRolesReset = "DBCC CHECKIDENT (ProcessRoles,RESEED, 0)";
+                SqlCommand cmdResetProcessRoles = new SqlCommand(sqlProcessRolesReset, _DB);
+                cmdResetProcessRoles.ExecuteNonQuery();
+
+                #endregion
+
+                #region Insert
+
+                string sqlProcessRoleInsert = "INSERT INTO ProcessRoles (RoleDescription, WorkFlowOrder) VALUES (@RoleDescription , @WorkFlowOrder); SELECT CAST(scope_identity() AS int)";
+                SqlCommand cmdProcessRoleInsert = new SqlCommand(sqlProcessRoleInsert, _DB);
+                cmdProcessRoleInsert.Parameters.Add("@RoleDescription", SqlDbType.Text);
+                cmdProcessRoleInsert.Parameters.Add("@WorkFlowOrder", SqlDbType.Int);
+                int newRoleID;
+
+                string sqlProcessRolePrimaryExtensionInsert = "INSERT INTO ProcessRoleExtensionsPrimary (RoleID, Extension) VALUES (@RoleID , @Extension)";
+                SqlCommand cmdProcessRolePrimaryExtensionInsert = new SqlCommand(sqlProcessRolePrimaryExtensionInsert, _DB);
+                cmdProcessRolePrimaryExtensionInsert.Parameters.Add("@RoleID", SqlDbType.Int);
+                cmdProcessRolePrimaryExtensionInsert.Parameters.Add("@Extension", SqlDbType.Text);
+
+                string sqlProcessRoleSecondaryExtensionInsert = "INSERT INTO ProcessRoleExtensionsSecondary (RoleID, Extension) VALUES (@RoleID , @Extension)";
+                SqlCommand cmdProcessRoleSecondaryExtensionInsert = new SqlCommand(sqlProcessRoleSecondaryExtensionInsert, _DB);
+                cmdProcessRoleSecondaryExtensionInsert.Parameters.Add("@RoleID", SqlDbType.Int);
+                cmdProcessRoleSecondaryExtensionInsert.Parameters.Add("@Extension", SqlDbType.Text);
+
+                DataTable tblProcessRoles = dsProcessRoleSet.Tables["ProcessRoles"];
+
+                foreach (DataRow drFileRole in tblProcessRoles.Rows)
+                {
+                    Console.Write(drFileRole["WorkFlowOrder"].ToString() + "," + drFileRole["RoleDescription"].ToString() + Environment.NewLine);
+
+                    cmdProcessRoleInsert.Parameters["@RoleDescription"].Value = drFileRole["RoleDescription"];
+                    cmdProcessRoleInsert.Parameters["@WorkFlowOrder"].Value = drFileRole["WorkFlowOrder"];
+                    int.TryParse(cmdProcessRoleInsert.ExecuteScalar().ToString(),out newRoleID);
+
+                    foreach (DataRow drPrimaryExtensionRow in drFileRole.GetChildRows(dsProcessRoleSet.Relations["ProcessRolePrimaryExtension"]))
+                    {
+                        Console.WriteLine("Primary : " + drPrimaryExtensionRow["Extension"].ToString());
+                        cmdProcessRolePrimaryExtensionInsert.Parameters["@RoleID"].Value = newRoleID;
+                        cmdProcessRolePrimaryExtensionInsert.Parameters["@Extension"].Value = drPrimaryExtensionRow["Extension"];
+                        cmdProcessRolePrimaryExtensionInsert.ExecuteNonQuery();
+
+                    }
+
+                    foreach (DataRow drSecondaryExtensionRow in drFileRole.GetChildRows(dsProcessRoleSet.Relations["ProcessRoleSecondaryExtension"]))
+                    {
+                        Console.WriteLine("Secondary : " + drSecondaryExtensionRow["Extension"].ToString());
+                        cmdProcessRoleSecondaryExtensionInsert.Parameters["@RoleID"].Value = newRoleID;
+                        cmdProcessRoleSecondaryExtensionInsert.Parameters["@Extension"].Value = drSecondaryExtensionRow["Extension"];
+                        cmdProcessRoleSecondaryExtensionInsert.ExecuteNonQuery();
+
+                    }
+
+                }
+
+                #endregion
+
+                // Bulk copy would be nice but we need to handle the changes keys which are the point of the reorganisation
+
+                // using (SqlBulkCopy bulkCopy =
+                //           new SqlBulkCopy(_DB))
+                // {
+                //    bulkCopy.DestinationTableName =
+                //        "dbo.FileRoles";
+                //
+                //    bulkCopy.WriteToServer(tblFileRoles);
+                // }
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                Trace.WriteLine(e.ToString());
+            }
+        }
     }
 }
