@@ -7,7 +7,7 @@ using System.Data.SqlClient;
 
 namespace ArtContentManager.DatabaseAgents
 {
-    class dbaContentType
+    class dbaContentType : DatabaseAgent
     {
         SqlTransaction trnActive;
 

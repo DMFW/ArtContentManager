@@ -58,9 +58,12 @@
     </ApplicationDefinition>
     <Compile Include="Content\ContentType.cs" />
     <Compile Include="Content\File.cs" />
+    <Compile Include="Content\Scan.cs" />
     <Compile Include="Content\Skin.cs" />
+    <Compile Include="DatabaseAgents\DatabaseAgent.cs" />
     <Compile Include="DatabaseAgents\dbaContentType.cs" />
     <Compile Include="DatabaseAgents\dbaFile.cs" />
+    <Compile Include="DatabaseAgents\dbaScanHistory.cs" />
     <Compile Include="Forms\frmOrganisation.xaml.cs">
       <DependentUpon>frmOrganisation.xaml</DependentUpon>
     </Compile>

@@ -177,6 +177,10 @@ namespace ArtContentManager.Static
                 // ProcessRoleExtensionsPrimary  (These are semi-fixed and re-ordered with ProcessRoles)
                 // ProcessRoleExtensionsSecondary (These are semi-fixed and re-ordered with ProcessRoles)
 
+                string sqlScanHistory = "TRUNCATE TABLE ScanHistory";
+                SqlCommand cmdScanHistory = new SqlCommand(sqlScanHistory, _DB);
+                cmdScanHistory.ExecuteNonQuery();
+
                 string sqlArtProductCredits = "TRUNCATE TABLE ArtProductCredits";
                 SqlCommand cmdArtProductCredits = new SqlCommand(sqlArtProductCredits, _DB);
                 cmdArtProductCredits.ExecuteNonQuery();
