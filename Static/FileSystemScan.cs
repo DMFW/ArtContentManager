@@ -18,14 +18,14 @@ namespace ArtContentManager.Static
         public enum ScanMode { smCount, smImport };
         public static ScanMode scanMode = ScanMode.smCount;
 
-        public static void Scan(string root, BackgroundWorker bw)
+        public static void Scan(Actions.Scan scan, BackgroundWorker bw)
         {
 
+            DirectoryInfo dirInfo;
             Database.LoadScanReferenceData();
 
             string phase;
             ArtContentManager.DatabaseAgents.dbaFile dbaFile = null;
-            DateTime scanDateTime = DateTime.Now; // This is the time the scan was initiated and the same date & time should be used throughout. 
             
             switch (scanMode)
             {
@@ -47,7 +47,7 @@ namespace ArtContentManager.Static
 
             ScanProgress.DirectioryName = "";
             ScanProgress.FileName = "";
-            ScanProgress.Message = "Scan starting for " + root;
+            ScanProgress.Message = "Scan starting for " + scan.FolderRoot;
             bw.ReportProgress(ScanProgress.CompletionPct);
 
             // Data structure to hold names of subfolders to be 
@@ -55,15 +55,16 @@ namespace ArtContentManager.Static
 
             Stack<string> dirs = new Stack<string>(20);
 
-            if (!System.IO.Directory.Exists(root))
+            if (!System.IO.Directory.Exists(scan.FolderRoot))
             {
                 throw new ArgumentException();
             }
-            dirs.Push(root);
+            dirs.Push(scan.FolderRoot);
 
             while (dirs.Count > 0)
             {
                 string currentDir = dirs.Pop();
+                FileInfo[] files;
 
                 if (bw.CancellationPending)
                 {
@@ -100,10 +101,10 @@ namespace ArtContentManager.Static
                     continue;
                 }
 
-                string[] files = null;
                 try
                 {
-                    files = System.IO.Directory.GetFiles(currentDir);
+                    dirInfo = new DirectoryInfo(currentDir);
+                    files = dirInfo.GetFiles().Where(p => p.CreationTime > scan.PreviousCompletedScanTime).ToArray();
                 }
                 catch (UnauthorizedAccessException e)
                 {
@@ -131,33 +132,32 @@ namespace ArtContentManager.Static
 
                 if (scanMode == ScanMode.smImport)
                 {
-                    foreach (string file in files)
+                    foreach (FileInfo file in files)
                     {
                         fileCount++;
                         ScanProgress.CurrentFileCount = fileCount;
 
                         if (bw.CancellationPending)
                         {
-                            ScanProgress.Message = "Scan cancelled before file " + file + " in the " + phase + " phase";
+                            ScanProgress.Message = "Scan cancelled before file " + file.Name + " in the " + phase + " phase";
                             bw.ReportProgress(ScanProgress.CompletionPct);
                             return;
                         }
 
                         try
                         {
-                            if (Database.ExcludedFiles.ContainsKey(file))
+                            if (Database.ExcludedFiles.ContainsKey(file.Name))
                             {
                                 ScanProgress.Message = "Skipping " + file;
                             }
                             else
                             {
-                                System.IO.FileInfo fi = new System.IO.FileInfo(file);
-                                Trace.WriteLine(String.Format("{0}: {1}, {2}", fi.Name, fi.Length, fi.CreationTime));
-                                ScanProgress.Message = "Importing " + file;
+                                Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
+                                ScanProgress.Message = "Importing " + file.Name;
 
-                                ArtContentManager.Content.File currentFile = new Content.File(fi, file);
+                                ArtContentManager.Content.File currentFile = new Content.File(file, file.FullName);
                                 Debug.Assert(dbaFile != null); // We should have a perisistent local instance initialised outside the loop which will be caching query definitions
-                                currentFile.Save(dbaFile, scanDateTime);
+                                currentFile.Save(dbaFile, scan.StartScanTime);
 
                                 Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
                             } 
@@ -174,7 +174,7 @@ namespace ArtContentManager.Static
                     }
 
                     dbaFile.BeginTransaction();
-                    dbaFile.UpdateAntiVerifiedFiles(currentDir, scanDateTime);
+                    dbaFile.UpdateAntiVerifiedFiles(currentDir, scan.StartScanTime);
                     dbaFile.CommitTransaction();
 
                 }

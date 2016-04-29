@@ -270,9 +270,6 @@ namespace ArtContentManager.Static
             // This is self indulgent because it is not strictly necessary but what
             // is a database tidy operation for, if not to please the designer? So humour me.
 
-            // This is not going to work (yet) until the dataset is extended to take care of
-            // the ProcessRoleExtensionsPrimary and ProcessRoleExtensionsSecondary tables
-
             DataColumn parentColumn;
             DataColumn childColumn;
             DataRelation relation;
@@ -284,27 +281,30 @@ namespace ArtContentManager.Static
                 string sqlProcessRoles = "Select * from ProcessRoles Order By ProcessRoles.WorkFlowOrder, ProcessRoles.RoleDescription";
                 string sqlProcessRoleExtensionsPrimary = "Select * from ProcessRoleExtensionsPrimary";
                 string sqlProcessRoleExtensionsSecondary = "Select * from ProcessRoleExtensionsSecondary";
+                string sqlSpecialFiles = "Select * from SpecialFiles";
 
                 SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DB);
                 SqlCommand cmdProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimary, _DB);
                 SqlCommand cmdProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondary, _DB);
+                SqlCommand cmdSpecialFiles = new SqlCommand(sqlSpecialFiles, _DB);
 
                 DataSet dsProcessRoleSet = new DataSet("ProcessRoleSet");
 
                 SqlDataAdapter daProcessRoles = new SqlDataAdapter();
-                // daProcessRoles.TableMappings.Add("ProcessRoles", "ProcessRoles");
                 daProcessRoles.SelectCommand = cmdProcessRoles;
                 daProcessRoles.Fill(dsProcessRoleSet,"ProcessRoles");
 
                 SqlDataAdapter daProcessRoleExtensionsPrimary = new SqlDataAdapter();
-                // daProcessRoleExtensionsPrimary.TableMappings.Add("ProcessRoleExtensionsPrimary", "ProcessRoleExtensionsPrimary");
                 daProcessRoleExtensionsPrimary.SelectCommand = cmdProcessRoleExtensionsPrimary;
                 daProcessRoleExtensionsPrimary.Fill(dsProcessRoleSet, "ProcessRoleExtensionsPrimary");
 
                 SqlDataAdapter daProcessRoleExtensionsSecondary = new SqlDataAdapter();
-                // daProcessRoleExtensionsSecondary.TableMappings.Add("ProcessRoleExtensionsSecondary", "ProcessRoleExtensionsSecondary");
                 daProcessRoleExtensionsSecondary.SelectCommand = cmdProcessRoleExtensionsSecondary;
                 daProcessRoleExtensionsSecondary.Fill(dsProcessRoleSet, "ProcessRoleExtensionsSecondary");
+
+                SqlDataAdapter daSpecialFiles = new SqlDataAdapter();
+                daSpecialFiles.SelectCommand = cmdSpecialFiles;
+                daSpecialFiles.Fill(dsProcessRoleSet, "SpecialFiles");
 
                 parentColumn = dsProcessRoleSet.Tables["ProcessRoles"].Columns["RoleID"];
 
@@ -314,6 +314,10 @@ namespace ArtContentManager.Static
 
                 childColumn = dsProcessRoleSet.Tables["ProcessRoleExtensionsSecondary"].Columns["RoleID"];
                 relation = new System.Data.DataRelation("ProcessRoleSecondaryExtension", parentColumn, childColumn);
+                dsProcessRoleSet.Relations.Add(relation);
+
+                childColumn = dsProcessRoleSet.Tables["SpecialFiles"].Columns["RoleID"];
+                relation = new System.Data.DataRelation("SpecialFilesForRole", parentColumn, childColumn);
                 dsProcessRoleSet.Relations.Add(relation);
 
                 #endregion
@@ -327,6 +331,10 @@ namespace ArtContentManager.Static
                 string sqlProcessRoleExtensionsSecondaryDelete = "DELETE FROM ProcessRoleExtensionsSecondary";
                 SqlCommand cmdDeleteProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondaryDelete, _DB);
                 cmdDeleteProcessRoleExtensionsSecondary.ExecuteNonQuery();
+
+                string sqlSpecialFilesDelete = "DELETE FROM SpecialFiles";
+                SqlCommand cmdDeleteSpecialFiles = new SqlCommand(sqlSpecialFilesDelete, _DB);
+                cmdDeleteSpecialFiles.ExecuteNonQuery();
 
                 string sqlProcessRolesDelete = "DELETE FROM ProcessRoles";
                 SqlCommand cmdDeleteProcessRoles = new SqlCommand(sqlProcessRolesDelete, _DB);
@@ -356,6 +364,12 @@ namespace ArtContentManager.Static
                 cmdProcessRoleSecondaryExtensionInsert.Parameters.Add("@RoleID", SqlDbType.Int);
                 cmdProcessRoleSecondaryExtensionInsert.Parameters.Add("@Extension", SqlDbType.Text);
 
+                string sqlSpecialFilesInsert = "INSERT INTO SpecialFiles (FileName, ExcludeFromScan, RoleID) VALUES (@FileName, @ExcludeFromScan, @RoleID)";
+                SqlCommand cmdSpecialFilesInsert = new SqlCommand(sqlSpecialFilesInsert, _DB);
+                cmdSpecialFilesInsert.Parameters.Add("@FileName", SqlDbType.Text);
+                cmdSpecialFilesInsert.Parameters.Add("@ExcludeFromScan", SqlDbType.Bit);
+                cmdSpecialFilesInsert.Parameters.Add("@RoleID", SqlDbType.Int);
+                
                 DataTable tblProcessRoles = dsProcessRoleSet.Tables["ProcessRoles"];
 
                 foreach (DataRow drFileRole in tblProcessRoles.Rows)
@@ -381,6 +395,16 @@ namespace ArtContentManager.Static
                         cmdProcessRoleSecondaryExtensionInsert.Parameters["@RoleID"].Value = newRoleID;
                         cmdProcessRoleSecondaryExtensionInsert.Parameters["@Extension"].Value = drSecondaryExtensionRow["Extension"];
                         cmdProcessRoleSecondaryExtensionInsert.ExecuteNonQuery();
+
+                    }
+
+                    foreach (DataRow drSpecialFiles in drFileRole.GetChildRows(dsProcessRoleSet.Relations["SpecialFilesForRole"]))
+                    {
+                        Console.WriteLine("Special File : " + drSpecialFiles["FileName"].ToString());
+                        cmdSpecialFilesInsert.Parameters["@FileName"].Value = drSpecialFiles["FileName"].ToString();
+                        cmdSpecialFilesInsert.Parameters["@ExcludeFromScan"].Value = drSpecialFiles["ExcludeFromScan"];
+                        cmdSpecialFilesInsert.Parameters["@RoleID"].Value = newRoleID;
+                        cmdSpecialFilesInsert.ExecuteNonQuery();
 
                     }
 

@@ -58,7 +58,7 @@
     </ApplicationDefinition>
     <Compile Include="Content\ContentType.cs" />
     <Compile Include="Content\File.cs" />
-    <Compile Include="Content\Scan.cs" />
+    <Compile Include="Actions\Scan.cs" />
     <Compile Include="Content\Skin.cs" />
     <Compile Include="DatabaseAgents\DatabaseAgent.cs" />
     <Compile Include="DatabaseAgents\dbaContentType.cs" />

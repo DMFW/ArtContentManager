@@ -25,7 +25,10 @@ namespace ArtContentManager.Forms
         private BackgroundWorker scanCountWorker;
         private BackgroundWorker scanImportWorker;
 
-        private string _currentScanRoot;
+        private string _formScanRoot;
+
+        private ArtContentManager.DatabaseAgents.dbaScanHistory _scanHistory;
+        private ArtContentManager.Actions.Scan _currentScan; 
 
         public frmFileMaintenance()
         {
@@ -47,7 +50,7 @@ namespace ArtContentManager.Forms
         private void btnScan_Click(object sender, RoutedEventArgs e)
         {
 
-            if (!Directory.Exists(_currentScanRoot))
+            if (!Directory.Exists(_formScanRoot))
             {
                 MessageBoxResult invalidScanPath = System.Windows.MessageBox.Show("You have selected an invalid root path. The scan cannot be performed.", "Scan Request Invalid");
                 return;
@@ -62,6 +65,17 @@ namespace ArtContentManager.Forms
 
             btnScan.IsEnabled = false;
             btnScanCancel.IsEnabled = true;
+
+            _scanHistory = new DatabaseAgents.dbaScanHistory();
+
+            _currentScan = new Actions.Scan();
+
+            _currentScan.FolderRoot = _formScanRoot;
+            _scanHistory.SetLastCompletedScanTime(_currentScan);
+
+            _currentScan.StartScanTime = DateTime.Now;
+            _scanHistory.RecordStartScan(_currentScan);
+
             scanCountWorker.RunWorkerAsync();   // Count all the files
            
         }
@@ -69,7 +83,7 @@ namespace ArtContentManager.Forms
         private void scanCountWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             Static.FileSystemScan.scanMode = Static.FileSystemScan.ScanMode.smCount;
-            Static.FileSystemScan.Scan(_currentScanRoot, scanCountWorker);   
+            Static.FileSystemScan.Scan(_currentScan, scanCountWorker);   
         }
 
         private void scanCountWorker_ReportProgress(object sender, ProgressChangedEventArgs e)
@@ -94,7 +108,7 @@ namespace ArtContentManager.Forms
         {
             Static.FileSystemScan.scanMode = Static.FileSystemScan.ScanMode.smImport;
             Static.FileSystemScan.knownFileTotalCount = Static.FileSystemScan.fileCount; // For progress reporting purposes
-            Static.FileSystemScan.Scan(_currentScanRoot, scanImportWorker);
+            Static.FileSystemScan.Scan(_currentScan, scanImportWorker);
         }
 
         private void scanImportWorker_ReportProgress(object sender, ProgressChangedEventArgs e)
@@ -125,7 +139,7 @@ namespace ArtContentManager.Forms
         private void txtScanRoot_TextChanged(object sender, TextChangedEventArgs e)
         {
             Properties.Settings.Default.LastScanPath = txtScanRoot.Text;
-            _currentScanRoot = txtScanRoot.Text;
+            _formScanRoot = txtScanRoot.Text;
         }
 
         private void btnScanCancel_Click(object sender, RoutedEventArgs e)
