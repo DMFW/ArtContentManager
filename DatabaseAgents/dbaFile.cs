@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace ArtContentManager.DatabaseAgents
 {
-    class dbaFile
+    class dbaFile : DatabaseAgent
     {
 
         SqlCommand cmdReadFiles; // Read all files by name and sum 
@@ -18,28 +18,9 @@ namespace ArtContentManager.DatabaseAgents
         SqlCommand cmdUpdateFileLocationVerified;
         SqlCommand cmdUpdateFileLocationAntiVerified;
 
-        SqlTransaction trnActive;
-
         public dbaFile()
         {
 
-        }
-
-        public void BeginTransaction()
-        {
-            trnActive = ArtContentManager.Static.Database.DB.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
-        }
-
-        public void CommitTransaction()
-        {
-            trnActive.Commit();
-            trnActive.Dispose();
-        }
-
-        public void RollbackTransaction()
-        {
-            trnActive.Rollback();
-            trnActive.Dispose();
         }
 
         public bool FileRecorded(ArtContentManager.Content.File File)
