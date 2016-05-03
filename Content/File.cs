@@ -149,10 +149,10 @@ namespace ArtContentManager.Content
 
             int roleID = 0; // default to undefined. This is even worse than unknown... 
 
-            if (Static.Database.FileRoles.ContainsKey("Unknown"))
+            if (Static.Database.ProcessRoles.ContainsKey("Unknown"))
             {
                 // Start with unknown if "unknown" is in the database and why wouldn't it be?
-                roleID = (int)Static.Database.FileRoles["Unknown"]; 
+                roleID = (int)Static.Database.ProcessRoles["Unknown"]; 
             }
 
             if (Static.Database.ReservedFiles.ContainsKey(_Name.ToLower()))
@@ -166,9 +166,9 @@ namespace ArtContentManager.Content
                 // This will be spot on in many cases but ambiguous in some.
                 // We will refine the ambiguous guesses later...
 
-                if (Static.Database.FileRoleExtensionsPrimary.ContainsKey(_Extension.ToLower()))
+                if (Static.Database.ProcessRoleExtensionsPrimary.ContainsKey(_Extension.ToLower()))
                 {
-                    roleID = (int)Static.Database.FileRoleExtensionsPrimary[_Extension.ToLower()];
+                    roleID = (int)Static.Database.ProcessRoleExtensionsPrimary[_Extension.ToLower()];
                 }
             }
 

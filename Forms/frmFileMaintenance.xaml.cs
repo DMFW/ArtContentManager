@@ -30,7 +30,7 @@ namespace ArtContentManager.Forms
         private string _formScanRoot;
 
         private ArtContentManager.DatabaseAgents.dbaScanHistory _dbaScanHistory;
-        private ArtContentManager.Actions.Scan _currentRootScan; 
+        private Actions.Scan _currentRootScan; 
 
         public frmFileMaintenance()
         {

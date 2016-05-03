@@ -27,6 +27,9 @@ namespace ArtContentManager.Static
             string phase;
             ArtContentManager.DatabaseAgents.dbaFile dbaFile = null;
             ArtContentManager.DatabaseAgents.dbaScanHistory dbaScanHistory = null;
+            dbaScanHistory = new ArtContentManager.DatabaseAgents.dbaScanHistory();
+
+            Database.LoadScanReferenceData();
 
             switch (scanMode)
             {
@@ -41,7 +44,6 @@ namespace ArtContentManager.Static
                     ScanProgress.TotalFileCount = rootScan.TotalFiles;
                     ScanProgress.CurrentFileCount = 0;
                     dbaFile = new ArtContentManager.DatabaseAgents.dbaFile();
-                    dbaScanHistory = new ArtContentManager.DatabaseAgents.dbaScanHistory();
                     break;
                 default:
                     phase = "unknown";
@@ -223,6 +225,13 @@ namespace ArtContentManager.Static
                         dbaFile.BeginTransaction();
                         dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
                         dbaFile.CommitTransaction();
+
+                        if (activeScan != rootScan)
+                        {
+                            activeScan.CompleteScanTime = DateTime.Now;
+                            dbaScanHistory.RecordScanComplete(activeScan);
+                        }
+
                         break;
                 }
 

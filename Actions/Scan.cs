@@ -28,7 +28,7 @@ namespace ArtContentManager.Actions
         public string FolderName
         {
             get { return _folderName; }
-            set { _folderName = value; }
+            set { _folderName = value.ToUpperInvariant(); }
         }
 
         public bool IsRequestRoot

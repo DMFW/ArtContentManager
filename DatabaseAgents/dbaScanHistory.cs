@@ -18,7 +18,7 @@ namespace ArtContentManager.DatabaseAgents
             _DB = ArtContentManager.Static.Database.DB;
         }
 
-        public void RecordStartScan(ArtContentManager.Actions.Scan scan)
+        public void RecordStartScan(Actions.Scan scan)
         {
             string sqlInsertScan;
 
@@ -44,7 +44,7 @@ namespace ArtContentManager.DatabaseAgents
             CommitTransaction();
         }
 
-        public void SetLastCompletedScanTime(ArtContentManager.Actions.Scan scan)
+        public void SetLastCompletedScanTime(Actions.Scan scan)
         {
             string sqlSelectScan;
             scan.PreviousCompletedScanTime = DateTime.MinValue; // Assume no prior successful scan
@@ -56,18 +56,26 @@ namespace ArtContentManager.DatabaseAgents
             cmdSelectScan.Parameters["@FolderName"].Value = scan.FolderName;
 
             SqlDataReader rdrScanHistory = cmdSelectScan.ExecuteReader();
-            while (rdrScanHistory.Read())
+
+            if (rdrScanHistory.HasRows)
             {
-                if (String.IsNullOrEmpty(rdrScanHistory["Completed"].ToString()))
+                while (rdrScanHistory.Read())
+                {
+                    if (String.IsNullOrEmpty(rdrScanHistory["Completed"].ToString()))
                     { scan.PreviousCompletedScanTime = DateTime.MinValue; }
-                else
+                    else
                     { scan.PreviousCompletedScanTime = (DateTime)rdrScanHistory["Completed"]; }
+                }
+            }
+            else
+            {
+                scan.PreviousCompletedScanTime = DateTime.MinValue;
             }
             rdrScanHistory.Close();
             cmdSelectScan.Dispose();
         }
 
-        public void UpdateInitialFileCounts(ArtContentManager.Actions.Scan scan)
+        public void UpdateInitialFileCounts(Actions.Scan scan)
         {
             string sqlUpdateScan;
 
@@ -91,7 +99,7 @@ namespace ArtContentManager.DatabaseAgents
             CommitTransaction();
         }
 
-        public void UpdateFilesProcessed(ArtContentManager.Actions.Scan scan)
+        public void UpdateFilesProcessed(Actions.Scan scan)
         {
             string sqlUpdateScan;
 
@@ -113,7 +121,7 @@ namespace ArtContentManager.DatabaseAgents
             CommitTransaction();
         }
 
-        public void RecordScanAbort(ArtContentManager.Actions.Scan scan)
+        public void RecordScanAbort(Actions.Scan scan)
         {
             string sqlUpdateScan;
 
@@ -139,7 +147,7 @@ namespace ArtContentManager.DatabaseAgents
 
         }
 
-        public void RecordScanComplete(ArtContentManager.Actions.Scan scan)
+        public void RecordScanComplete(Actions.Scan scan)
         {
             string sqlUpdateScan;
 
@@ -153,7 +161,7 @@ namespace ArtContentManager.DatabaseAgents
             cmdUpdateScan.Parameters.Add("@ProcessedFiles", System.Data.SqlDbType.Int);
             cmdUpdateScan.Parameters.Add("@Completed", System.Data.SqlDbType.DateTime);
 
-            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderName;
+            cmdUpdateScan.Parameters["@FolderName"].Value = scan.FolderName;
             cmdUpdateScan.Parameters["@Started"].Value = scan.StartScanTime;
             cmdUpdateScan.Parameters["@ProcessedFiles"].Value = scan.ProcessedFiles;
             cmdUpdateScan.Parameters["@Completed"].Value = scan.CompleteScanTime;
@@ -165,7 +173,7 @@ namespace ArtContentManager.DatabaseAgents
         }
 
 
-        public void UpdateAll(ArtContentManager.Actions.Scan scan)
+        public void UpdateAll(Actions.Scan scan)
         {
             string sqlUpdateScan;
 

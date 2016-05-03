@@ -16,8 +16,8 @@ namespace ArtContentManager.Static
         private static SqlConnection _DB;
 
         // Static dictionaries loaded for performance purposes during scanning 
-        public static Dictionary<string, int> FileRoleExtensionsPrimary;
-        public static Dictionary<string, int> FileRoles;
+        public static Dictionary<string, int> ProcessRoleExtensionsPrimary;
+        public static Dictionary<string, int> ProcessRoles;
         public static Dictionary<string, string> ExcludedFiles;
         public static Dictionary<string, int> ReservedFiles;
 
@@ -62,35 +62,35 @@ namespace ArtContentManager.Static
   
         public static void LoadScanReferenceData()
         {
-            LoadFileRoles();
-            Trace.WriteLine("File roles loaded");
-            LoadFileRoleExtensionsPrimary();
-            Trace.WriteLine("File role primary extensions loaded");
+            LoadProcessRoles();
+            Trace.WriteLine("Process roles loaded");
+            LoadProcessRoleExtensionsPrimary();
+            Trace.WriteLine("Process role primary extensions loaded");
             LoadSpecialFiles();
             Trace.WriteLine("Special files loaded");
         }
 
         public static void UnloadScanReferenceData()
         {
-            FileRoles=null;
-            FileRoleExtensionsPrimary = null;
+            ProcessRoles=null;
+            ProcessRoleExtensionsPrimary = null;
             ExcludedFiles = null;
             ReservedFiles = null;
         }
 
-        private static void LoadFileRoles()
+        private static void LoadProcessRoles()
         {
 
-            FileRoles = new Dictionary<string, int>();
+            ProcessRoles = new Dictionary<string, int>();
 
             try
             {
                 SqlDataReader myReader = null;
-                SqlCommand myCommand = new SqlCommand("SELECT * from FileRoles", _DB);
+                SqlCommand myCommand = new SqlCommand("SELECT * from ProcessRoles", _DB);
                 myReader = myCommand.ExecuteReader();
                 while (myReader.Read())
                 {
-                    FileRoles.Add( myReader["RoleDescription"].ToString(), (Int16)myReader["RoleID"]);
+                    ProcessRoles.Add( myReader["RoleDescription"].ToString(), (Int16)myReader["RoleID"]);
                 }
                 myReader.Close();
             }
@@ -100,19 +100,19 @@ namespace ArtContentManager.Static
             }
         }
 
-        private static void LoadFileRoleExtensionsPrimary()
+        private static void LoadProcessRoleExtensionsPrimary()
         {
 
-            FileRoleExtensionsPrimary = new Dictionary<string, int>();
+            ProcessRoleExtensionsPrimary = new Dictionary<string, int>();
 
             try
             {
                 SqlDataReader myReader = null;
-                SqlCommand myCommand = new SqlCommand("SELECT * from FileRoleExtensionsPrimary", _DB);
+                SqlCommand myCommand = new SqlCommand("SELECT * from ProcessRoleExtensionsPrimary", _DB);
                 myReader = myCommand.ExecuteReader();
                 while (myReader.Read())
                 {
-                    FileRoleExtensionsPrimary.Add(myReader["Extension"].ToString(), (Int16)myReader["RoleID"]);
+                    ProcessRoleExtensionsPrimary.Add(myReader["Extension"].ToString(), (Int16)myReader["RoleID"]);
                 }
                 myReader.Close();
             }
