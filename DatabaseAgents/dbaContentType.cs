@@ -9,11 +9,8 @@ namespace ArtContentManager.DatabaseAgents
 {
     class dbaContentType : DatabaseAgent
     {
-        SqlTransaction trnActive;
-
         public dbaContentType()
         {
-            
         }
     }
 }

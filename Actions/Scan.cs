@@ -9,13 +9,15 @@ namespace ArtContentManager.Actions
     internal class Scan
     {
 
-        private string _folderRoot;
+        private string _folderName;
+        private bool _isRequestRoot;
         private DateTime _startScanTime;
-        private DateTime? _previousCompletedScanTime;
-        private int _totalFileCount;
-        private int _processedFileCount;
         private DateTime? _abortScanTime;
         private DateTime? _completeScanTime;
+        private DateTime? _previousCompletedScanTime;
+        private int _totalFiles;
+        private int _newFiles;
+        private int _processedFiles;
 
         public Scan()
         {
@@ -23,34 +25,22 @@ namespace ArtContentManager.Actions
             _completeScanTime = null;
         }
 
-        public string FolderRoot
+        public string FolderName
         {
-            get { return _folderRoot; }
-            set { _folderRoot = value; }
+            get { return _folderName; }
+            set { _folderName = value; }
+        }
+
+        public bool IsRequestRoot
+        {
+            get { return _isRequestRoot; }
+            set { _isRequestRoot = value; }
         }
 
         public DateTime StartScanTime
         {
             get { return _startScanTime; }
             set { _startScanTime = value; }
-        }
-
-        public DateTime? PreviousCompletedScanTime
-        {
-            get { return _previousCompletedScanTime; }
-            set { _previousCompletedScanTime = value; }
-        }
-
-        public int TotalFileCount
-        {
-            get { return _totalFileCount; }
-            set { _totalFileCount = value; }
-        }
-
-        public int ProcessedFileCount
-        {
-            get { return _processedFileCount; }
-            set { _processedFileCount = value; }
         }
 
         public DateTime? AbortScanTime
@@ -63,6 +53,30 @@ namespace ArtContentManager.Actions
         {
             get { return _completeScanTime; }
             set { _completeScanTime = value; }
+        }
+
+        public DateTime? PreviousCompletedScanTime
+        {
+            get { return _previousCompletedScanTime; }
+            set { _previousCompletedScanTime = value; }
+        }
+
+        public int TotalFiles
+        {
+            get { return _totalFiles; }
+            set { _totalFiles = value; }
+        }
+
+        public int NewFiles
+        {
+            get { return _newFiles; }
+            set { _newFiles = value; }
+        }
+
+        public int ProcessedFiles
+        {
+            get { return _processedFiles; }
+            set { _processedFiles = value; }
         }
 
     }

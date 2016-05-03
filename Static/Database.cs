@@ -20,7 +20,12 @@ namespace ArtContentManager.Static
         public static Dictionary<string, int> FileRoles;
         public static Dictionary<string, string> ExcludedFiles;
         public static Dictionary<string, int> ReservedFiles;
-       
+
+        public static SqlConnection DB
+        {
+            get { return _DB; }
+        }
+
         public static bool Open()
         {
             try
@@ -55,17 +60,8 @@ namespace ArtContentManager.Static
             }
         }
   
-        public static SqlConnection DB
-        {
-            get 
-            {
-                return _DB;
-            }
-        }
-
         public static void LoadScanReferenceData()
         {
-
             LoadFileRoles();
             Trace.WriteLine("File roles loaded");
             LoadFileRoleExtensionsPrimary();

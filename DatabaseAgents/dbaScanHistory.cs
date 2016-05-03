@@ -11,19 +11,32 @@ namespace ArtContentManager.DatabaseAgents
     class dbaScanHistory : DatabaseAgent
     {
 
+        private SqlConnection _DB;
+
+        public dbaScanHistory()
+        {
+            _DB = ArtContentManager.Static.Database.DB;
+        }
+
         public void RecordStartScan(ArtContentManager.Actions.Scan scan)
         {
             string sqlInsertScan;
 
-            sqlInsertScan = "INSERT INTO ScanHistory (FolderRoot, Started) Values(@FolderRoot, @Started)";
+            sqlInsertScan = "INSERT INTO ScanHistory (FolderName, IsRequestRoot, Started, TotalFiles, NewFiles) Values(@FolderName, @IsRequestRoot,  @Started, @TotalFiles, @NewFiles)";
 
-            SqlCommand cmdInsertScan = new SqlCommand(sqlInsertScan, Static.Database.DB);
+            SqlCommand cmdInsertScan = new SqlCommand(sqlInsertScan, _DB);
 
-            cmdInsertScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
+            cmdInsertScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
+            cmdInsertScan.Parameters.Add("@IsRequestRoot", System.Data.SqlDbType.Bit);
             cmdInsertScan.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
+            cmdInsertScan.Parameters.Add("@TotalFiles", System.Data.SqlDbType.Int);
+            cmdInsertScan.Parameters.Add("@NewFiles", System.Data.SqlDbType.Int);
 
-            cmdInsertScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdInsertScan.Parameters["@FolderName"].Value = scan.FolderName;
+            cmdInsertScan.Parameters["@IsRequestRoot"].Value = scan.IsRequestRoot;
             cmdInsertScan.Parameters["@Started"].Value = scan.StartScanTime;
+            cmdInsertScan.Parameters["@TotalFiles"].Value = scan.TotalFiles;
+            cmdInsertScan.Parameters["@NewFiles"].Value = scan.NewFiles;
 
             BeginTransaction();
             cmdInsertScan.Transaction = trnActive;
@@ -34,38 +47,43 @@ namespace ArtContentManager.DatabaseAgents
         public void SetLastCompletedScanTime(ArtContentManager.Actions.Scan scan)
         {
             string sqlSelectScan;
-
             scan.PreviousCompletedScanTime = DateTime.MinValue; // Assume no prior successful scan
 
-            sqlSelectScan = "SELECT TOP 1 Completed FROM ScanHistory WHERE FolderRoot = @FolderRoot ORDER BY Completed DESC";
-            SqlCommand cmdSelectScan = new SqlCommand(sqlSelectScan, Static.Database.DB);
+            sqlSelectScan = "SELECT TOP 1 Completed FROM ScanHistory WHERE FolderName = @FolderName ORDER BY Completed DESC";
+            SqlCommand cmdSelectScan = new SqlCommand(sqlSelectScan, _DB);
 
-            cmdSelectScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
-            cmdSelectScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdSelectScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
+            cmdSelectScan.Parameters["@FolderName"].Value = scan.FolderName;
 
             SqlDataReader rdrScanHistory = cmdSelectScan.ExecuteReader();
             while (rdrScanHistory.Read())
             {
-                scan.PreviousCompletedScanTime = (DateTime)rdrScanHistory["Completed"];
+                if (String.IsNullOrEmpty(rdrScanHistory["Completed"].ToString()))
+                    { scan.PreviousCompletedScanTime = DateTime.MinValue; }
+                else
+                    { scan.PreviousCompletedScanTime = (DateTime)rdrScanHistory["Completed"]; }
             }
-
+            rdrScanHistory.Close();
+            cmdSelectScan.Dispose();
         }
 
-        public void UpdateFilesCounted(ArtContentManager.Actions.Scan scan)
+        public void UpdateInitialFileCounts(ArtContentManager.Actions.Scan scan)
         {
             string sqlUpdateScan;
 
-            sqlUpdateScan = "UPDATE ScanHistory Set FilesCounted = @FilesCounted WHERE FolderRoot = @FolderRoot AND Started = @Started";
+            sqlUpdateScan = "UPDATE ScanHistory Set TotalFiles = @TotalFiles, NewFiles = @NewFiles WHERE FolderName = @FolderName AND Started = @Started";
 
-            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, Static.Database.DB);
+            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, _DB);
 
-            cmdUpdateScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
+            cmdUpdateScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
             cmdUpdateScan.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
-            cmdUpdateScan.Parameters.Add("@FilesCounted", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@TotalFiles", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@NewFiles", System.Data.SqlDbType.Int);
 
-            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdUpdateScan.Parameters["@FolderName"].Value = scan.FolderName;
             cmdUpdateScan.Parameters["@Started"].Value = scan.StartScanTime;
-            cmdUpdateScan.Parameters["@FilesCounted"].Value = scan.TotalFileCount;
+            cmdUpdateScan.Parameters["@TotalFiles"].Value = scan.TotalFiles;
+            cmdUpdateScan.Parameters["@NewFiles"].Value = scan.NewFiles;
 
             BeginTransaction();
             cmdUpdateScan.Transaction = trnActive;
@@ -77,17 +95,17 @@ namespace ArtContentManager.DatabaseAgents
         {
             string sqlUpdateScan;
 
-            sqlUpdateScan = "UPDATE ScanHistory Set FilesProcessed = @FilesProcessed WHERE FolderRoot = @FolderRoot AND Started = @Started";
+            sqlUpdateScan = "UPDATE ScanHistory Set ProcessedFiles = @ProcessedFiles WHERE FolderName = @FolderName AND Started = @Started";
 
-            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, Static.Database.DB);
+            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, _DB);
 
-            cmdUpdateScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
+            cmdUpdateScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
             cmdUpdateScan.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
-            cmdUpdateScan.Parameters.Add("@FilesProcessed", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@ProcessedFiles", System.Data.SqlDbType.Int);
 
-            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderName;
             cmdUpdateScan.Parameters["@Started"].Value = scan.StartScanTime;
-            cmdUpdateScan.Parameters["@FilesProcessed"].Value = scan.ProcessedFileCount;
+            cmdUpdateScan.Parameters["@FilesProcessed"].Value = scan.ProcessedFiles;
 
             BeginTransaction();
             cmdUpdateScan.Transaction = trnActive;
@@ -99,19 +117,19 @@ namespace ArtContentManager.DatabaseAgents
         {
             string sqlUpdateScan;
 
-            sqlUpdateScan = "UPDATE ScanHistory Set Aborted = @Aborted, FilesProcessed = @FilesProcessed " +
-                            "WHERE FolderRoot = @FolderRoot AND Started = @Started";
+            sqlUpdateScan = "UPDATE ScanHistory Set Aborted = @Aborted, ProcessedFiles = @ProcessedFiles " +
+                            "WHERE FolderName = @FolderName AND Started = @Started";
 
-            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, Static.Database.DB);
+            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, _DB);
 
-            cmdUpdateScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
+            cmdUpdateScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
             cmdUpdateScan.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
-            cmdUpdateScan.Parameters.Add("@FilesProcessed", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@ProcessedFiles", System.Data.SqlDbType.Int);
             cmdUpdateScan.Parameters.Add("@Aborted", System.Data.SqlDbType.DateTime);
 
-            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderName;
             cmdUpdateScan.Parameters["@Started"].Value = scan.StartScanTime;
-            cmdUpdateScan.Parameters["@FilesProcessed"].Value = scan.ProcessedFileCount;
+            cmdUpdateScan.Parameters["@ProcessedFiles"].Value = scan.ProcessedFiles;
             cmdUpdateScan.Parameters["@Aborted"].Value = scan.AbortScanTime;
 
             BeginTransaction();
@@ -125,19 +143,19 @@ namespace ArtContentManager.DatabaseAgents
         {
             string sqlUpdateScan;
 
-            sqlUpdateScan = "UPDATE ScanHistory Set Completed = @Completed, FilesProcessed = @FilesProcessed " +
-                            "WHERE FolderRoot = @FolderRoot AND Started = @Started";
+            sqlUpdateScan = "UPDATE ScanHistory Set Completed = @Completed, ProcessedFiles = @ProcessedFiles " +
+                            "WHERE FolderName = @FolderName AND Started = @Started";
 
-            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, Static.Database.DB);
+            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, _DB);
 
-            cmdUpdateScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
+            cmdUpdateScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
             cmdUpdateScan.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
-            cmdUpdateScan.Parameters.Add("@FilesProcessed", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@ProcessedFiles", System.Data.SqlDbType.Int);
             cmdUpdateScan.Parameters.Add("@Completed", System.Data.SqlDbType.DateTime);
 
-            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderName;
             cmdUpdateScan.Parameters["@Started"].Value = scan.StartScanTime;
-            cmdUpdateScan.Parameters["@FilesProcessed"].Value = scan.ProcessedFileCount;
+            cmdUpdateScan.Parameters["@ProcessedFiles"].Value = scan.ProcessedFiles;
             cmdUpdateScan.Parameters["@Completed"].Value = scan.CompleteScanTime;
 
             BeginTransaction();
@@ -151,22 +169,24 @@ namespace ArtContentManager.DatabaseAgents
         {
             string sqlUpdateScan;
 
-            sqlUpdateScan = "UPDATE ScanHistory Set FilesProcessed = @FilesProcessed, FilesCounted = @FilesCounted, Aborted = @Aborted, Completed = @Completed " + 
-                            "WHERE FolderRoot = @FolderRoot AND Started = @Started";
+            sqlUpdateScan = "UPDATE ScanHistory Set TotalFiles = @TotalFiles, NewFiles = @NewFiles, ProcessedFiles = @ProcessedFiles, Aborted = @Aborted, Completed = @Completed " + 
+                            "WHERE FolderName = @FolderName AND Started = @Started";
 
-            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, Static.Database.DB);
+            SqlCommand cmdUpdateScan = new SqlCommand(sqlUpdateScan, _DB);
 
-            cmdUpdateScan.Parameters.Add("@FolderRoot", System.Data.SqlDbType.NVarChar, 255);
+            cmdUpdateScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
             cmdUpdateScan.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
-            cmdUpdateScan.Parameters.Add("@FilesProcessed", System.Data.SqlDbType.Int);
-            cmdUpdateScan.Parameters.Add("@FilesCounted", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@TotalFiles", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@NewFiles", System.Data.SqlDbType.Int);
+            cmdUpdateScan.Parameters.Add("@ProcessedFiles", System.Data.SqlDbType.Int);
             cmdUpdateScan.Parameters.Add("@Aborted", System.Data.SqlDbType.DateTime);
             cmdUpdateScan.Parameters.Add("@Completed", System.Data.SqlDbType.DateTime);
 
-            cmdUpdateScan.Parameters["@FolderRoot"].Value = scan.FolderRoot;
+            cmdUpdateScan.Parameters["@FolderName"].Value = scan.FolderName;
             cmdUpdateScan.Parameters["@Started"].Value = scan.StartScanTime;
-            cmdUpdateScan.Parameters["@FilesCounted"].Value = scan.TotalFileCount;
-            cmdUpdateScan.Parameters["@FilesProcessed"].Value = scan.ProcessedFileCount;
+            cmdUpdateScan.Parameters["@TotalFiles"].Value = scan.TotalFiles;
+            cmdUpdateScan.Parameters["@NewFiles"].Value = scan.NewFiles;
+            cmdUpdateScan.Parameters["@ProcessedFiles"].Value = scan.NewFiles;
             cmdUpdateScan.Parameters["@Aborted"].Value = scan.AbortScanTime;
             cmdUpdateScan.Parameters["@Completed"].Value = scan.CompleteScanTime;
 

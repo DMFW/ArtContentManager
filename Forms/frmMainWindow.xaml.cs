@@ -60,9 +60,9 @@ namespace ArtContentManager.Forms
 
         private void frmMainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            lblStatus.Content = "Closing database...";
-            Properties.Settings.Default.Save();
-            Static.Database.Close();
+           lblStatus.Content = "Closing database...";
+           Properties.Settings.Default.Save();
+           Static.Database.Close();
         }
 
     }

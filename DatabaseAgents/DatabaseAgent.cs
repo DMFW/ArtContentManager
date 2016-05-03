@@ -10,7 +10,7 @@ namespace ArtContentManager.DatabaseAgents
 {
     class DatabaseAgent
     {
-        SqlTransaction _trnActive;
+        protected SqlTransaction _trnActive;
 
         public void BeginTransaction()
         {

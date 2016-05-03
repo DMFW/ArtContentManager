@@ -11,17 +11,19 @@ namespace ArtContentManager.DatabaseAgents
     class dbaFile : DatabaseAgent
     {
 
+        private SqlConnection _DB;
+
+        public dbaFile()
+        {
+            _DB = ArtContentManager.Static.Database.DB;
+        }
+
         SqlCommand cmdReadFiles; // Read all files by name and sum 
         SqlCommand cmdInsertFiles;
         SqlCommand cmdReadFileLocations;
         SqlCommand cmdInsertFileLocations;
         SqlCommand cmdUpdateFileLocationVerified;
         SqlCommand cmdUpdateFileLocationAntiVerified;
-
-        public dbaFile()
-        {
-
-        }
 
         public bool FileRecorded(ArtContentManager.Content.File File)
         {
@@ -32,7 +34,7 @@ namespace ArtContentManager.DatabaseAgents
             if (cmdReadFiles == null)
             {
                 string readFilesSQL = "Select * from Files where FileName = @FileName and Checksum = @Checksum";
-                cmdReadFiles = new SqlCommand(readFilesSQL, Static.Database.DB);
+                cmdReadFiles = new SqlCommand(readFilesSQL, _DB);
                 cmdReadFiles.Parameters.Add("@FileName", System.Data.SqlDbType.NVarChar, 255);
                 cmdReadFiles.Parameters.Add("@Checksum", System.Data.SqlDbType.NChar, 256);
             }
@@ -62,7 +64,7 @@ namespace ArtContentManager.DatabaseAgents
             if (cmdInsertFiles == null)
             {
                 string insertFilesSQL = "INSERT INTO Files (FileName, Extension, Checksum, Size, RoleID, ParentID) VALUES (@FileName, @Extension, @Checksum, @Size, @RoleID, @ParentID) SET @FileID = SCOPE_IDENTITY();";
-                cmdInsertFiles = new SqlCommand(insertFilesSQL, Static.Database.DB);
+                cmdInsertFiles = new SqlCommand(insertFilesSQL, _DB);
 
                 cmdInsertFiles.Parameters.Add("@FileName", System.Data.SqlDbType.NVarChar, 255);
                 cmdInsertFiles.Parameters.Add("@Extension", System.Data.SqlDbType.NVarChar, 10);
@@ -105,7 +107,7 @@ namespace ArtContentManager.DatabaseAgents
             if (cmdReadFileLocations == null)
             {
                 string readFileLocationsSQL = "SELECT * FROM FileLocations WHERE FileID = @FileID AND Location = @Location";
-                cmdReadFileLocations = new SqlCommand(readFileLocationsSQL, Static.Database.DB);
+                cmdReadFileLocations = new SqlCommand(readFileLocationsSQL, _DB);
                 cmdReadFileLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                 cmdReadFileLocations.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
             }
@@ -126,7 +128,7 @@ namespace ArtContentManager.DatabaseAgents
                 if (cmdUpdateFileLocationVerified == null)
                 {
                     string updateFileLocationsSQL = "UPDATE FileLocations SET VerificationDate = @VerificationDate WHERE FileID = @FileID and Location = @Location";
-                    cmdUpdateFileLocationVerified = new SqlCommand(updateFileLocationsSQL, Static.Database.DB);
+                    cmdUpdateFileLocationVerified = new SqlCommand(updateFileLocationsSQL, _DB);
                     cmdUpdateFileLocationVerified.Parameters.Add("@VerificationDate", System.Data.SqlDbType.DateTime);
                     cmdUpdateFileLocationVerified.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                     cmdUpdateFileLocationVerified.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
@@ -144,7 +146,7 @@ namespace ArtContentManager.DatabaseAgents
                 if (cmdInsertFileLocations == null)
                 {
                     string insertFileLocationsSQL = "INSERT INTO FileLocations (FileID, Location, VerificationDate) VALUES (@FileID, @Location, @VerificationDate)";
-                    cmdInsertFileLocations = new SqlCommand(insertFileLocationsSQL, Static.Database.DB);
+                    cmdInsertFileLocations = new SqlCommand(insertFileLocationsSQL, _DB);
                     cmdInsertFileLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                     cmdInsertFileLocations.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
                     cmdInsertFileLocations.Parameters.Add("@VerificationDate", System.Data.SqlDbType.DateTime);
@@ -167,7 +169,7 @@ namespace ArtContentManager.DatabaseAgents
            if (cmdUpdateFileLocationAntiVerified == null)
            {
                string updateFileLocationsSQL = "UPDATE FileLocations SET AntiVerificationDate = @AntiVerificationDate WHERE (Location = @Location) AND (VerificationDate <> @VerificationDate)";
-               cmdUpdateFileLocationAntiVerified = new SqlCommand(updateFileLocationsSQL, Static.Database.DB);
+               cmdUpdateFileLocationAntiVerified = new SqlCommand(updateFileLocationsSQL, _DB);
                cmdUpdateFileLocationAntiVerified.Parameters.Add("@AntiVerificationDate", System.Data.SqlDbType.DateTime);
                cmdUpdateFileLocationAntiVerified.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
                cmdUpdateFileLocationAntiVerified.Parameters.Add("@VerificationDate", System.Data.SqlDbType.DateTime);

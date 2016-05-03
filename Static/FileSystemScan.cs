@@ -12,42 +12,45 @@ namespace ArtContentManager.Static
 {
     static internal class FileSystemScan
     {
-        public static int fileCount;
-        public static int knownFileTotalCount = 0;
 
         public enum ScanMode { smCount, smImport };
         public static ScanMode scanMode = ScanMode.smCount;
 
-        public static void Scan(Actions.Scan scan, BackgroundWorker bw)
+        public static void Scan(Actions.Scan rootScan, BackgroundWorker bw)
         {
 
+            Actions.Scan activeScan;
+            Actions.Scan subScan;
             DirectoryInfo dirInfo;
             Database.LoadScanReferenceData();
 
             string phase;
             ArtContentManager.DatabaseAgents.dbaFile dbaFile = null;
-            
+            ArtContentManager.DatabaseAgents.dbaScanHistory dbaScanHistory = null;
+
             switch (scanMode)
             {
                 case ScanMode.smCount :
                     phase = "counting";
+                    rootScan.TotalFiles = 0;
+                    rootScan.NewFiles = 0;
+                    rootScan.ProcessedFiles = 0;
                     break;
                 case ScanMode.smImport :
                     phase = "importing";
+                    ScanProgress.TotalFileCount = rootScan.TotalFiles;
+                    ScanProgress.CurrentFileCount = 0;
                     dbaFile = new ArtContentManager.DatabaseAgents.dbaFile();
+                    dbaScanHistory = new ArtContentManager.DatabaseAgents.dbaScanHistory();
                     break;
                 default:
                     phase = "unknown";
                     break;
             }
 
-            fileCount = 0;
-            ScanProgress.TotalFileCount = knownFileTotalCount;
-            ScanProgress.CurrentFileCount = 0;
-
             ScanProgress.DirectioryName = "";
             ScanProgress.FileName = "";
-            ScanProgress.Message = "Scan starting for " + scan.FolderRoot;
+            ScanProgress.Message = "Scan starting for " + rootScan.FolderName;
             bw.ReportProgress(ScanProgress.CompletionPct);
 
             // Data structure to hold names of subfolders to be 
@@ -55,16 +58,16 @@ namespace ArtContentManager.Static
 
             Stack<string> dirs = new Stack<string>(20);
 
-            if (!System.IO.Directory.Exists(scan.FolderRoot))
+            if (!System.IO.Directory.Exists(rootScan.FolderName))
             {
                 throw new ArgumentException();
             }
-            dirs.Push(scan.FolderRoot);
+            dirs.Push(rootScan.FolderName);
 
             while (dirs.Count > 0)
             {
                 string currentDir = dirs.Pop();
-                FileInfo[] files;
+                FileInfo[] newFiles;
 
                 if (bw.CancellationPending)
                 {
@@ -104,7 +107,6 @@ namespace ArtContentManager.Static
                 try
                 {
                     dirInfo = new DirectoryInfo(currentDir);
-                    files = dirInfo.GetFiles().Where(p => p.CreationTime > scan.PreviousCompletedScanTime).ToArray();
                 }
                 catch (UnauthorizedAccessException e)
                 {
@@ -119,64 +121,109 @@ namespace ArtContentManager.Static
                     continue;
                 }
 
-                // Perform the required action on each file here. 
-                // Modify this block to perform your required task.
-  
-                if (scanMode == ScanMode.smCount)
+                if (rootScan.FolderName == currentDir)
                 {
-                    fileCount = fileCount + files.Length; // Always count the files
-                    ScanProgress.CurrentFileCount = fileCount;
-                    ScanProgress.Message = "Directory " + currentDir + " [+" + files.Length + "] -> " + fileCount;
-                    bw.ReportProgress(ScanProgress.CompletionPct); // This will be zero 
+                    activeScan = rootScan;
+                    subScan = null;
+                }
+                else
+                {
+                    subScan = new Actions.Scan();
+                    subScan.FolderName = currentDir;
+                    subScan.StartScanTime = rootScan.StartScanTime; // Inherit this rather than using true time.
+                    subScan.IsRequestRoot = false;
+                    dbaScanHistory.SetLastCompletedScanTime(subScan);
+                    activeScan = subScan;
                 }
 
-                if (scanMode == ScanMode.smImport)
+                newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
+
+                activeScan.TotalFiles += dirInfo.GetFiles().Length;
+                activeScan.NewFiles += newFiles.Length;
+
+                // Perform the required action on each file here. 
+                // Modify this block to perform your required task.
+
+                switch (scanMode)
                 {
-                    foreach (FileInfo file in files)
-                    {
-                        fileCount++;
-                        ScanProgress.CurrentFileCount = fileCount;
+         
+                    case ScanMode.smCount:
+                        
+                        // When we are not the root, roll subtotals into the root total and add the sub scan
+                        // The root scan will be updated outside the loop at the end of the process
+                        if (activeScan != rootScan)
+                        {
+                            rootScan.TotalFiles += subScan.TotalFiles;
+                            rootScan.NewFiles += subScan.NewFiles;
+                            dbaScanHistory.RecordStartScan(subScan);
+                            ScanProgress.Message = "Directory " + currentDir + " [+" + subScan.NewFiles + " (" + subScan.TotalFiles + ")] -> " + rootScan.NewFiles + " (" + rootScan.TotalFiles + ")";
+                        }
+
+                        ScanProgress.CurrentFileCount = rootScan.TotalFiles;
+                        bw.ReportProgress(ScanProgress.CompletionPct); // This will be zero
 
                         if (bw.CancellationPending)
                         {
-                            ScanProgress.Message = "Scan cancelled before file " + file.Name + " in the " + phase + " phase";
+                            ScanProgress.Message = "Scan cancelled after directory " + currentDir + " in the " + phase + " phase";
                             bw.ReportProgress(ScanProgress.CompletionPct);
                             return;
                         }
 
-                        try
+                        break;
+
+                    case ScanMode.smImport:
+
+                        foreach (FileInfo file in newFiles)
                         {
-                            if (Database.ExcludedFiles.ContainsKey(file.Name))
+                            activeScan.ProcessedFiles++;
+
+                            if (activeScan != rootScan)
                             {
-                                ScanProgress.Message = "Skipping " + file;
+                                rootScan.ProcessedFiles++;
                             }
-                            else
+
+                            ScanProgress.CurrentFileCount = rootScan.ProcessedFiles;
+
+                            if (bw.CancellationPending)
                             {
-                                Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
-                                ScanProgress.Message = "Importing " + file.Name;
+                                ScanProgress.Message = "Scan cancelled before file " + file.Name + " in the " + phase + " phase";
+                                bw.ReportProgress(ScanProgress.CompletionPct);
+                                return;
+                            }
 
-                                ArtContentManager.Content.File currentFile = new Content.File(file, file.FullName);
-                                Debug.Assert(dbaFile != null); // We should have a perisistent local instance initialised outside the loop which will be caching query definitions
-                                currentFile.Save(dbaFile, scan.StartScanTime);
+                            try
+                            {
+                                if (Database.ExcludedFiles.ContainsKey(file.Name))
+                                {
+                                    ScanProgress.Message = "Skipping " + file;
+                                }
+                                else
+                                {
+                                    Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
+                                    ScanProgress.Message = "Importing " + file.Name;
 
-                                Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
-                            } 
-                            bw.ReportProgress(ScanProgress.CompletionPct);
+                                    ArtContentManager.Content.File currentFile = new Content.File(file, file.FullName);
+                                    Debug.Assert(dbaFile != null); // We should have a perisistent local instance initialised outside the loop which will be caching query definitions
+                                    currentFile.Save(dbaFile, activeScan.StartScanTime);
+
+                                    Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
+                                }
+                                bw.ReportProgress(ScanProgress.CompletionPct);
+                            }
+                            catch (System.IO.FileNotFoundException e)
+                            {
+                                // If file was deleted by a separate application 
+                                //  or thread since the call to TraverseTree() 
+                                // then just continue.
+                                Trace.WriteLine(e.Message);
+                                continue;
+                            }
                         }
-                        catch (System.IO.FileNotFoundException e)
-                        {
-                            // If file was deleted by a separate application 
-                            //  or thread since the call to TraverseTree() 
-                            // then just continue.
-                            Trace.WriteLine(e.Message);
-                            continue;
-                        }
-                    }
 
-                    dbaFile.BeginTransaction();
-                    dbaFile.UpdateAntiVerifiedFiles(currentDir, scan.StartScanTime);
-                    dbaFile.CommitTransaction();
-
+                        dbaFile.BeginTransaction();
+                        dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
+                        dbaFile.CommitTransaction();
+                        break;
                 }
 
                 // Push the subdirectories onto the stack for traversal. 
@@ -186,6 +233,11 @@ namespace ArtContentManager.Static
             }
 
             Database.UnloadScanReferenceData(); // Just to free up some memory
+
+            if (scanMode == ScanMode.smCount)
+            {
+                dbaScanHistory.UpdateInitialFileCounts(rootScan);
+            }
         }
 
         public static bool IsWritableDirectory(string directory)
