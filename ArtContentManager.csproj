@@ -60,10 +60,9 @@
     <Compile Include="Content\File.cs" />
     <Compile Include="Actions\Scan.cs" />
     <Compile Include="Content\Skin.cs" />
-    <Compile Include="DatabaseAgents\DatabaseAgent.cs" />
-    <Compile Include="DatabaseAgents\dbaContentType.cs" />
-    <Compile Include="DatabaseAgents\dbaFile.cs" />
-    <Compile Include="DatabaseAgents\dbaScanHistory.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaContentType.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaScanHistory.cs" />
     <Compile Include="Forms\frmOrganisation.xaml.cs">
       <DependentUpon>frmOrganisation.xaml</DependentUpon>
     </Compile>

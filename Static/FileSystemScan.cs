@@ -15,6 +15,7 @@ namespace ArtContentManager.Static
 
         public enum ScanMode { smCount, smImport };
         public static ScanMode scanMode = ScanMode.smCount;
+        private static int _internalZipInstance;
 
         public static void Scan(Actions.Scan rootScan, BackgroundWorker bw)
         {
@@ -23,11 +24,8 @@ namespace ArtContentManager.Static
             Actions.Scan subScan;
             DirectoryInfo dirInfo;
             Database.LoadScanReferenceData();
-
+           
             string phase;
-            ArtContentManager.DatabaseAgents.dbaFile dbaFile = null;
-            ArtContentManager.DatabaseAgents.dbaScanHistory dbaScanHistory = null;
-            dbaScanHistory = new ArtContentManager.DatabaseAgents.dbaScanHistory();
 
             Database.LoadScanReferenceData();
 
@@ -43,7 +41,6 @@ namespace ArtContentManager.Static
                     phase = "importing";
                     ScanProgress.TotalFileCount = rootScan.TotalFiles;
                     ScanProgress.CurrentFileCount = 0;
-                    dbaFile = new ArtContentManager.DatabaseAgents.dbaFile();
                     break;
                 default:
                     phase = "unknown";
@@ -134,7 +131,7 @@ namespace ArtContentManager.Static
                     subScan.FolderName = currentDir;
                     subScan.StartScanTime = rootScan.StartScanTime; // Inherit this rather than using true time.
                     subScan.IsRequestRoot = false;
-                    dbaScanHistory.SetLastCompletedScanTime(subScan);
+                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(subScan);
                     activeScan = subScan;
                 }
 
@@ -157,7 +154,7 @@ namespace ArtContentManager.Static
                         {
                             rootScan.TotalFiles += subScan.TotalFiles;
                             rootScan.NewFiles += subScan.NewFiles;
-                            dbaScanHistory.RecordStartScan(subScan);
+                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(subScan);
                             ScanProgress.Message = "Directory " + currentDir + " [+" + subScan.NewFiles + " (" + subScan.TotalFiles + ")] -> " + rootScan.NewFiles + " (" + rootScan.TotalFiles + ")";
                         }
 
@@ -178,6 +175,7 @@ namespace ArtContentManager.Static
                         foreach (FileInfo file in newFiles)
                         {
                             activeScan.ProcessedFiles++;
+                            _internalZipInstance = 0;
 
                             if (activeScan != rootScan)
                             {
@@ -203,11 +201,8 @@ namespace ArtContentManager.Static
                                 {
                                     Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
                                     ScanProgress.Message = "Importing " + file.Name;
-
-                                    ArtContentManager.Content.File currentFile = new Content.File(file, file.FullName);
-                                    Debug.Assert(dbaFile != null); // We should have a perisistent local instance initialised outside the loop which will be caching query definitions
-                                    currentFile.Save(dbaFile, activeScan.StartScanTime);
-
+                                    // The creation of the file object, also saves it. Everything is encapsulated in the constructor
+                                    ArtContentManager.Content.File currentFile = new Content.File(activeScan.StartScanTime, null, file);
                                     Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
                                 }
                                 bw.ReportProgress(ScanProgress.CompletionPct);
@@ -222,14 +217,14 @@ namespace ArtContentManager.Static
                             }
                         }
 
-                        dbaFile.BeginTransaction();
-                        dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
-                        dbaFile.CommitTransaction();
+                        ArtContentManager.Static.Database.BeginTransaction();
+                        ArtContentManager.Static.DatabaseAgents.dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
+                        ArtContentManager.Static.Database.CommitTransaction();
 
                         if (activeScan != rootScan)
                         {
                             activeScan.CompleteScanTime = DateTime.Now;
-                            dbaScanHistory.RecordScanComplete(activeScan);
+                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(activeScan);
                         }
 
                         break;
@@ -245,7 +240,24 @@ namespace ArtContentManager.Static
 
             if (scanMode == ScanMode.smCount)
             {
-                dbaScanHistory.UpdateInitialFileCounts(rootScan);
+                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.UpdateInitialFileCounts(rootScan);
+            }
+        }
+
+        public static int InternalZipInstance
+        {
+            // This property is maintained at scan level because it needs to be global to a specific file identified at the top level.
+            // It represents the count of zip files within zip files and must be unique for every zip file inside the root zip file.
+            // Since zip files can potentially occur at different levels in a hierrachy, recusive logic which analyses then cannot
+            // assign a unique number for them and as such they must refer to this static variable (and maintain it) which is only
+            // reset to zero when analysing a new file at the top level.
+            get
+            {
+                return _internalZipInstance;
+            }
+            set
+            {
+                _internalZipInstance = value;
             }
         }
 

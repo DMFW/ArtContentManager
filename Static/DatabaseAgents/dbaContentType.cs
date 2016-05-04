@@ -5,13 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 
-namespace ArtContentManager.DatabaseAgents
+namespace ArtContentManager.Static.DatabaseAgents
 {
-    class dbaContentType : DatabaseAgent
+    static class dbaContentType
     {
-        public dbaContentType()
-        {
-        }
+
     }
 }
 

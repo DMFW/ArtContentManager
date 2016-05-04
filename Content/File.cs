@@ -13,6 +13,11 @@ namespace ArtContentManager.Content
 {
     class File
     {
+
+        private DateTime _ScanDateTime;
+        private File parentFile;
+        private int _ParentID;
+
         private string _Name;
         private string _ActivePathAndName;
         private string _Extension;
@@ -23,45 +28,42 @@ namespace ArtContentManager.Content
         private int _ID;
         private List<File> _ChildFiles;
 
-        private int _ParentID;
         private string _RelativeInstallationPath;
+        private string _WorkingExtractDirectory;
 
-        public File(FileInfo fi, string activePathAndName)
+        public File(DateTime scanDateTime, File parentFile, FileInfo fi)
         {
 
-            // The constructor for a primary file found directly in a scan
+            // The constructor, both for a primary file found directly in a scan and a secondary file embedded in a zip or manifest
+            // A "primary" file can be distinguished by having a parent ID of zero.
 
-            _ActivePathAndName = activePathAndName;
-            _Name = Path.GetFileName(activePathAndName);
-            _Extension = Path.GetExtension(activePathAndName);
-            _Location = Path.GetDirectoryName(activePathAndName);
+            _ScanDateTime = scanDateTime;
+            _ParentID = parentFile == null ? 0 : parentFile.ID;
+            _ActivePathAndName = fi.FullName;
+            _Name = fi.Name;
+            _Extension = Path.GetExtension(fi.FullName);
+            _Location = Path.GetDirectoryName(fi.FullName);
             _Size = fi.Length;
+
+            if (parentFile != null)
+            {
+                _RelativeInstallationPath = _ActivePathAndName.Substring(parentFile.WorkingExtractDirectory.Length);
+            }
+            else
+            {
+                _RelativeInstallationPath = "";
+            }
 
             // Make a provisional stab at deriving a role ID
             _RoleID = DeriveProvisionalRole();
+
+            // Must save before analysing content so we have an ID to use as a parent to any children.
+            Save(scanDateTime);
             
             if (_Extension == ".zip")
             {
-                DeriveZipProperties();
-            }
-
-        }
-
-        public File(string name, string relativeInstallationPath, long size)
-        {
-
-            // The constructor for a secondary file within a zip file
-            _Name = name;
-            _RelativeInstallationPath = relativeInstallationPath;
-            _Size = size;
-
-            _Extension = Path.GetExtension(_Name);
-            _RoleID = DeriveProvisionalRole();
-
-            // This would be a zip within a zip but this is possible...
-            if (_Extension == ".zip")
-            {
-                DeriveZipProperties();
+                ArtContentManager.Static.FileSystemScan.InternalZipInstance++;
+                ExtractZipContent();
             }
 
         }
@@ -69,6 +71,16 @@ namespace ArtContentManager.Content
         public string ActivePathAndName
         {
             get { return _ActivePathAndName; }
+        }
+
+        public string RelativeInstallationPath
+        {
+            get { return _RelativeInstallationPath; }
+        }
+
+        public string WorkingExtractDirectory
+        {
+            get { return _WorkingExtractDirectory; }
         }
 
         public string Name
@@ -175,36 +187,101 @@ namespace ArtContentManager.Content
             return roleID;
         }
 
-        private void DeriveZipProperties()
+        private void ExtractZipContent()
         {
 
+            _WorkingExtractDirectory = Properties.Settings.Default.WorkFolder + @"\ZipFile" + ArtContentManager.Static.FileSystemScan.InternalZipInstance;
             _ChildFiles = new List<File>();
 
-            using (ZipArchive archive = ZipFile.OpenRead(_ActivePathAndName))
+            if (ArtContentManager.Static.FileSystemScan.InternalZipInstance == 1)
             {
-                foreach (ZipArchiveEntry entry in archive.Entries)
+                // This is the first zip file within the chain so clean the zip working extract area
+                Debug.Assert(_ParentID == 0);  // The parentID should be zero when the internal zip instance is one
+                CleanZipWorkingRootDirectory();
+            }
+
+            ZipFile.ExtractToDirectory(_ActivePathAndName, _WorkingExtractDirectory);
+            WalkDirectoryTree(new DirectoryInfo(_WorkingExtractDirectory));
+
+        }
+
+        private void CleanZipWorkingRootDirectory()
+        {
+            System.IO.DirectoryInfo di = new DirectoryInfo(Properties.Settings.Default.WorkFolder);
+
+            foreach (FileInfo file in di.GetFiles())
+            {
+                file.Delete();
+            }
+            foreach (DirectoryInfo dir in di.GetDirectories())
+            {
+                dir.Delete(true);
+            }
+        }
+
+        private void WalkDirectoryTree(System.IO.DirectoryInfo root)
+        {
+            System.IO.FileInfo[] files = null;
+            System.IO.DirectoryInfo[] subDirs = null;
+
+            // First, process all the files directly under this folder
+            try
+            {
+                files = root.GetFiles("*.*");
+            }
+            // This is thrown if even one of the files requires permissions greater
+            // than the application provides.
+            catch (UnauthorizedAccessException e)
+            {
+                // This code just writes out the message and continues to recurse.
+                // You may decide to do something different here. For example, you
+                // can try to elevate your privileges and access the file again.
+                Trace.WriteLine(e.Message);
+            }
+
+            catch (System.IO.DirectoryNotFoundException e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+
+            if (files != null)
+            {
+                foreach (System.IO.FileInfo fi in files)
                 {
-                    File childFile = new File(entry.Name, entry.FullName, entry.Length);
-                    _ChildFiles.Add(childFile);
+                    // In this example, we only access the existing FileInfo object. If we
+                    // want to open, delete or modify the file, then
+                    // a try-catch block is required here to handle the case
+                    // where the file has been deleted since the call to TraverseTree().
+                    File subFile = new File(_ScanDateTime, this, fi);
+                    Trace.WriteLine(fi.FullName);
+                }
+
+                // Now find all the subdirectories under this directory.
+                subDirs = root.GetDirectories();
+
+                foreach (System.IO.DirectoryInfo dirInfo in subDirs)
+                {
+                    // Resursive call for each subdirectory.
+                    WalkDirectoryTree(dirInfo);
                 }
             }
         }
 
-        public void Save(ArtContentManager.DatabaseAgents.dbaFile dbaFile, DateTime scanDateTime)
+        private void Save(DateTime scanDateTime)
         {
 
             // Adds new files and also inserts or updates their location instance(s)
+            // After calling this method we will have an ID for the file (either an existing known one or a new one)
 
-            dbaFile.BeginTransaction();
+            ArtContentManager.Static.Database.BeginTransaction();
 
-            if (!dbaFile.FileRecorded(this))
+            if (!ArtContentManager.Static.DatabaseAgents.dbaFile.FileRecorded(this))
             {
-                dbaFile.RecordFile(this);
+                ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFile(this);
             }
 
-            dbaFile.RecordFileInstance(this, scanDateTime);
-
-            dbaFile.CommitTransaction();
+            ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileLocation(this, scanDateTime);
+            ArtContentManager.Static.Database.CommitTransaction();
 
         }
     }

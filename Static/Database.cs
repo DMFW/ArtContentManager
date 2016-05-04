@@ -14,6 +14,7 @@ namespace ArtContentManager.Static
     {
 
         private static SqlConnection _DB;
+        private static SqlTransaction _trnActive;
 
         // Static dictionaries loaded for performance purposes during scanning 
         public static Dictionary<string, int> ProcessRoleExtensionsPrimary;
@@ -59,7 +60,29 @@ namespace ArtContentManager.Static
                 return false;
             }
         }
-  
+
+        public static void BeginTransaction()
+        {
+            _trnActive = ArtContentManager.Static.Database.DB.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
+        }
+
+        public static SqlTransaction ActiveTransaction
+        {
+            get { return _trnActive; }
+        }
+
+        public static void CommitTransaction()
+        {
+            _trnActive.Commit();
+            _trnActive.Dispose();
+        }
+
+        public static void RollbackTransaction()
+        {
+            _trnActive.Rollback();
+            _trnActive.Dispose();
+        }
+
         public static void LoadScanReferenceData()
         {
             LoadProcessRoles();

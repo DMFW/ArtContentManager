@@ -28,8 +28,6 @@ namespace ArtContentManager.Forms
         private BackgroundWorker _scanImportWorker;
 
         private string _formScanRoot;
-
-        private ArtContentManager.DatabaseAgents.dbaScanHistory _dbaScanHistory;
         private Actions.Scan _currentRootScan; 
 
         public frmFileMaintenance()
@@ -58,6 +56,14 @@ namespace ArtContentManager.Forms
                 return;
             }
 
+            string workFolder = Properties.Settings.Default.WorkFolder;
+
+            if (!Static.FileSystemScan.IsWritableDirectory(workFolder))
+            {
+                MessageBoxResult invalidScanPath = System.Windows.MessageBox.Show("The working folder is not a writeable location", "Scan Request Invalid");
+                return;
+            }
+
             _scanCountWorker = new BackgroundWorker();
             _scanCountWorker.WorkerReportsProgress = true;
             _scanCountWorker.WorkerSupportsCancellation = true;
@@ -76,16 +82,14 @@ namespace ArtContentManager.Forms
 
              ArtContentManager.Static.Database.Open();
 
-            _dbaScanHistory = new DatabaseAgents.dbaScanHistory();
-
             _currentRootScan = new Actions.Scan();
 
             _currentRootScan.FolderName = _formScanRoot;
             _currentRootScan.IsRequestRoot = true;
-            _dbaScanHistory.SetLastCompletedScanTime(_currentRootScan);
+            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(_currentRootScan);
 
             _currentRootScan.StartScanTime = DateTime.Now;
-            _dbaScanHistory.RecordStartScan(_currentRootScan);
+            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(_currentRootScan);
 
             Static.FileSystemScan.scanMode = Static.FileSystemScan.ScanMode.smCount;
             Static.FileSystemScan.Scan(_currentRootScan, _scanCountWorker);   
@@ -108,7 +112,7 @@ namespace ArtContentManager.Forms
 
             if (e.Cancelled)
             {
-                _dbaScanHistory.RecordScanAbort(_currentRootScan);
+                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(_currentRootScan);
             }
             else
             {
@@ -137,13 +141,13 @@ namespace ArtContentManager.Forms
 
             if (e.Cancelled)
             {
-                _dbaScanHistory.RecordScanAbort(_currentRootScan);
+                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(_currentRootScan);
             }
             else
             {
                 lblStatusMessage.Content = "Completed processing of " + _currentRootScan.ProcessedFiles + " files";
                 _currentRootScan.CompleteScanTime = DateTime.Now;
-                _dbaScanHistory.RecordScanComplete(_currentRootScan);
+                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
             }
             ArtContentManager.Static.Database.Close();
         }
