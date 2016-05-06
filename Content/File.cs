@@ -47,7 +47,7 @@ namespace ArtContentManager.Content
 
             if (parentFile != null)
             {
-                _RelativeInstallationPath = _ActivePathAndName.Substring(parentFile.WorkingExtractDirectory.Length);
+                _RelativeInstallationPath = _ActivePathAndName.Substring(parentFile.WorkingExtractDirectory.Length + 1);
             }
             else
             {
@@ -58,12 +58,19 @@ namespace ArtContentManager.Content
             _RoleID = DeriveProvisionalRole();
 
             // Must save before analysing content so we have an ID to use as a parent to any children.
-            Save(scanDateTime);
-            
-            if (_Extension == ".zip")
+            bool wasAlreadyRecorded;
+            Save(scanDateTime, out wasAlreadyRecorded);
+
+            // The first time we encounter a zip file we need to analyse it "deeply", but thereafter we only care about noting its current location,
+            // which the above save will have done even when wasAlreadyRecorded is true.
+
+            if (!wasAlreadyRecorded)
             {
-                ArtContentManager.Static.FileSystemScan.InternalZipInstance++;
-                ExtractZipContent();
+                if (_Extension == ".zip")
+                {
+                    ArtContentManager.Static.FileSystemScan.InternalZipInstance++;
+                    ExtractZipContent();
+                }
             }
 
         }
@@ -267,7 +274,7 @@ namespace ArtContentManager.Content
             }
         }
 
-        private void Save(DateTime scanDateTime)
+        private void Save(DateTime scanDateTime, out bool wasAlreadyRecorded)
         {
 
             // Adds new files and also inserts or updates their location instance(s)
@@ -275,9 +282,14 @@ namespace ArtContentManager.Content
 
             ArtContentManager.Static.Database.BeginTransaction();
 
-            if (!ArtContentManager.Static.DatabaseAgents.dbaFile.FileRecorded(this))
+            if (ArtContentManager.Static.DatabaseAgents.dbaFile.FileRecorded(this))
+            {
+                wasAlreadyRecorded = true;
+            }
+            else
             {
                 ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFile(this);
+                wasAlreadyRecorded = false;
             }
 
             ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileLocation(this, scanDateTime);

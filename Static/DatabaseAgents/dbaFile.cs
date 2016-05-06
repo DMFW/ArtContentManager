@@ -14,8 +14,9 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdReadFiles;
         static SqlCommand _cmdInsertFiles;
         static SqlCommand _cmdReadFileLocations;
-        static SqlCommand _cmdReadDefaultRelativeFileLocations;
         static SqlCommand _cmdInsertFileLocations;
+        static SqlCommand _cmdReadDefaultRelativeFileLocations;
+        static SqlCommand _cmdInsertDefaultRelativeLocations;
         static SqlCommand _cmdUpdateFileLocationVerified;
         static SqlCommand _cmdUpdateFileLocationAntiVerified;
 
@@ -121,18 +122,22 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
-            // So this is going to be a little bit complex.
-            // We have to analyse if the parent already has children and if so, then for each of them,
-            // if the checksum matches our file. 
-            // Assuming it does, then we have to check if the path in DefaultRelativeLocations matches
-            // the one in the File.RelativeInstallationPath property.
-            // If all the above is true then we have already recorded the zip sub file DefaultRelativeLocation,
-            // otherwise we need to write a new record.
+            // Assume we need to record (or re-record) the relative location
 
-            // Or something like the above. But it may be a better simplificaton to not invoke this
-            // routine at all for parent files where the check sum is in the database....
+            if (_cmdInsertDefaultRelativeLocations == null)
+            {
+                string insertDefaultRelativeLocationsSQL = "INSERT INTO DefaultRelativeLocations (FileID, RelativeLocation) VALUES (@FileID, @RelativeLocation);";
+                _cmdInsertDefaultRelativeLocations = new SqlCommand(insertDefaultRelativeLocationsSQL, DB);
 
-            // I need to think about this so put on the "To Do" list...
+                _cmdInsertDefaultRelativeLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+                _cmdInsertDefaultRelativeLocations.Parameters.Add("@RelativeLocation", System.Data.SqlDbType.NVarChar, 255);              
+            }
+
+            _cmdInsertDefaultRelativeLocations.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdInsertDefaultRelativeLocations.Parameters["@FileID"].Value = File.ID;
+            _cmdInsertDefaultRelativeLocations.Parameters["@RelativeLocation"].Value = File.RelativeInstallationPath;
+
+            _cmdInsertDefaultRelativeLocations.ExecuteScalar();
 
         }
 

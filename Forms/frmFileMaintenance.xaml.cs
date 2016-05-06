@@ -149,7 +149,6 @@ namespace ArtContentManager.Forms
                 _currentRootScan.CompleteScanTime = DateTime.Now;
                 ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
             }
-            ArtContentManager.Static.Database.Close();
         }
 
         private void frmFileMaintenance_Loaded(object sender, RoutedEventArgs e)

@@ -57,11 +57,11 @@ namespace ArtContentManager.Static.DatabaseAgents
             {
                 string sqlSelectScan = "SELECT TOP 1 Completed FROM ScanHistory WHERE FolderName = @FolderName ORDER BY Completed DESC";
                 _cmdSelectScan = new SqlCommand(sqlSelectScan, DB);
-
                 _cmdSelectScan.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
-                _cmdSelectScan.Parameters["@FolderName"].Value = scan.FolderName;
+               
             }
 
+            _cmdSelectScan.Parameters["@FolderName"].Value = scan.FolderName;
             SqlDataReader rdrScanHistory = _cmdSelectScan.ExecuteReader();
 
             if (rdrScanHistory.HasRows)
@@ -89,8 +89,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             {
                 string sqlUpdateScan = "UPDATE ScanHistory Set TotalFiles = @TotalFiles, NewFiles = @NewFiles WHERE FolderName = @FolderName AND Started = @Started";
 
-                SqlCommand _cmdUpdateScan = new SqlCommand(sqlUpdateScan, DB);
-
+                _cmdUpdateScanInitialFileCounts = new SqlCommand(sqlUpdateScan, DB);
                 _cmdUpdateScanInitialFileCounts.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
                 _cmdUpdateScanInitialFileCounts.Parameters.Add("@Started", System.Data.SqlDbType.DateTime);
                 _cmdUpdateScanInitialFileCounts.Parameters.Add("@TotalFiles", System.Data.SqlDbType.Int);

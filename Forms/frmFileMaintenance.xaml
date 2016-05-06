@@ -16,7 +16,6 @@
                         <Label x:Name="lblStatusMessage" Content="" Height="29" Width="427" FontSize="10"/>
                     </StatusBar>
                     <Button x:Name="btnScanCancel" Content="Cancel Scan" HorizontalAlignment="Left" Height="48" Margin="299,188,0,0" VerticalAlignment="Top" Width="97" Click="btnScanCancel_Click" IsEnabled="False"/>
-                    <CheckBox x:Name="chkDeepScan" Content="Deep Scan" HorizontalAlignment="Left" Height="21" Margin="34,141,0,0" VerticalAlignment="Top" Width="119"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tiFileList" Header="List">
