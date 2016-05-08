@@ -12,20 +12,21 @@ namespace ArtContentManager.Static.DatabaseAgents
     {
   
         static SqlCommand _cmdReadFiles;
-        static SqlCommand _cmdInsertFiles;
+        static SqlCommand _cmdInsertFile;
         static SqlCommand _cmdReadFileLocations;
         static SqlCommand _cmdInsertFileLocations;
         static SqlCommand _cmdReadDefaultRelativeFileLocations;
         static SqlCommand _cmdInsertDefaultRelativeLocations;
         static SqlCommand _cmdUpdateFileLocationVerified;
         static SqlCommand _cmdUpdateFileLocationAntiVerified;
+        static SqlCommand _cmdUpdateFile;
 
-        public static bool FileRecorded(ArtContentManager.Content.File File)
+        public static bool IsFileRecorded(ArtContentManager.Content.File File)
         {
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
             // Set default return value and output parameters
-            bool fileRecorded = false;
+            bool isFileRecorded = false;
 
             if (_cmdReadFiles == null)
             {
@@ -43,57 +44,50 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             while (reader.Read())
             {
-                if (fileRecorded)
+                if (isFileRecorded)
                 {
                     Trace.WriteLine("Multiple file records found with a Checksum match for " + File.Name);
                 }
                 File.ID = (int)reader["FileID"];
-                fileRecorded = true;
+                isFileRecorded = true;
             }
 
             reader.Close();
-            return fileRecorded;
+            return isFileRecorded;
         }
 
         public static void RecordFile(ArtContentManager.Content.File File)
         {
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
-            if (_cmdInsertFiles == null)
+            if (_cmdInsertFile == null)
             {
-                string insertFilesSQL = "INSERT INTO Files (FileName, Extension, Checksum, Size, RoleID, ParentID) VALUES (@FileName, @Extension, @Checksum, @Size, @RoleID, @ParentID) SET @FileID = SCOPE_IDENTITY();";
-                _cmdInsertFiles = new SqlCommand(insertFilesSQL, DB);
+                string insertFileSQL = "INSERT INTO Files (FileName, Extension, Checksum, Size, RoleID, ParentID, ExtractUnreadable) VALUES (@FileName, @Extension, @Checksum, @Size, @RoleID, @ParentID, @ExtractUnreadable) SET @FileID = SCOPE_IDENTITY();";
+                _cmdInsertFile = new SqlCommand(insertFileSQL, DB);
 
-                _cmdInsertFiles.Parameters.Add("@FileName", System.Data.SqlDbType.NVarChar, 255);
-                _cmdInsertFiles.Parameters.Add("@Extension", System.Data.SqlDbType.NVarChar, 10);
-                _cmdInsertFiles.Parameters.Add("@Checksum", System.Data.SqlDbType.NChar, 256);
-                _cmdInsertFiles.Parameters.Add("@Size", System.Data.SqlDbType.Int);
-                _cmdInsertFiles.Parameters.Add("@RoleID", System.Data.SqlDbType.SmallInt);
-                _cmdInsertFiles.Parameters.Add("@ParentID", System.Data.SqlDbType.Int);
-                _cmdInsertFiles.Parameters.Add("@FileID", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+                _cmdInsertFile.Parameters.Add("@FileName", System.Data.SqlDbType.NVarChar, 255);
+                _cmdInsertFile.Parameters.Add("@Extension", System.Data.SqlDbType.NVarChar, 10);
+                _cmdInsertFile.Parameters.Add("@Checksum", System.Data.SqlDbType.NChar, 256);
+                _cmdInsertFile.Parameters.Add("@Size", System.Data.SqlDbType.Int);
+                _cmdInsertFile.Parameters.Add("@RoleID", System.Data.SqlDbType.SmallInt);
+                _cmdInsertFile.Parameters.Add("@ParentID", System.Data.SqlDbType.Int);
+                _cmdInsertFile.Parameters.Add("@ExtractUnreadable", System.Data.SqlDbType.Bit);
+                _cmdInsertFile.Parameters.Add("@FileID", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
 
             }
 
-            _cmdInsertFiles.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
-            _cmdInsertFiles.Parameters["@FileName"].Value = File.Name; 
-            _cmdInsertFiles.Parameters["@Extension"].Value = File.Extension;
-            _cmdInsertFiles.Parameters["@Checksum"].Value = File.Checksum;
-            _cmdInsertFiles.Parameters["@Size"].Value = File.Size;
-            _cmdInsertFiles.Parameters["@RoleID"].Value = File.RoleID;
-            _cmdInsertFiles.Parameters["@ParentID"].Value = File.ParentID;
+            _cmdInsertFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdInsertFile.Parameters["@FileName"].Value = File.Name; 
+            _cmdInsertFile.Parameters["@Extension"].Value = File.Extension;
+            _cmdInsertFile.Parameters["@Checksum"].Value = File.Checksum;
+            _cmdInsertFile.Parameters["@Size"].Value = File.Size;
+            _cmdInsertFile.Parameters["@RoleID"].Value = File.RoleID;
+            _cmdInsertFile.Parameters["@ExtractUnreadable"].Value = File.ExtractUnreadable;
+            _cmdInsertFile.Parameters["@ParentID"].Value = File.ParentID;
 
-            _cmdInsertFiles.ExecuteScalar();
+            _cmdInsertFile.ExecuteScalar();
 
-            File.ID = (int)_cmdInsertFiles.Parameters["@FileID"].Value;
-
-            if (File.ChildFiles != null)
-            {
-                foreach (ArtContentManager.Content.File childFile in File.ChildFiles)
-                {
-                    childFile.ParentID = File.ID;
-                    RecordFile(childFile);
-                }
-            }
+            File.ID = (int)_cmdInsertFile.Parameters["@FileID"].Value;
 
         }
 
@@ -137,7 +131,15 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdInsertDefaultRelativeLocations.Parameters["@FileID"].Value = File.ID;
             _cmdInsertDefaultRelativeLocations.Parameters["@RelativeLocation"].Value = File.RelativeInstallationPath;
 
-            _cmdInsertDefaultRelativeLocations.ExecuteScalar();
+            try
+            {
+                _cmdInsertDefaultRelativeLocations.ExecuteScalar();
+            }
+            catch(System.Data.SqlClient.SqlException e)
+            {
+                // Failure to insert due to a duplicate key is OK because some vendors put a readme file 
+                // which is exactly the same in multiple zip files installing to the same location
+            }
 
         }
 
@@ -146,12 +148,8 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
-            
-
             // Set default return value and output parameters
             bool locationRecorded = false;
-
-
 
             if (_cmdReadFileLocations == null)
             {
@@ -209,6 +207,40 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
             reader.Close();
        }
+
+       public static void UpdateFile(ArtContentManager.Content.File File)
+       {
+            SqlConnection DB = ArtContentManager.Static.Database.DB;
+
+            if (_cmdUpdateFile == null)
+            {
+                string updateFilesSQL = " UPDATE Files Set FileName = @FileName, Extension = @Extension, Checksum = @Checksum, Size = @Size, RoleID = @RoleID, ParentID = @ParentID, ExtractUnreadable = @ExtractUnreadable " +
+                                        " WHERE FileID = @FileID";
+                _cmdUpdateFile = new SqlCommand(updateFilesSQL, DB);
+
+                _cmdUpdateFile.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+                _cmdUpdateFile.Parameters.Add("@FileName", System.Data.SqlDbType.NVarChar, 255);
+                _cmdUpdateFile.Parameters.Add("@Extension", System.Data.SqlDbType.NVarChar, 10);
+                _cmdUpdateFile.Parameters.Add("@Checksum", System.Data.SqlDbType.NChar, 256);
+                _cmdUpdateFile.Parameters.Add("@Size", System.Data.SqlDbType.Int);
+                _cmdUpdateFile.Parameters.Add("@RoleID", System.Data.SqlDbType.SmallInt);
+                _cmdUpdateFile.Parameters.Add("@ParentID", System.Data.SqlDbType.Int);
+                _cmdUpdateFile.Parameters.Add("@ExtractUnreadable", System.Data.SqlDbType.Bit);
+                
+            }
+
+            _cmdUpdateFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdUpdateFile.Parameters["@FileID"].Value = File.ID;
+            _cmdUpdateFile.Parameters["@FileName"].Value = File.Name;
+            _cmdUpdateFile.Parameters["@Extension"].Value = File.Extension;
+            _cmdUpdateFile.Parameters["@Checksum"].Value = File.Checksum;
+            _cmdUpdateFile.Parameters["@Size"].Value = File.Size;
+            _cmdUpdateFile.Parameters["@RoleID"].Value = File.RoleID;
+            _cmdUpdateFile.Parameters["@ParentID"].Value = File.ParentID;
+            _cmdUpdateFile.Parameters["@ExtractUnreadable"].Value = File.ExtractUnreadable;
+
+            _cmdUpdateFile.ExecuteScalar();
+        }
 
        public static void UpdateAntiVerifiedFiles(string location, DateTime scanDateTime)
        {

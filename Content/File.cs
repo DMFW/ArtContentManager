@@ -15,7 +15,7 @@ namespace ArtContentManager.Content
     {
 
         private DateTime _ScanDateTime;
-        private File parentFile;
+        private File _parentFile;
         private int _ParentID;
 
         private string _Name;
@@ -30,6 +30,7 @@ namespace ArtContentManager.Content
 
         private string _RelativeInstallationPath;
         private string _WorkingExtractDirectory;
+        private bool _ExtractUnreadable;
 
         public File(DateTime scanDateTime, File parentFile, FileInfo fi)
         {
@@ -38,12 +39,14 @@ namespace ArtContentManager.Content
             // A "primary" file can be distinguished by having a parent ID of zero.
 
             _ScanDateTime = scanDateTime;
-            _ParentID = parentFile == null ? 0 : parentFile.ID;
+            _parentFile = parentFile;
+            _ParentID = _parentFile == null ? 0 : parentFile.ID;
             _ActivePathAndName = fi.FullName;
             _Name = fi.Name;
             _Extension = Path.GetExtension(fi.FullName);
             _Location = Path.GetDirectoryName(fi.FullName);
             _Size = fi.Length;
+            _ExtractUnreadable = false;
 
             if (parentFile != null)
             {
@@ -129,6 +132,11 @@ namespace ArtContentManager.Content
             set { _ParentID = value; }
         }
 
+        public bool ExtractUnreadable
+        {
+            get { return _ExtractUnreadable; }
+        }
+
         public List<File> ChildFiles
         {
             get { return _ChildFiles;  }
@@ -207,9 +215,16 @@ namespace ArtContentManager.Content
                 CleanZipWorkingRootDirectory();
             }
 
-            ZipFile.ExtractToDirectory(_ActivePathAndName, _WorkingExtractDirectory);
-            WalkDirectoryTree(new DirectoryInfo(_WorkingExtractDirectory));
-
+            try
+            {
+                ZipFile.ExtractToDirectory(_ActivePathAndName, _WorkingExtractDirectory);
+                WalkDirectoryTree(new DirectoryInfo(_WorkingExtractDirectory));
+            }
+            catch(System.IO.IOException e)
+            {
+                _ExtractUnreadable = true;
+                Update();
+            }
         }
 
         private void CleanZipWorkingRootDirectory()
@@ -282,7 +297,7 @@ namespace ArtContentManager.Content
 
             ArtContentManager.Static.Database.BeginTransaction();
 
-            if (ArtContentManager.Static.DatabaseAgents.dbaFile.FileRecorded(this))
+            if (ArtContentManager.Static.DatabaseAgents.dbaFile.IsFileRecorded(this))
             {
                 wasAlreadyRecorded = true;
             }
@@ -295,6 +310,13 @@ namespace ArtContentManager.Content
             ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileLocation(this, scanDateTime);
             ArtContentManager.Static.Database.CommitTransaction();
 
+        }
+
+        private void Update()
+        {
+            ArtContentManager.Static.Database.BeginTransaction();
+            ArtContentManager.Static.DatabaseAgents.dbaFile.UpdateFile(this);
+            ArtContentManager.Static.Database.CommitTransaction();
         }
     }
 }

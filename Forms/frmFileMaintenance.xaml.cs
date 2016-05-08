@@ -80,8 +80,6 @@ namespace ArtContentManager.Forms
         private void scanCountWorker_DoWork(object sender, DoWorkEventArgs e)
         {
 
-             ArtContentManager.Static.Database.Open();
-
             _currentRootScan = new Actions.Scan();
 
             _currentRootScan.FolderName = _formScanRoot;
@@ -112,7 +110,9 @@ namespace ArtContentManager.Forms
 
             if (e.Cancelled)
             {
+                ArtContentManager.Static.Database.BeginTransaction();
                 ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(_currentRootScan);
+                ArtContentManager.Static.Database.CommitTransaction();
             }
             else
             {
@@ -138,6 +138,7 @@ namespace ArtContentManager.Forms
             _scanImportWorker = null;
             btnScan.IsEnabled = true;
             btnScanCancel.IsEnabled = false;
+            ArtContentManager.Static.Database.BeginTransaction();
 
             if (e.Cancelled)
             {
@@ -145,10 +146,12 @@ namespace ArtContentManager.Forms
             }
             else
             {
-                lblStatusMessage.Content = "Completed processing of " + _currentRootScan.ProcessedFiles + " files";
+                lblStatusMessage.Content = "Completed scanning of " + _currentRootScan.TotalFiles + " files [" + _currentRootScan.ProcessedFiles + " new imports]";
                 _currentRootScan.CompleteScanTime = DateTime.Now;
                 ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
             }
+            ArtContentManager.Static.Database.CommitTransaction();
+
         }
 
         private void frmFileMaintenance_Loaded(object sender, RoutedEventArgs e)

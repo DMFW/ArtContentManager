@@ -9,6 +9,7 @@ namespace ArtContentManager.Actions
     internal class Scan
     {
 
+        private int _ID;
         private string _folderName;
         private bool _isRequestRoot;
         private DateTime _startScanTime;
@@ -23,6 +24,12 @@ namespace ArtContentManager.Actions
         {
             _abortScanTime = null;
             _completeScanTime = null;
+        }
+
+        public int ID
+        {
+            get { return _ID; }
+            set { _ID = value; }
         }
 
         public string FolderName
@@ -78,6 +85,5 @@ namespace ArtContentManager.Actions
             get { return _processedFiles; }
             set { _processedFiles = value; }
         }
-
     }
 }

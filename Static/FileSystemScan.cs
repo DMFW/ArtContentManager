@@ -16,18 +16,17 @@ namespace ArtContentManager.Static
         public enum ScanMode { smCount, smImport };
         public static ScanMode scanMode = ScanMode.smCount;
         private static int _internalZipInstance;
+        private static Dictionary<string, Actions.Scan> _folderScan;
 
         public static void Scan(Actions.Scan rootScan, BackgroundWorker bw)
         {
 
-            Actions.Scan activeScan;
             Actions.Scan subScan;
+            Actions.Scan activeScan;
             DirectoryInfo dirInfo;
             Database.LoadScanReferenceData();
            
             string phase;
-
-            Database.LoadScanReferenceData();
 
             switch (scanMode)
             {
@@ -36,6 +35,8 @@ namespace ArtContentManager.Static
                     rootScan.TotalFiles = 0;
                     rootScan.NewFiles = 0;
                     rootScan.ProcessedFiles = 0;
+                    _folderScan = new Dictionary<string, Actions.Scan>();
+                    _folderScan.Add(rootScan.FolderName, rootScan);
                     break;
                 case ScanMode.smImport :
                     phase = "importing";
@@ -50,6 +51,7 @@ namespace ArtContentManager.Static
             ScanProgress.DirectioryName = "";
             ScanProgress.FileName = "";
             ScanProgress.Message = "Scan starting for " + rootScan.FolderName;
+            activeScan = rootScan;
             bw.ReportProgress(ScanProgress.CompletionPct);
 
             // Data structure to hold names of subfolders to be 
@@ -120,19 +122,26 @@ namespace ArtContentManager.Static
                     continue;
                 }
 
-                if (rootScan.FolderName == currentDir)
+                if (rootScan.FolderName != currentDir)
                 {
-                    activeScan = rootScan;
-                    subScan = null;
-                }
-                else
-                {
-                    subScan = new Actions.Scan();
-                    subScan.FolderName = currentDir;
-                    subScan.StartScanTime = rootScan.StartScanTime; // Inherit this rather than using true time.
-                    subScan.IsRequestRoot = false;
-                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(subScan);
-                    activeScan = subScan;
+                    switch (scanMode)
+                    {
+                        case ScanMode.smCount:
+                            subScan = new Actions.Scan();
+                            subScan.FolderName = currentDir;
+                            subScan.StartScanTime = DateTime.Now;
+                            subScan.IsRequestRoot = false;
+                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(subScan);
+                            _folderScan.Add(subScan.FolderName, subScan);
+                            activeScan = subScan;
+                            break;
+
+                        case ScanMode.smImport:
+                            Debug.Assert(_folderScan.ContainsKey(currentDir.ToUpperInvariant())); // Indicates either a logic error or that someone has been adding folders between the counting and import phases. Just don't do that OK? 
+                            subScan = _folderScan[currentDir.ToUpperInvariant()];
+                            activeScan = subScan;
+                            break;
+                    }
                 }
 
                 newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
@@ -152,10 +161,10 @@ namespace ArtContentManager.Static
                         // The root scan will be updated outside the loop at the end of the process
                         if (activeScan != rootScan)
                         {
-                            rootScan.TotalFiles += subScan.TotalFiles;
-                            rootScan.NewFiles += subScan.NewFiles;
-                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(subScan);
-                            ScanProgress.Message = "Directory " + currentDir + " [+" + subScan.NewFiles + " (" + subScan.TotalFiles + ")] -> " + rootScan.NewFiles + " (" + rootScan.TotalFiles + ")";
+                            rootScan.TotalFiles += activeScan.TotalFiles;
+                            rootScan.NewFiles += activeScan.NewFiles;
+                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(activeScan);
+                            ScanProgress.Message = "Directory " + currentDir + " [+" + activeScan.NewFiles + " (" + activeScan.TotalFiles + ")] -> " + rootScan.NewFiles + " (" + rootScan.TotalFiles + ")";
                         }
 
                         ScanProgress.CurrentFileCount = rootScan.TotalFiles;
@@ -188,6 +197,10 @@ namespace ArtContentManager.Static
                             {
                                 ScanProgress.Message = "Scan cancelled before file " + file.Name + " in the " + phase + " phase";
                                 bw.ReportProgress(ScanProgress.CompletionPct);
+                                if (activeScan != rootScan)
+                                {
+                                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(activeScan);
+                                }
                                 return;
                             }
 
@@ -236,11 +249,18 @@ namespace ArtContentManager.Static
                     dirs.Push(str);
             }
 
-            Database.UnloadScanReferenceData(); // Just to free up some memory
-
-            if (scanMode == ScanMode.smCount)
+            switch (scanMode)
             {
-                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.UpdateInitialFileCounts(rootScan);
+                case ScanMode.smCount:
+                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.UpdateInitialFileCounts(rootScan);
+                    break;
+                case ScanMode.smImport:
+                    // Free up any static memory structures which are only needed by the scan
+                    // This includes the dictionary of scans we persist between the count and import phases
+                    Database.UnloadScanReferenceData();
+                    _folderScan = null;
+                    break;
+
             }
         }
 

@@ -71,6 +71,7 @@
     </Compile>
     <Compile Include="Forms\SkinableWindow.cs" />
     <Compile Include="Static\Database.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaSettings.cs" />
     <Compile Include="Static\FileSystemScan.cs" />
     <Compile Include="Static\Log.cs" />
     <Compile Include="Static\ScanProgress.cs" />

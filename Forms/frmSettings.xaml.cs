@@ -41,9 +41,13 @@ namespace ArtContentManager.Forms
             selectedURI = ((ArtContentManager.Content.Skin)cboSkin.SelectedItem).URIPath;
             skinURI = new Uri(selectedURI, UriKind.Relative);
 
-            foreach (SkinableWindow openWindow in Application.Current.Windows)
+            foreach (Window openWindow in Application.Current.Windows)
             {
-                openWindow.ApplySkin(skinURI);
+                if (openWindow is SkinableWindow)
+                {
+                    SkinableWindow openSkinableWindow = (SkinableWindow)openWindow;
+                    openSkinableWindow.ApplySkin(skinURI);
+                }
             }
 
             Properties.Settings.Default.CurrentSkinUri = selectedURI;

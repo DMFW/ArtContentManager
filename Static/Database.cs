@@ -15,6 +15,7 @@ namespace ArtContentManager.Static
 
         private static SqlConnection _DB;
         private static SqlTransaction _trnActive;
+        private static int _trnLevel = 0;
 
         // Static dictionaries loaded for performance purposes during scanning 
         public static Dictionary<string, int> ProcessRoleExtensionsPrimary;
@@ -63,7 +64,15 @@ namespace ArtContentManager.Static
 
         public static void BeginTransaction()
         {
-            _trnActive = ArtContentManager.Static.Database.DB.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
+            if (_trnActive != null)
+            {
+                Trace.Write("Attempting to start new transation when the previous one is not disposed of");
+            }
+            else
+            {
+                _trnLevel++;
+                _trnActive = ArtContentManager.Static.Database.DB.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
+            }
         }
 
         public static SqlTransaction ActiveTransaction
@@ -75,12 +84,16 @@ namespace ArtContentManager.Static
         {
             _trnActive.Commit();
             _trnActive.Dispose();
+            _trnActive = null;
+            _trnLevel--;
         }
 
         public static void RollbackTransaction()
         {
             _trnActive.Rollback();
             _trnActive.Dispose();
+            _trnActive = null;
+            _trnLevel--;
         }
 
         public static void LoadScanReferenceData()
@@ -194,6 +207,9 @@ namespace ArtContentManager.Static
 
                 string sqlScanHistory = "TRUNCATE TABLE ScanHistory";
                 SqlCommand cmdScanHistory = new SqlCommand(sqlScanHistory, _DB);
+                cmdScanHistory.ExecuteNonQuery();
+
+                cmdScanHistory.CommandText = "DBCC CHECKIDENT (ScanHistory,RESEED, 0)";
                 cmdScanHistory.ExecuteNonQuery();
 
                 string sqlArtProductCredits = "TRUNCATE TABLE ArtProductCredits";
