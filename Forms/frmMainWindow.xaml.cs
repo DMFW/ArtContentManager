@@ -33,6 +33,8 @@ namespace ArtContentManager.Forms
             if (Static.Database.Open())
             {
                 lblStatus.Content = "Database opened successfully.";
+                Static.DatabaseAgents.dbaSettings.LoadSettings();
+                ApplySkinViaSetting();
             }
             else
             {

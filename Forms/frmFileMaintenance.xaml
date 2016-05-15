@@ -16,6 +16,7 @@
                         <Label x:Name="lblStatusMessage" Content="" Height="29" Width="427" FontSize="10"/>
                     </StatusBar>
                     <Button x:Name="btnScanCancel" Content="Cancel Scan" HorizontalAlignment="Left" Height="48" Margin="299,188,0,0" VerticalAlignment="Top" Width="97" Click="btnScanCancel_Click" IsEnabled="False"/>
+                    <Button x:Name="btnAutoProducts" Content="Auto Products" HorizontalAlignment="Left" Height="52" Margin="36,259,0,0" VerticalAlignment="Top" Width="95" Click="btnAutoProducts_Click"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tiFileList" Header="List">

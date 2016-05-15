@@ -282,8 +282,16 @@ namespace ArtContentManager.Static
                 SqlCommand cmdDefaultRelativeLocations = new SqlCommand(sqlDefaultRelativeLocations, _DB);
                 cmdDefaultRelativeLocations.ExecuteNonQuery();
 
-                string sqlFilesTruncate = "DELETE FROM Files";
-                SqlCommand cmdFiles = new SqlCommand(sqlFilesTruncate, _DB);
+                string sqlFileImagesTruncate = "TRUNCATE FileImages";
+                SqlCommand cmdFileImagesTruncate = new SqlCommand(sqlFileImagesTruncate, _DB);
+                cmdFileImagesTruncate.ExecuteNonQuery();
+
+                string sqlFileTextNotesTruncate = "TRUNCATE FileTextNotes";
+                SqlCommand cmdFileTextNotesTruncate = new SqlCommand(sqlFileTextNotesTruncate, _DB);
+                cmdFileTextNotesTruncate.ExecuteNonQuery();
+
+                string sqlFilesDelete = "DELETE FROM Files";
+                SqlCommand cmdFiles = new SqlCommand(sqlFilesDelete, _DB);
                 cmdFiles.ExecuteNonQuery();
 
                 cmdFiles.CommandText = "DBCC CHECKIDENT (Files,RESEED, 0)";

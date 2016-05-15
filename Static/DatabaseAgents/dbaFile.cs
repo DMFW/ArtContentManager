@@ -36,7 +36,6 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdReadFiles.Parameters.Add("@Checksum", System.Data.SqlDbType.NChar, 256);
             }
 
-            _cmdReadFiles.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
             _cmdReadFiles.Parameters["@FileName"].Value = File.Name;
             _cmdReadFiles.Parameters["@Checksum"].Value = File.Checksum;
 

@@ -205,7 +205,7 @@ namespace ArtContentManager.Content
         private void ExtractZipContent()
         {
 
-            _WorkingExtractDirectory = Properties.Settings.Default.WorkFolder + @"\ZipFile" + ArtContentManager.Static.FileSystemScan.InternalZipInstance;
+            _WorkingExtractDirectory = Static.DatabaseAgents.dbaSettings.Setting("WorkFolder").Item1 + @"\ZipFile" + ArtContentManager.Static.FileSystemScan.InternalZipInstance;
             _ChildFiles = new List<File>();
 
             if (ArtContentManager.Static.FileSystemScan.InternalZipInstance == 1)
@@ -229,7 +229,7 @@ namespace ArtContentManager.Content
 
         private void CleanZipWorkingRootDirectory()
         {
-            System.IO.DirectoryInfo di = new DirectoryInfo(Properties.Settings.Default.WorkFolder);
+            System.IO.DirectoryInfo di = new DirectoryInfo(Static.DatabaseAgents.dbaSettings.Setting("WorkFolder").Item1);
 
             foreach (FileInfo file in di.GetFiles())
             {

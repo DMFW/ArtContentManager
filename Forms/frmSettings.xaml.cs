@@ -19,18 +19,28 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmSettings : SkinableWindow
     {
+        private bool showingInitialSettings;
         private ArtContentManager.Content.Skin skinSetting = new ArtContentManager.Content.Skin();
 
         public frmSettings()
         {
+            showingInitialSettings = true;
+
             DataContext = skinSetting;
-            skinSetting.URIPath = Properties.Settings.Default.CurrentSkinUri;
+            skinSetting.URIPath = Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri").Item1;
             InitializeComponent();
 
-            if (Properties.Settings.Default.WorkFolder != null)
+            if (Static.DatabaseAgents.dbaSettings.Setting("WorkFolder") != null)
             {
-                txtWorkFolder.Text = Properties.Settings.Default.WorkFolder;
+                txtWorkFolder.Text = Static.DatabaseAgents.dbaSettings.Setting("WorkFolder").Item1;
             }
+
+            if (Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength") != null)
+            {
+                txtProductPatternMatchLength.Text = Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength").Item2.ToString();
+            }
+
+            showingInitialSettings = false;
         }
 
         private void btnApplySkin_Click(object sender, RoutedEventArgs e)
@@ -50,7 +60,7 @@ namespace ArtContentManager.Forms
                 }
             }
 
-            Properties.Settings.Default.CurrentSkinUri = selectedURI;
+            Static.DatabaseAgents.dbaSettings.SaveSetting("CurrentSkinUri", new Tuple<string, int>(selectedURI, 0));
 
         }
 
@@ -78,11 +88,27 @@ namespace ArtContentManager.Forms
 
         private void txtWorkFolder_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (Static.FileSystemScan.IsWritableDirectory(txtWorkFolder.Text))
+            if (!showingInitialSettings)
             {
-                Properties.Settings.Default.WorkFolder = txtWorkFolder.Text;
+                if (Static.FileSystemScan.IsWritableDirectory(txtWorkFolder.Text))
+                {
+                    Static.DatabaseAgents.dbaSettings.SaveSetting("WorkFolder", new Tuple<string, int>(txtWorkFolder.Text, 0));
+                }
             }
         }
 
+        private void txtProductPatternMatchLength_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            int productPatternMatchLength;
+
+            if (!showingInitialSettings)
+            {
+                if (Int32.TryParse(txtProductPatternMatchLength.Text, out productPatternMatchLength))
+                {
+                    Static.DatabaseAgents.dbaSettings.SaveSetting("ProductPatternMatchLength", new Tuple<string, int>("", productPatternMatchLength));
+                }
+            }
+
+        }
     }
 }

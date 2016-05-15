@@ -56,7 +56,7 @@ namespace ArtContentManager.Forms
                 return;
             }
 
-            string workFolder = Properties.Settings.Default.WorkFolder;
+            string workFolder = Static.DatabaseAgents.dbaSettings.Setting("WorkFolder").Item1;
 
             if (!Static.FileSystemScan.IsWritableDirectory(workFolder))
             {
@@ -156,12 +156,12 @@ namespace ArtContentManager.Forms
 
         private void frmFileMaintenance_Loaded(object sender, RoutedEventArgs e)
         {
-            txtScanRoot.Text = Properties.Settings.Default.LastScanPath;
+            txtScanRoot.Text = Static.DatabaseAgents.dbaSettings.Setting("LastScanPath").Item1;
         }
 
         private void txtScanRoot_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Properties.Settings.Default.LastScanPath = txtScanRoot.Text;
+            Static.DatabaseAgents.dbaSettings.SaveSetting("LastScanPath", new Tuple<string, int>(txtScanRoot.Text, 0));
             _formScanRoot = txtScanRoot.Text;
         }
 
@@ -178,5 +178,11 @@ namespace ArtContentManager.Forms
             }
         }
 
+        private void btnAutoProducts_Click(object sender, RoutedEventArgs e)
+        {
+            Static.DatabaseAgents.dbaProduct.AutoAssignProducts();
+        }
+
+        
     }
  }

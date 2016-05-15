@@ -25,8 +25,6 @@ namespace ArtContentManager.Static.DatabaseAgents
             {
                 string sqlSelectSettings = "SELECT * FROM Settings";
                 _cmdSelectSettings = new SqlCommand(sqlSelectSettings, DB);
-                _cmdSelectSettings.Parameters.Add("@FolderName", System.Data.SqlDbType.NVarChar, 255);
-
             }
 
             SqlDataReader rdrSettings = _cmdSelectSettings.ExecuteReader();
@@ -35,7 +33,13 @@ namespace ArtContentManager.Static.DatabaseAgents
             {
                 while (rdrSettings.Read())
                 {
-                    _Settings.Add(rdrSettings["SettingName"].ToString(), new Tuple<string, int>(rdrSettings["SettingTextValue"].ToString(), (int)rdrSettings["SettingIntValue"]));
+
+                    string settingTextValue = rdrSettings["SettingTextValue"].ToString();
+                    int settingIntValue;
+                    if (Int32.TryParse(rdrSettings["SettingIntValue"].ToString(), out settingIntValue)) { }
+                    else { settingIntValue = 0; }
+
+                    _Settings.Add(rdrSettings["SettingName"].ToString(), new Tuple<string, int>(settingTextValue, settingIntValue));
                 }
             }
 
@@ -59,9 +63,9 @@ namespace ArtContentManager.Static.DatabaseAgents
                     _cmdSaveSetting.Parameters.Add("@SettingIntValue", System.Data.SqlDbType.Int);
                 }
 
-                _cmdSaveSetting.Parameters["SettingName"].Value = SettingName;
-                _cmdSaveSetting.Parameters["SettingTextValue"].Value = SettingValues.Item1;
-                _cmdSaveSetting.Parameters["SettingIntValue"].Value = SettingValues.Item2;
+                _cmdSaveSetting.Parameters["@SettingName"].Value = SettingName;
+                _cmdSaveSetting.Parameters["@SettingTextValue"].Value = SettingValues.Item1;
+                _cmdSaveSetting.Parameters["@SettingIntValue"].Value = SettingValues.Item2;
 
                 ArtContentManager.Static.Database.BeginTransaction();
                 _cmdSaveSetting.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
@@ -96,6 +100,11 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static Tuple<string,int> Setting(string SettingName)
         {
+            if (_Settings == null)
+            { 
+                return null;
+                }
+
             if (_Settings.ContainsKey(SettingName))
             {
                 return _Settings[SettingName];

@@ -11,8 +11,16 @@ namespace ArtContentManager.Forms
     {
         public SkinableWindow()
         {
-            Uri skinURI = new Uri(Properties.Settings.Default.CurrentSkinUri, UriKind.Relative);
-            ApplySkin(skinURI);
+            ApplySkinViaSetting();
+        }
+
+        public void ApplySkinViaSetting()
+        {
+            if (Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri") != null)
+            {
+                Uri skinURI = new Uri(Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri").Item1, UriKind.Relative);
+                ApplySkin(skinURI);
+            }
         }
 
         public void ApplySkin(Uri skinDictionaryUri)
