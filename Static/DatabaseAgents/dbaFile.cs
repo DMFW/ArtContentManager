@@ -44,6 +44,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdReadFiles.Parameters["@FileName"].Value = File.Name;
             _cmdReadFiles.Parameters["@Checksum"].Value = File.Checksum;
 
+            _cmdReadFiles.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
             SqlDataReader reader = _cmdReadFiles.ExecuteReader();
 
             while (reader.Read())
@@ -215,7 +216,7 @@ namespace ArtContentManager.Static.DatabaseAgents
        public static void RecordFileTextNotes(ArtContentManager.Content.File File)
        {
 
-            if (File.Extension != "txt")
+            if (File.Extension != ".txt")
             {
                 Trace.Write("Bypassing non-text file in document folder for text file save");
                 return;
@@ -241,7 +242,19 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdInsertFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
             _cmdInsertFileTextNotes.Parameters["@FileID"].Value = File.ID;
             _cmdInsertFileTextNotes.Parameters["@Text"].Value = textNotes;
-            _cmdInsertFile.ExecuteScalar();
+
+            try
+            {
+                _cmdInsertFileTextNotes.ExecuteScalar();
+            }
+            catch(SqlException ex)
+            {
+                if (ex.Number == 2627)
+                {
+                    // Ignore duplicate inserts
+                    // This can happen if exactly the same licence or read me file is stored in multiple zip files.
+                }
+            }
         }
 
         public static void UpdateFile(ArtContentManager.Content.File File)

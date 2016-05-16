@@ -27,7 +27,7 @@ namespace ArtContentManager.Static
             Database.LoadScanReferenceData();
            
             string phase;
-
+           
             switch (scanMode)
             {
                 case ScanMode.smCount :
@@ -148,9 +148,6 @@ namespace ArtContentManager.Static
 
                 newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
 
-                activeScan.TotalFiles += dirInfo.GetFiles().Length;
-                activeScan.NewFiles += newFiles.Length;
-
                 // Perform the required action on each file here. 
                 // Modify this block to perform your required task.
 
@@ -158,7 +155,10 @@ namespace ArtContentManager.Static
                 {
          
                     case ScanMode.smCount:
-                        
+
+                        activeScan.TotalFiles += dirInfo.GetFiles().Length;
+                        activeScan.NewFiles += newFiles.Length;
+
                         // When we are not the root, roll subtotals into the root total and add the sub scan
                         // The root scan will be updated outside the loop at the end of the process
                         if (activeScan != rootScan)

@@ -282,11 +282,11 @@ namespace ArtContentManager.Static
                 SqlCommand cmdDefaultRelativeLocations = new SqlCommand(sqlDefaultRelativeLocations, _DB);
                 cmdDefaultRelativeLocations.ExecuteNonQuery();
 
-                string sqlFileImagesTruncate = "TRUNCATE FileImages";
+                string sqlFileImagesTruncate = "TRUNCATE TABLE FileImages";
                 SqlCommand cmdFileImagesTruncate = new SqlCommand(sqlFileImagesTruncate, _DB);
                 cmdFileImagesTruncate.ExecuteNonQuery();
 
-                string sqlFileTextNotesTruncate = "TRUNCATE FileTextNotes";
+                string sqlFileTextNotesTruncate = "TRUNCATE TABLE FileTextNotes";
                 SqlCommand cmdFileTextNotesTruncate = new SqlCommand(sqlFileTextNotesTruncate, _DB);
                 cmdFileTextNotesTruncate.ExecuteNonQuery();
 
