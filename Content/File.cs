@@ -308,6 +308,14 @@ namespace ArtContentManager.Content
             }
 
             ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileLocation(this, scanDateTime);
+
+            if (this.Location.Contains("Documentation") & this._ParentID != 0)
+            {
+                // We are a child file (i.e. within a zip or some such) and we are in a document location
+                // Attempt to pull the document into the database.
+                ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileTextNotes(this);
+            }
+
             ArtContentManager.Static.Database.CommitTransaction();
 
         }

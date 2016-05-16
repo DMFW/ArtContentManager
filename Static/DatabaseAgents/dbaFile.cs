@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,8 @@ namespace ArtContentManager.Static.DatabaseAgents
     static class dbaFile
     {
   
+        // Handles database related updates and reads for the File and closely related extension objects
+
         static SqlCommand _cmdReadFiles;
         static SqlCommand _cmdInsertFile;
         static SqlCommand _cmdReadFileLocations;
@@ -20,6 +23,8 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdUpdateFileLocationVerified;
         static SqlCommand _cmdUpdateFileLocationAntiVerified;
         static SqlCommand _cmdUpdateFile;
+
+        static SqlCommand _cmdInsertFileTextNotes;
 
         public static bool IsFileRecorded(ArtContentManager.Content.File File)
         {
@@ -207,7 +212,39 @@ namespace ArtContentManager.Static.DatabaseAgents
             reader.Close();
        }
 
-       public static void UpdateFile(ArtContentManager.Content.File File)
+       public static void RecordFileTextNotes(ArtContentManager.Content.File File)
+       {
+
+            if (File.Extension != "txt")
+            {
+                Trace.Write("Bypassing non-text file in document folder for text file save");
+                return;
+            }
+
+            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            string textNotes;
+
+            if (_cmdInsertFileTextNotes == null)
+            {
+                string insertFileTextNotesSQL = "INSERT INTO FileTextNotes (FileID, Text) VALUES (@FileID, @Text);";
+                _cmdInsertFileTextNotes = new SqlCommand(insertFileTextNotesSQL, DB);
+                _cmdInsertFileTextNotes.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+                _cmdInsertFileTextNotes.Parameters.Add("@Text", System.Data.SqlDbType.NVarChar);
+               
+            }
+
+            using (var streamReader = new StreamReader(File.ActivePathAndName, Encoding.UTF8))
+            {
+                textNotes = streamReader.ReadToEnd();
+            }
+
+            _cmdInsertFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdInsertFileTextNotes.Parameters["@FileID"].Value = File.ID;
+            _cmdInsertFileTextNotes.Parameters["@Text"].Value = textNotes;
+            _cmdInsertFile.ExecuteScalar();
+        }
+
+        public static void UpdateFile(ArtContentManager.Content.File File)
        {
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 

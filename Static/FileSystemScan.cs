@@ -67,7 +67,9 @@ namespace ArtContentManager.Static
 
             while (dirs.Count > 0)
             {
+                
                 string currentDir = dirs.Pop();
+
                 FileInfo[] newFiles;
 
                 if (bw.CancellationPending)
