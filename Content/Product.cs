@@ -15,6 +15,7 @@ namespace ArtContentManager.Content
         private string _Name;
         private Image _Thumbnail;
         private string _ReadMe;
+        private bool _IsPrimary;
 
         private List<File> _ComponentFiles; // Just the parent files
 
@@ -46,6 +47,12 @@ namespace ArtContentManager.Content
         {
             get { return _ReadMe; }
             set { _ReadMe = value; }
+        }
+
+        public bool IsPrimary
+        {
+            get { return _IsPrimary; }
+            set { _IsPrimary = value; }
         }
 
     }

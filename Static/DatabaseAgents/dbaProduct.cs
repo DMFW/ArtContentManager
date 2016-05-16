@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
 
 namespace ArtContentManager.Static.DatabaseAgents
@@ -13,6 +14,7 @@ namespace ArtContentManager.Static.DatabaseAgents
     {
         static SqlCommand _cmdSelectUnassignedParentFiles;
         static SqlCommand _cmdAddProduct;
+        static SqlCommand _cmdAddProductFile;
 
         public static void AutoAssignProducts()
         {
@@ -23,7 +25,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             string lastPattern;
             string thisPattern;
             bool patternMatch;
-            int productID;
+            ArtContentManager.Content.Product product = null;
 
             // Assign products to anything that hasn't yet been assigned
 
@@ -50,7 +52,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             while (reader.Read())
             {
                 patternMatch = false;
-                int ID = (int)reader["FileID"];
+                int fileID = (int)reader["FileID"];
                 thisFileName = reader["FileName"].ToString();
 
                 if (lastFileName.Length > patternMatchLength)
@@ -95,21 +97,28 @@ namespace ArtContentManager.Static.DatabaseAgents
                     }
                 }
 
-                if (patternMatch == false)
+                if (patternMatch == true)
                 {
-                    productID = RecordProduct();
+                    AddProductFile(product, fileID, thisFileName);
+                }
+                else
+                {
+                    product = new Content.Product();
+                    product.Name = thisPattern;
+                    RecordProduct(product);
+                    AddProductFile(product, fileID, thisFileName);
                 }
             }
         }
 
 
-        public static int RecordProduct(ArtContentManager.Content.Product Product)
+        public static void RecordProduct(ArtContentManager.Content.Product Product)
         {
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
             if (_cmdAddProduct == null)
             {
-                string insertProductSQL = "INSERT INTO Products (FileName, Extension, Checksum, Size, RoleID, ParentID, ExtractUnreadable) VALUES (@FileName, @Extension, @Checksum, @Size, @RoleID, @ParentID, @ExtractUnreadable) SET @ProductID = SCOPE_IDENTITY();";
+                string insertProductSQL = "INSERT INTO Products (CreatorID, ProductName, ProductThumbnail, ReadMe, IsPrimary) VALUES (@CreatorID, @ProductName, @ProductThumbnail, @ReadMe, @IsPrimary) SET @ProductID = SCOPE_IDENTITY();";
                 _cmdAddProduct = new SqlCommand(insertProductSQL, DB);
                 _cmdAddProduct.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
                 _cmdAddProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.Int);
@@ -123,15 +132,51 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdAddProduct.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
             _cmdAddProduct.Parameters["@CreatorID"].Value = Product.CreatorID;
             _cmdAddProduct.Parameters["@ProductName"].Value = Product.Name;
-            _cmdAddProduct.Parameters["@ProductThumbnail"].Value = File.Checksum;
-            _cmdAddProduct.Parameters["@Size"].Value = File.Size;
-            _cmdAddProduct.Parameters["@RoleID"].Value = File.RoleID;
-            _cmdAddProduct.Parameters["@ExtractUnreadable"].Value = File.ExtractUnreadable;
-            _cmdAddProduct.Parameters["@ParentID"].Value = File.ParentID;
+            _cmdAddProduct.Parameters["@ProductThumbnail"].Value = Product.Thumbnail;
+            _cmdAddProduct.Parameters["@ReadMe"].Value = Product.ReadMe;
+            _cmdAddProduct.Parameters["@IsPrimary"].Value = Product.IsPrimary;
 
             _cmdAddProduct.ExecuteScalar();
 
             Product.ID = (int)_cmdAddProduct.Parameters["@ProductID"].Value;
+        }
+
+        public static void AddProductFile(ArtContentManager.Content.Product Product, int fileID, string fileName)
+        {
+
+            int installerSeq;
+
+            SqlConnection DB = ArtContentManager.Static.Database.DB;
+
+            if (_cmdAddProductFile == null)
+            {
+                string insertProductFileSQL = "INSERT INTO ProductFiles (ProductID, InstallerSequence, FileID) VALUES (@ProductID, @InstallerSequence, @FileID)";
+                _cmdAddProductFile = new SqlCommand(insertProductFileSQL, DB);
+
+                _cmdAddProductFile.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+                _cmdAddProductFile.Parameters.Add("@InstallerSequence", System.Data.SqlDbType.SmallInt);
+                _cmdAddProductFile.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+            }
+
+            Regex objNameSetPattern = new Regex("([0-9]){1,3}(?=(of|OF)([0-9]){1,3})");
+
+            if (objNameSetPattern.IsMatch(fileName))
+            {
+                Match patternMatch = objNameSetPattern.Match(fileName);
+                installerSeq = Int32.Parse(patternMatch.ToString());
+            }
+            else
+            {
+                installerSeq = 0;
+            }
+
+            _cmdAddProductFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdAddProductFile.Parameters["@ProductID"].Value = Product.CreatorID;
+            _cmdAddProductFile.Parameters["@InstallerSequence"].Value = installerSeq;
+            _cmdAddProductFile.Parameters["@FileID"].Value = fileID;
+
+            _cmdAddProductFile.ExecuteScalar();
+
         }
 
     }
