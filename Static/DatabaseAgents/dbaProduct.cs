@@ -31,6 +31,8 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
+            Static.Database.BeginTransaction();
+
             if (Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength") == null)
             {
                 MessageBox.Show("Auto assignment requires a product pattern match length to be defined in the settings.", "Auto assign products", MessageBoxButton.OKCancel);
@@ -47,6 +49,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdSelectUnassignedParentFiles = new SqlCommand(sqlAutoProducts, DB);
             }
 
+            _cmdSelectUnassignedParentFiles.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
             SqlDataReader reader = _cmdSelectUnassignedParentFiles.ExecuteReader();
 
             while (reader.Read())
@@ -103,12 +106,48 @@ namespace ArtContentManager.Static.DatabaseAgents
                 }
                 else
                 {
+
+                    // Initiate a new transaction on change of product
+
+                    Static.Database.CommitTransaction();
+                    Static.Database.BeginTransaction();
+
+                    Content.File parentFile = new Content.File(fileID);
+                    Content.FileTextData fileTextData = dbaFile.DeriveFileTextData(parentFile);
                     product = new Content.Product();
-                    product.Name = thisPattern;
+
+                    product.Name = thisPattern; // Default the product name to the pattern match but we might be able to do better if we can process a read me file
+                    if (fileTextData != null)
+                    {
+                        if (fileTextData.ProductName != String.Empty)
+                        {
+                            product.Name = fileTextData.ProductName; // Better product name...
+                        }
+
+                        if (fileTextData.VendorNameCode != String.Empty)
+                        {
+                            Content.Creator creator = new Content.Creator();
+                            creator.CreatorNameCode = fileTextData.VendorNameCode;
+                            if (!dbaContentCreators.IsCreatorRecorded(creator))
+                            {
+                                creator.CreatorDirectoryName = fileTextData.VendorNameCode;
+                                creator.CreatorTrueName = fileTextData.VendorName;
+                                dbaContentCreators.RecordContentCreator(creator);
+                                product.CreatorID = creator.ID;
+                            }
+                        }
+
+                    }
+                    
                     RecordProduct(product);
                     AddProductFile(product, fileID, thisFileName);
                 }
             }
+
+            // Final commit for the last product
+            Static.Database.CommitTransaction();
+            MessageBox.Show("Completed automatic assignment of products");
+
         }
 
 
@@ -171,13 +210,12 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
 
             _cmdAddProductFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
-            _cmdAddProductFile.Parameters["@ProductID"].Value = Product.CreatorID;
+            _cmdAddProductFile.Parameters["@ProductID"].Value = Product.ID;
             _cmdAddProductFile.Parameters["@InstallerSequence"].Value = installerSeq;
             _cmdAddProductFile.Parameters["@FileID"].Value = fileID;
 
             _cmdAddProductFile.ExecuteScalar();
 
         }
-
     }
 }

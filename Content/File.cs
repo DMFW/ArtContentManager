@@ -78,34 +78,50 @@ namespace ArtContentManager.Content
 
         }
 
+        public File(int fileID)
+        {
+            // The constructor for known files.
+
+            _ID = fileID;
+
+            ArtContentManager.Static.DatabaseAgents.dbaFile.Load(this);
+
+        }
+
         public string ActivePathAndName
         {
             get { return _ActivePathAndName; }
+            set { _ActivePathAndName = value; }
         }
 
         public string RelativeInstallationPath
         {
             get { return _RelativeInstallationPath; }
+            set { _RelativeInstallationPath = value; }
         }
 
         public string WorkingExtractDirectory
         {
             get { return _WorkingExtractDirectory; }
+            set { _WorkingExtractDirectory = value; }
         }
 
         public string Name
         {
             get { return _Name; }
+            set { _Name = value; }
         }
 
         public string Extension
         {
             get { return _Extension; }
+            set { _Extension = value; }
         }
 
         public string Location
         {
             get { return _Location; }
+            set { _Location = value; }
         }
 
         public int RoleID
@@ -135,6 +151,7 @@ namespace ArtContentManager.Content
         public bool ExtractUnreadable
         {
             get { return _ExtractUnreadable; }
+            set { _ExtractUnreadable = value; }
         }
 
         public List<File> ChildFiles

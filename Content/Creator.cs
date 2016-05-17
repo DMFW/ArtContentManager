@@ -9,8 +9,9 @@ namespace ArtContentManager.Content
     class Creator
     {
         private int _ID;
-        private string _CreatorName;
-        private string _CreatorDirectoryName; // Because their "true" name may not be a valid directory name
+        private string _CreatorNameCode;
+        private string _CreatorTrueName;
+        private string _CreatorDirectoryName; // Because their name code or true name may not be a valid directory name
         private string _Notes;
         private string _ContactEmail;
 
@@ -20,17 +21,22 @@ namespace ArtContentManager.Content
             set { _ID = value; }
         }
 
-        public string CreatorName
+        public string CreatorNameCode
         {
-            get { return _CreatorName; }
-            set { _CreatorName = value; }
+            get { return _CreatorNameCode; }
+            set { _CreatorNameCode = value; }
+        }
+
+        public string CreatorTrueName
+        {
+            get { return _CreatorTrueName; }
+            set { _CreatorTrueName = value; }
         }
 
         public string CreatorDirectoryName
         {
             get { return _CreatorDirectoryName; }
             set { _CreatorDirectoryName = value; }
-
         }
 
         public string Notes

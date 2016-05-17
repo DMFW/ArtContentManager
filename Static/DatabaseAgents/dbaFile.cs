@@ -15,16 +15,52 @@ namespace ArtContentManager.Static.DatabaseAgents
         // Handles database related updates and reads for the File and closely related extension objects
 
         static SqlCommand _cmdReadFiles;
+        static SqlCommand _cmdReadFileByID;
         static SqlCommand _cmdInsertFile;
         static SqlCommand _cmdReadFileLocations;
         static SqlCommand _cmdInsertFileLocations;
-        static SqlCommand _cmdReadDefaultRelativeFileLocations;
         static SqlCommand _cmdInsertDefaultRelativeLocations;
         static SqlCommand _cmdUpdateFileLocationVerified;
         static SqlCommand _cmdUpdateFileLocationAntiVerified;
         static SqlCommand _cmdUpdateFile;
 
+        static SqlCommand _cmdReadFileTextNotes;
         static SqlCommand _cmdInsertFileTextNotes;
+
+        public static void Load(ArtContentManager.Content.File File)
+        {
+
+            // This function assumes the ID is set within the File object and on that basis loads all the rest of the object properties
+
+            SqlConnection DB = ArtContentManager.Static.Database.DB;
+
+            if (_cmdReadFileByID == null)
+            {
+                string readFilesByID_SQL = "Select * from Files where FileID = @FileID";
+                _cmdReadFileByID = new SqlCommand(readFilesByID_SQL, DB);
+                _cmdReadFileByID.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadFileByID.Parameters["@FileID"].Value = File.ID;
+
+            _cmdReadFileByID.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            SqlDataReader reader = _cmdReadFiles.ExecuteReader();
+
+            while (reader.Read())
+            {
+                File.Name = reader["FileName"].ToString();
+                File.Extension = reader["Extension"].ToString();
+                File.Size = (long)reader["Size"];
+                File.RoleID = (int)reader["RoleID"];
+                File.ParentID = (int)reader["ParentID"];
+                File.ExtractUnreadable = (bool)reader["ExtractUnreadable"];
+            }
+
+            reader.Close();
+
+        }
+
+
 
         public static bool IsFileRecorded(ArtContentManager.Content.File File)
         {
@@ -257,7 +293,82 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
         }
 
-        public static void UpdateFile(ArtContentManager.Content.File File)
+       public static ArtContentManager.Content.FileTextData DeriveFileTextData(Content.File parentFile)
+       {
+
+            string textFileName;
+            Content.File textFile;
+            Content.FileTextData fileTextData = null;
+
+            SqlConnection DB = ArtContentManager.Static.Database.DB;
+
+            if (_cmdReadFileTextNotes == null)
+            {
+                string sqlReadFileTextNotes = "SELECT * from TextNotesForParent WHERE ParentID = @ParentFileID";
+                _cmdReadFileByID = new SqlCommand(sqlReadFileTextNotes, DB);
+                _cmdReadFileTextNotes.Parameters.Add("@ParentFileID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdReadFileTextNotes.Parameters["@ParentFileID"].Value = parentFile.ID;
+
+            SqlDataReader reader = _cmdReadFiles.ExecuteReader();
+
+            while (reader.Read())
+            {
+                textFileName = reader["FileName"].ToString();
+
+                if (textFileName.Contains("EULA") | textFileName.Contains("Licence"))
+                {
+                    // Ignore licence files
+                }
+                else
+                {
+                    textFile = new Content.File((int)reader["FileID"]);
+                    fileTextData = ExtractTextData(textFile);
+                }
+            }
+
+            reader.Close();
+
+            return fileTextData;
+
+       }
+
+       public static ArtContentManager.Content.FileTextData ExtractTextData(ArtContentManager.Content.File File)
+       {
+
+            string textData = "";
+
+            SqlConnection DB = ArtContentManager.Static.Database.DB;
+
+            if (_cmdReadFileTextNotes == null)
+            {
+                string selectFileTextNotesSQL = "SELECT * FROM FileTextNotes WHERE @FileID = FileID";
+                _cmdReadFileTextNotes = new SqlCommand(selectFileTextNotesSQL, DB);
+                _cmdReadFileTextNotes.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdReadFileTextNotes.Parameters["@FileID"].Value = File.ID;
+
+            SqlDataReader reader = _cmdReadFileTextNotes.ExecuteReader();
+
+            while (reader.Read())
+            {
+                textData = reader["Text"].ToString();
+            }
+
+            reader.Close();
+
+            ArtContentManager.Content.FileTextData fileTextData = new Content.FileTextData();
+            fileTextData.ParseText(textData);
+
+            return fileTextData;
+
+       }
+
+       public static void UpdateFile(ArtContentManager.Content.File File)
        {
             SqlConnection DB = ArtContentManager.Static.Database.DB;
 
