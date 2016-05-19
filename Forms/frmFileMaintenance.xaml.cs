@@ -110,9 +110,9 @@ namespace ArtContentManager.Forms
 
             if (e.Cancelled)
             {
-                ArtContentManager.Static.Database.BeginTransaction();
+                ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
                 ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(_currentRootScan);
-                ArtContentManager.Static.Database.CommitTransaction();
+                ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
             }
             else
             {
@@ -138,7 +138,7 @@ namespace ArtContentManager.Forms
             _scanImportWorker = null;
             btnScan.IsEnabled = true;
             btnScanCancel.IsEnabled = false;
-            ArtContentManager.Static.Database.BeginTransaction();
+            ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
 
             if (e.Cancelled)
             {
@@ -150,7 +150,7 @@ namespace ArtContentManager.Forms
                 _currentRootScan.CompleteScanTime = DateTime.Now;
                 ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
             }
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
 
         }
 

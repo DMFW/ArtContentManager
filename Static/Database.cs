@@ -13,9 +13,26 @@ namespace ArtContentManager.Static
     public static class Database
     {
 
-        private static SqlConnection _DB;
+        private static SqlConnection _DBActive;
         private static SqlTransaction _trnActive;
-        private static int _trnLevel = 0;
+
+        private static SqlConnection _DBReadOnly;
+        private static SqlTransaction _trnReadOnly;
+
+        private static int _trnLevelActive = 0;
+        private static int _trnLevelReadOnly = 0;
+
+        public enum ResetLevel
+        {
+            AllDynamicData,
+            ProductData
+        }
+
+        public enum TransactionType
+        {
+            Active,
+            ReadOnly
+        }
 
         // Static dictionaries loaded for performance purposes during scanning 
         public static Dictionary<string, int> ProcessRoleExtensionsPrimary;
@@ -23,18 +40,29 @@ namespace ArtContentManager.Static
         public static Dictionary<string, string> ExcludedFiles;
         public static Dictionary<string, int> ReservedFiles;
 
-        public static SqlConnection DB
+        public static SqlConnection DBActive
         {
-            get { return _DB; }
+            get { return _DBActive; }
         }
+
+        public static SqlConnection DBReadOnly
+        {
+            get { return _DBReadOnly; }
+        }
+
 
         public static bool Open()
         {
             try
             {
                 string dbConnection = Properties.Settings.Default.DatabaseConnection;
-                _DB = new SqlConnection(dbConnection);
-                _DB.Open();
+
+                _DBActive = new SqlConnection(dbConnection);
+                _DBActive.Open();
+
+                _DBReadOnly = new SqlConnection(dbConnection);
+                _DBReadOnly.Open();
+
                 Trace.WriteLine("Database opened");
                 return true;
             }
@@ -50,7 +78,14 @@ namespace ArtContentManager.Static
         {
             try
             {
-                _DB.Close();
+                if (_DBActive != null)
+                {
+                    _DBActive.Close();
+                }
+                if (_DBReadOnly != null)
+                {
+                    _DBReadOnly.Close();
+                }
                 Trace.WriteLine("Database closed");
                 return true;
             }
@@ -62,38 +97,99 @@ namespace ArtContentManager.Static
             }
         }
 
-        public static void BeginTransaction()
+        public static void BeginTransaction(TransactionType tt)
         {
-            if (_trnActive != null)
+            switch (tt)
             {
-                Trace.Write("Attempting to start new transation when the previous one is not disposed of");
+                case TransactionType.Active:
+                    if (_trnActive != null)
+                    {
+                        Trace.Write("Attempting to start new transation when the previous one is not disposed of");
+                    }
+                    else
+                    {
+                        _trnLevelActive++;
+                        _trnActive = ArtContentManager.Static.Database.DBActive.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
+                    }
+                    break;
+                case TransactionType.ReadOnly:
+                    if (_trnReadOnly != null)
+                    {
+                        Trace.Write("Attempting to start new transation when the previous one is not disposed of");
+                    }
+                    else
+                    {
+                        _trnLevelReadOnly++;
+                        _trnReadOnly = ArtContentManager.Static.Database.DBReadOnly.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
+                    }
+                    break;
             }
-            else
+
+       }
+
+        public static SqlTransaction CurrentTransaction(TransactionType tt)
+        {
+  
+            switch (tt)
             {
-                _trnLevel++;
-                _trnActive = ArtContentManager.Static.Database.DB.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted);
+                case TransactionType.Active:
+                    return _trnActive;
+
+                case TransactionType.ReadOnly:
+                    return _trnReadOnly;
+        
+                default:
+                    return null;
             }
+              
         }
 
-        public static SqlTransaction ActiveTransaction
+        public static void CommitTransaction(TransactionType tt)
         {
-            get { return _trnActive; }
+
+            switch (tt)
+            {
+                case TransactionType.Active:
+
+                    _trnActive.Commit();
+                    _trnActive.Dispose();
+                    _trnActive = null;
+                    _trnLevelActive--;
+                    break;
+
+                case TransactionType.ReadOnly:
+
+                    _trnReadOnly.Commit();
+                    _trnReadOnly.Dispose();
+                    _trnReadOnly = null;
+                    _trnLevelReadOnly--;
+                    break;
+            }
+
         }
 
-        public static void CommitTransaction()
+        public static void RollbackTransaction(TransactionType tt)
         {
-            _trnActive.Commit();
-            _trnActive.Dispose();
-            _trnActive = null;
-            _trnLevel--;
-        }
 
-        public static void RollbackTransaction()
-        {
-            _trnActive.Rollback();
-            _trnActive.Dispose();
-            _trnActive = null;
-            _trnLevel--;
+            switch (tt)
+            {
+                case TransactionType.Active:
+
+                    _trnActive.Rollback();
+                    _trnActive.Dispose();
+                    _trnActive = null;
+                    _trnLevelActive--;
+                    break;
+
+                case TransactionType.ReadOnly:
+
+                    _trnReadOnly.Rollback();
+                    _trnReadOnly.Dispose();
+                    _trnReadOnly = null;
+                    _trnLevelReadOnly--;
+                    break;
+
+            }
         }
 
         public static void LoadScanReferenceData()
@@ -122,7 +218,7 @@ namespace ArtContentManager.Static
             try
             {
                 SqlDataReader myReader = null;
-                SqlCommand myCommand = new SqlCommand("SELECT * from ProcessRoles", _DB);
+                SqlCommand myCommand = new SqlCommand("SELECT * from ProcessRoles", _DBReadOnly);
                 myReader = myCommand.ExecuteReader();
                 while (myReader.Read())
                 {
@@ -144,7 +240,7 @@ namespace ArtContentManager.Static
             try
             {
                 SqlDataReader myReader = null;
-                SqlCommand myCommand = new SqlCommand("SELECT * from ProcessRoleExtensionsPrimary", _DB);
+                SqlCommand myCommand = new SqlCommand("SELECT * from ProcessRoleExtensionsPrimary", _DBReadOnly);
                 myReader = myCommand.ExecuteReader();
                 while (myReader.Read())
                 {
@@ -167,7 +263,7 @@ namespace ArtContentManager.Static
             try
             {
                 SqlDataReader myReader = null;
-                SqlCommand myCommand = new SqlCommand("SELECT * from SpecialFiles", _DB);
+                SqlCommand myCommand = new SqlCommand("SELECT * from SpecialFiles", _DBReadOnly);
                 myReader = myCommand.ExecuteReader();
                 while (myReader.Read())
                 {
@@ -188,7 +284,7 @@ namespace ArtContentManager.Static
             }
         }
 
-        public static void Reset()
+        public static void Reset(ResetLevel resetLevel)
         {
 
             try
@@ -205,99 +301,117 @@ namespace ArtContentManager.Static
                 // ProcessRoleExtensionsPrimary  (These are semi-fixed and re-ordered with ProcessRoles)
                 // ProcessRoleExtensionsSecondary (These are semi-fixed and re-ordered with ProcessRoles)
 
-                string sqlScanHistory = "TRUNCATE TABLE ScanHistory";
-                SqlCommand cmdScanHistory = new SqlCommand(sqlScanHistory, _DB);
-                cmdScanHistory.ExecuteNonQuery();
+                if (resetLevel == ResetLevel.AllDynamicData)
+                {
+                    string sqlScanHistory = "TRUNCATE TABLE ScanHistory";
+                    SqlCommand cmdScanHistory = new SqlCommand(sqlScanHistory, _DBActive);
+                    cmdScanHistory.ExecuteNonQuery();
 
-                cmdScanHistory.CommandText = "DBCC CHECKIDENT (ScanHistory,RESEED, 0)";
-                cmdScanHistory.ExecuteNonQuery();
+                    cmdScanHistory.CommandText = "DBCC CHECKIDENT (ScanHistory,RESEED, 0)";
+                    cmdScanHistory.ExecuteNonQuery();
 
-                string sqlArtProductCredits = "TRUNCATE TABLE ArtProductCredits";
-                SqlCommand cmdArtProductCredits = new SqlCommand(sqlArtProductCredits, _DB);
-                cmdArtProductCredits.ExecuteNonQuery();
+                    string sqlArtProductCredits = "TRUNCATE TABLE ArtProductCredits";
+                    SqlCommand cmdArtProductCredits = new SqlCommand(sqlArtProductCredits, _DBActive);
+                    cmdArtProductCredits.ExecuteNonQuery();
 
-                string sqlArtTags = "TRUNCATE TABLE ArtTags";
-                SqlCommand cmdArtTags = new SqlCommand(sqlArtTags, _DB);
-                cmdArtTags.ExecuteNonQuery();
+                    string sqlArtTags = "TRUNCATE TABLE ArtTags";
+                    SqlCommand cmdArtTags = new SqlCommand(sqlArtTags, _DBActive);
+                    cmdArtTags.ExecuteNonQuery();
 
-                string sqlArt = "DELETE FROM Art";
-                SqlCommand cmdArt = new SqlCommand(sqlArt, _DB);
-                cmdArt.ExecuteNonQuery();
+                    string sqlArt = "DELETE FROM Art";
+                    SqlCommand cmdArt = new SqlCommand(sqlArt, _DBActive);
+                    cmdArt.ExecuteNonQuery();
 
-                cmdArt.CommandText = "DBCC CHECKIDENT (Art,RESEED, 0)";
-                cmdArt.ExecuteNonQuery();
+                    cmdArt.CommandText = "DBCC CHECKIDENT (Art,RESEED, 0)";
+                    cmdArt.ExecuteNonQuery();
+                }
 
                 string sqlProductInstaller = "TRUNCATE TABLE ProductInstaller";
-                SqlCommand cmdProductInstaller = new SqlCommand(sqlProductInstaller, _DB);
+                SqlCommand cmdProductInstaller = new SqlCommand(sqlProductInstaller, _DBActive);
                 cmdProductInstaller.ExecuteNonQuery();
 
                 string sqlProductFilesTruncate = "TRUNCATE TABLE ProductFiles";
-                SqlCommand cmdProductFiles = new SqlCommand(sqlProductFilesTruncate, _DB);
+                SqlCommand cmdProductFiles = new SqlCommand(sqlProductFilesTruncate, _DBActive);
                 cmdProductFiles.ExecuteNonQuery();
 
                 string sqlProductTagsTruncate = "TRUNCATE TABLE ProductTags";
-                SqlCommand cmdProductTags = new SqlCommand(sqlProductTagsTruncate, _DB);
+                SqlCommand cmdProductTags = new SqlCommand(sqlProductTagsTruncate, _DBActive);
                 cmdProductTags.ExecuteNonQuery();
 
                 string sqlProductImagesTruncate = "TRUNCATE TABLE ProductImages";
-                SqlCommand cmdProductImages = new SqlCommand(sqlProductImagesTruncate, _DB);
+                SqlCommand cmdProductImages = new SqlCommand(sqlProductImagesTruncate, _DBActive);
                 cmdProductImages.ExecuteNonQuery();
 
                 string sqlProductContentTypes = "TRUNCATE TABLE ProductContentTypes";
-                SqlCommand cmdProductContentTypes = new SqlCommand(sqlProductContentTypes, _DB);
+                SqlCommand cmdProductContentTypes = new SqlCommand(sqlProductContentTypes, _DBActive);
                 cmdProductContentTypes.ExecuteNonQuery();
 
                 string sqlContentTypes = "TRUNCATE TABLE ContentTypes";
-                SqlCommand cmdContentTypes = new SqlCommand(sqlContentTypes, _DB);
+                SqlCommand cmdContentTypes = new SqlCommand(sqlContentTypes, _DBActive);
                 cmdContentTypes.ExecuteNonQuery();
 
                 string sqlContentSpecialTypes = "TRUNCATE TABLE ContentSpecialTypes";
-                SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DB);
+                SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DBActive);
                 cmdContentSpecialTypes.ExecuteNonQuery();
 
                 string sqlDefinitionGroupID = "DELETE FROM DefinitionGroupID";
-                SqlCommand cmdDefinitionGroupID = new SqlCommand(sqlDefinitionGroupID, _DB);
+                SqlCommand cmdDefinitionGroupID = new SqlCommand(sqlDefinitionGroupID, _DBActive);
                 cmdDefinitionGroupID.ExecuteNonQuery();
 
                 string sqlProductGroupMembers = "TRUNCATE TABLE ProductGroupMembers";
-                SqlCommand cmdProductGroupMembers = new SqlCommand(sqlProductGroupMembers, _DB);
+                SqlCommand cmdProductGroupMembers = new SqlCommand(sqlProductGroupMembers, _DBActive);
                 cmdProductGroupMembers.ExecuteNonQuery();
 
                 string sqlProductGroups = "DELETE FROM ProductGroups";
-                SqlCommand cmdProductGroups = new SqlCommand(sqlProductGroups, _DB);
+                SqlCommand cmdProductGroups = new SqlCommand(sqlProductGroups, _DBActive);
                 cmdProductGroups.ExecuteNonQuery();
 
                 string sqlProducts = "DELETE FROM Products";
-                SqlCommand cmdProducts = new SqlCommand(sqlProducts, _DB);
+                SqlCommand cmdProducts = new SqlCommand(sqlProducts, _DBActive);
                 cmdProducts.ExecuteNonQuery();
 
                 cmdProducts.CommandText = "DBCC CHECKIDENT (Products,RESEED, 0)";
                 cmdProducts.ExecuteNonQuery();
 
-                string sqlFileLocationsTruncate = "TRUNCATE TABLE FileLocations";
-                SqlCommand cmdFileLocations = new SqlCommand(sqlFileLocationsTruncate, _DB);
-                cmdFileLocations.ExecuteNonQuery();
+                string sqlProductCreators = "DELETE FROM ProductCreators";
+                SqlCommand cmdProductCreators = new SqlCommand(sqlProductCreators, _DBActive);
+                cmdProductCreators.ExecuteNonQuery();
 
-                string sqlDefaultRelativeLocations = "TRUNCATE TABLE DefaultRelativeLocations";
-                SqlCommand cmdDefaultRelativeLocations = new SqlCommand(sqlDefaultRelativeLocations, _DB);
-                cmdDefaultRelativeLocations.ExecuteNonQuery();
+                string sqlContentCreators = "DELETE FROM ContentCreators";
+                SqlCommand cmdContentCreators = new SqlCommand(sqlContentCreators, _DBActive);
+                cmdContentCreators.ExecuteNonQuery();
 
-                string sqlFileImagesTruncate = "TRUNCATE TABLE FileImages";
-                SqlCommand cmdFileImagesTruncate = new SqlCommand(sqlFileImagesTruncate, _DB);
-                cmdFileImagesTruncate.ExecuteNonQuery();
+                cmdContentCreators.CommandText = "DBCC CHECKIDENT (ContentCreators,RESEED, 0)";
+                cmdContentCreators.ExecuteNonQuery();
 
-                string sqlFileTextNotesTruncate = "TRUNCATE TABLE FileTextNotes";
-                SqlCommand cmdFileTextNotesTruncate = new SqlCommand(sqlFileTextNotesTruncate, _DB);
-                cmdFileTextNotesTruncate.ExecuteNonQuery();
+                if (resetLevel == ResetLevel.AllDynamicData)
+                {
 
-                string sqlFilesDelete = "DELETE FROM Files";
-                SqlCommand cmdFiles = new SqlCommand(sqlFilesDelete, _DB);
-                cmdFiles.ExecuteNonQuery();
+                    string sqlFileLocationsTruncate = "TRUNCATE TABLE FileLocations";
+                    SqlCommand cmdFileLocations = new SqlCommand(sqlFileLocationsTruncate, _DBActive);
+                    cmdFileLocations.ExecuteNonQuery();
 
-                cmdFiles.CommandText = "DBCC CHECKIDENT (Files,RESEED, 0)";
-                cmdFiles.ExecuteNonQuery();
+                    string sqlDefaultRelativeLocations = "TRUNCATE TABLE DefaultRelativeLocations";
+                    SqlCommand cmdDefaultRelativeLocations = new SqlCommand(sqlDefaultRelativeLocations, _DBActive);
+                    cmdDefaultRelativeLocations.ExecuteNonQuery();
 
-                ReorganiseProcessRoles();
+                    string sqlFileImagesTruncate = "TRUNCATE TABLE FileImages";
+                    SqlCommand cmdFileImagesTruncate = new SqlCommand(sqlFileImagesTruncate, _DBActive);
+                    cmdFileImagesTruncate.ExecuteNonQuery();
+
+                    string sqlFileTextNotesTruncate = "TRUNCATE TABLE FileTextNotes";
+                    SqlCommand cmdFileTextNotesTruncate = new SqlCommand(sqlFileTextNotesTruncate, _DBActive);
+                    cmdFileTextNotesTruncate.ExecuteNonQuery();
+
+                    string sqlFilesDelete = "DELETE FROM Files";
+                    SqlCommand cmdFiles = new SqlCommand(sqlFilesDelete, _DBActive);
+                    cmdFiles.ExecuteNonQuery();
+
+                    cmdFiles.CommandText = "DBCC CHECKIDENT (Files,RESEED, 0)";
+                    cmdFiles.ExecuteNonQuery();
+
+                    ReorganiseProcessRoles();
+                }
 
                 MessageBox.Show("Database reset complete");
             }
@@ -330,10 +444,10 @@ namespace ArtContentManager.Static
                 string sqlProcessRoleExtensionsSecondary = "Select * from ProcessRoleExtensionsSecondary";
                 string sqlSpecialFiles = "Select * from SpecialFiles";
 
-                SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DB);
-                SqlCommand cmdProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimary, _DB);
-                SqlCommand cmdProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondary, _DB);
-                SqlCommand cmdSpecialFiles = new SqlCommand(sqlSpecialFiles, _DB);
+                SqlCommand cmdProcessRoles = new SqlCommand(sqlProcessRoles, _DBActive);
+                SqlCommand cmdProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimary, _DBActive);
+                SqlCommand cmdProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondary, _DBActive);
+                SqlCommand cmdSpecialFiles = new SqlCommand(sqlSpecialFiles, _DBActive);
 
                 DataSet dsProcessRoleSet = new DataSet("ProcessRoleSet");
 
@@ -372,23 +486,23 @@ namespace ArtContentManager.Static
                 #region PhysicalDelete
 
                 string sqlProcessRoleExtensionsPrimaryDelete = "DELETE FROM ProcessRoleExtensionsPrimary";
-                SqlCommand cmdDeleteProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimaryDelete, _DB);
+                SqlCommand cmdDeleteProcessRoleExtensionsPrimary = new SqlCommand(sqlProcessRoleExtensionsPrimaryDelete, _DBActive);
                 cmdDeleteProcessRoleExtensionsPrimary.ExecuteNonQuery();
 
                 string sqlProcessRoleExtensionsSecondaryDelete = "DELETE FROM ProcessRoleExtensionsSecondary";
-                SqlCommand cmdDeleteProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondaryDelete, _DB);
+                SqlCommand cmdDeleteProcessRoleExtensionsSecondary = new SqlCommand(sqlProcessRoleExtensionsSecondaryDelete, _DBActive);
                 cmdDeleteProcessRoleExtensionsSecondary.ExecuteNonQuery();
 
                 string sqlSpecialFilesDelete = "DELETE FROM SpecialFiles";
-                SqlCommand cmdDeleteSpecialFiles = new SqlCommand(sqlSpecialFilesDelete, _DB);
+                SqlCommand cmdDeleteSpecialFiles = new SqlCommand(sqlSpecialFilesDelete, _DBActive);
                 cmdDeleteSpecialFiles.ExecuteNonQuery();
 
                 string sqlProcessRolesDelete = "DELETE FROM ProcessRoles";
-                SqlCommand cmdDeleteProcessRoles = new SqlCommand(sqlProcessRolesDelete, _DB);
+                SqlCommand cmdDeleteProcessRoles = new SqlCommand(sqlProcessRolesDelete, _DBActive);
                 cmdDeleteProcessRoles.ExecuteNonQuery();
 
                 string sqlProcessRolesReset = "DBCC CHECKIDENT (ProcessRoles,RESEED, 0)";
-                SqlCommand cmdResetProcessRoles = new SqlCommand(sqlProcessRolesReset, _DB);
+                SqlCommand cmdResetProcessRoles = new SqlCommand(sqlProcessRolesReset, _DBActive);
                 cmdResetProcessRoles.ExecuteNonQuery();
 
                 #endregion
@@ -396,23 +510,23 @@ namespace ArtContentManager.Static
                 #region Insert
 
                 string sqlProcessRoleInsert = "INSERT INTO ProcessRoles (RoleDescription, WorkFlowOrder) VALUES (@RoleDescription , @WorkFlowOrder); SELECT CAST(scope_identity() AS int)";
-                SqlCommand cmdProcessRoleInsert = new SqlCommand(sqlProcessRoleInsert, _DB);
+                SqlCommand cmdProcessRoleInsert = new SqlCommand(sqlProcessRoleInsert, _DBActive);
                 cmdProcessRoleInsert.Parameters.Add("@RoleDescription", SqlDbType.Text);
                 cmdProcessRoleInsert.Parameters.Add("@WorkFlowOrder", SqlDbType.Int);
                 int newRoleID;
 
                 string sqlProcessRolePrimaryExtensionInsert = "INSERT INTO ProcessRoleExtensionsPrimary (RoleID, Extension) VALUES (@RoleID , @Extension)";
-                SqlCommand cmdProcessRolePrimaryExtensionInsert = new SqlCommand(sqlProcessRolePrimaryExtensionInsert, _DB);
+                SqlCommand cmdProcessRolePrimaryExtensionInsert = new SqlCommand(sqlProcessRolePrimaryExtensionInsert, _DBActive);
                 cmdProcessRolePrimaryExtensionInsert.Parameters.Add("@RoleID", SqlDbType.Int);
                 cmdProcessRolePrimaryExtensionInsert.Parameters.Add("@Extension", SqlDbType.Text);
 
                 string sqlProcessRoleSecondaryExtensionInsert = "INSERT INTO ProcessRoleExtensionsSecondary (RoleID, Extension) VALUES (@RoleID , @Extension)";
-                SqlCommand cmdProcessRoleSecondaryExtensionInsert = new SqlCommand(sqlProcessRoleSecondaryExtensionInsert, _DB);
+                SqlCommand cmdProcessRoleSecondaryExtensionInsert = new SqlCommand(sqlProcessRoleSecondaryExtensionInsert, _DBActive);
                 cmdProcessRoleSecondaryExtensionInsert.Parameters.Add("@RoleID", SqlDbType.Int);
                 cmdProcessRoleSecondaryExtensionInsert.Parameters.Add("@Extension", SqlDbType.Text);
 
                 string sqlSpecialFilesInsert = "INSERT INTO SpecialFiles (FileName, ExcludeFromScan, RoleID) VALUES (@FileName, @ExcludeFromScan, @RoleID)";
-                SqlCommand cmdSpecialFilesInsert = new SqlCommand(sqlSpecialFilesInsert, _DB);
+                SqlCommand cmdSpecialFilesInsert = new SqlCommand(sqlSpecialFilesInsert, _DBActive);
                 cmdSpecialFilesInsert.Parameters.Add("@FileName", SqlDbType.Text);
                 cmdSpecialFilesInsert.Parameters.Add("@ExcludeFromScan", SqlDbType.Bit);
                 cmdSpecialFilesInsert.Parameters.Add("@RoleID", SqlDbType.Int);

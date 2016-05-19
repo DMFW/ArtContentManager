@@ -11,11 +11,10 @@ namespace ArtContentManager.Content
     class Product
     {
         private int _ID;
-        private int _CreatorID;
         private string _Name;
         private Image _Thumbnail;
-        private string _ReadMe;
         private bool _IsPrimary;
+        private Dictionary<int, int> _dctCreatorIDs = new Dictionary<int, int>();
 
         private List<File> _ComponentFiles; // Just the parent files
 
@@ -23,12 +22,6 @@ namespace ArtContentManager.Content
         {
             get { return _ID; }
             set { _ID = value; }
-        }
-
-        public int CreatorID
-        {
-            get { return _CreatorID; }
-            set { _CreatorID = value; }
         }
 
         public string Name
@@ -43,17 +36,15 @@ namespace ArtContentManager.Content
             set { _Thumbnail = value; }
         }
 
-        public string ReadMe
-        {
-            get { return _ReadMe; }
-            set { _ReadMe = value; }
-        }
-
         public bool IsPrimary
         {
             get { return _IsPrimary; }
             set { _IsPrimary = value; }
         }
 
+        public Dictionary<int, int> Creators
+        {
+            get { return _dctCreatorIDs; }
+        }
     }
 }

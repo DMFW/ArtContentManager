@@ -12,9 +12,13 @@ namespace ArtContentManager.Static.DatabaseAgents
 {
     static class dbaProduct
     {
+
+        // Handles database related updates and reads for the Product and closely related extension objects
+
         static SqlCommand _cmdSelectUnassignedParentFiles;
         static SqlCommand _cmdAddProduct;
         static SqlCommand _cmdAddProductFile;
+        static SqlCommand _cmdAddProductCreator;
 
         public static void AutoAssignProducts()
         {
@@ -29,9 +33,10 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             // Assign products to anything that hasn't yet been assigned
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DBReadOnly = ArtContentManager.Static.Database.DBReadOnly;
+            SqlConnection DBActive = ArtContentManager.Static.Database.DBActive;
 
-            Static.Database.BeginTransaction();
+            Static.Database.BeginTransaction(Database.TransactionType.Active);
 
             if (Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength") == null)
             {
@@ -46,10 +51,13 @@ namespace ArtContentManager.Static.DatabaseAgents
             if (_cmdSelectUnassignedParentFiles == null)
             {
                 string sqlAutoProducts = "SELECT * from ParentFilesNotAssignedToProducts ORDER BY FileName Asc";
-                _cmdSelectUnassignedParentFiles = new SqlCommand(sqlAutoProducts, DB);
+                _cmdSelectUnassignedParentFiles = new SqlCommand(sqlAutoProducts, DBReadOnly);
             }
 
-            _cmdSelectUnassignedParentFiles.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.ReadOnly);
+           _cmdSelectUnassignedParentFiles.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+
             SqlDataReader reader = _cmdSelectUnassignedParentFiles.ExecuteReader();
 
             while (reader.Read())
@@ -76,7 +84,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                     thisPattern = thisFileName;
                 }
 
-                if (thisPattern.Length < lastPattern.Length)
+                if ((thisPattern.Length < lastPattern.Length) & (thisPattern.Length > 0))
                 {
                     if (lastPattern.Substring(0, thisPattern.Length) == thisPattern)
                     {
@@ -84,7 +92,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                     }
                 }
 
-                if (thisPattern.Length > lastPattern.Length)
+                if ((thisPattern.Length > lastPattern.Length) & (lastPattern.Length > 0))
                 {
                     if (thisPattern.Substring(0, lastPattern.Length) == lastPattern)
                     {
@@ -109,8 +117,8 @@ namespace ArtContentManager.Static.DatabaseAgents
 
                     // Initiate a new transaction on change of product
 
-                    Static.Database.CommitTransaction();
-                    Static.Database.BeginTransaction();
+                    Static.Database.CommitTransaction(Database.TransactionType.Active);
+                    Static.Database.BeginTransaction(Database.TransactionType.Active);
 
                     Content.File parentFile = new Content.File(fileID);
                     Content.FileTextData fileTextData = dbaFile.DeriveFileTextData(parentFile);
@@ -119,21 +127,31 @@ namespace ArtContentManager.Static.DatabaseAgents
                     product.Name = thisPattern; // Default the product name to the pattern match but we might be able to do better if we can process a read me file
                     if (fileTextData != null)
                     {
-                        if (fileTextData.ProductName != String.Empty)
+                        if (fileTextData.ProductName != null)
                         {
-                            product.Name = fileTextData.ProductName; // Better product name...
+                            if (fileTextData.ProductName != String.Empty)
+                            {
+                                product.Name = fileTextData.ProductName; // Better product name...
+                            }
                         }
 
-                        if (fileTextData.VendorNameCode != String.Empty)
+                        if (fileTextData.VendorNameCode != null)
                         {
-                            Content.Creator creator = new Content.Creator();
-                            creator.CreatorNameCode = fileTextData.VendorNameCode;
-                            if (!dbaContentCreators.IsCreatorRecorded(creator))
+                            if (fileTextData.VendorNameCode != String.Empty)
                             {
-                                creator.CreatorDirectoryName = fileTextData.VendorNameCode;
-                                creator.CreatorTrueName = fileTextData.VendorName;
-                                dbaContentCreators.RecordContentCreator(creator);
-                                product.CreatorID = creator.ID;
+                                Content.Creator creator = new Content.Creator();
+                                creator.CreatorNameCode = fileTextData.VendorNameCode;
+                                if (!dbaContentCreators.IsCreatorRecorded(creator))
+                                {
+                                    creator.CreatorDirectoryName = fileTextData.VendorNameCode;
+                                    creator.CreatorTrueName = fileTextData.VendorName;
+                                    dbaContentCreators.RecordContentCreator(creator);
+                                    product.Creators.Add(creator.ID, creator.ID);
+                                }
+                                else
+                                {
+                                    product.Creators.Add(creator.ID, creator.ID);
+                                }
                             }
                         }
 
@@ -142,10 +160,15 @@ namespace ArtContentManager.Static.DatabaseAgents
                     RecordProduct(product);
                     AddProductFile(product, fileID, thisFileName);
                 }
+                lastFileName = thisFileName;
             }
 
             // Final commit for the last product
-            Static.Database.CommitTransaction();
+            Static.Database.CommitTransaction(Database.TransactionType.Active);
+
+            reader.Close();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.ReadOnly);
+
             MessageBox.Show("Completed automatic assignment of products");
 
         }
@@ -153,31 +176,43 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static void RecordProduct(ArtContentManager.Content.Product Product)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdAddProduct == null)
             {
-                string insertProductSQL = "INSERT INTO Products (CreatorID, ProductName, ProductThumbnail, ReadMe, IsPrimary) VALUES (@CreatorID, @ProductName, @ProductThumbnail, @ReadMe, @IsPrimary) SET @ProductID = SCOPE_IDENTITY();";
+                string insertProductSQL = "INSERT INTO Products (ProductName, IsPrimary) VALUES (@ProductName, @IsPrimary) SET @ProductID = SCOPE_IDENTITY();";
                 _cmdAddProduct = new SqlCommand(insertProductSQL, DB);
-                _cmdAddProduct.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
-                _cmdAddProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.Int);
-                _cmdAddProduct.Parameters.Add("@ProductThumbnail", System.Data.SqlDbType.Image);
-                _cmdAddProduct.Parameters.Add("@ReadMe", System.Data.SqlDbType.NVarChar);
-                _cmdAddProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Binary);
+                _cmdAddProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar,255);
+                _cmdAddProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Bit);
                 _cmdAddProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
             }
 
 
-            _cmdAddProduct.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
-            _cmdAddProduct.Parameters["@CreatorID"].Value = Product.CreatorID;
+            _cmdAddProduct.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdAddProduct.Parameters["@ProductName"].Value = Product.Name;
-            _cmdAddProduct.Parameters["@ProductThumbnail"].Value = Product.Thumbnail;
-            _cmdAddProduct.Parameters["@ReadMe"].Value = Product.ReadMe;
             _cmdAddProduct.Parameters["@IsPrimary"].Value = Product.IsPrimary;
 
             _cmdAddProduct.ExecuteScalar();
 
             Product.ID = (int)_cmdAddProduct.Parameters["@ProductID"].Value;
+
+            if (_cmdAddProductCreator == null)
+            {
+                string insertProductCreatorSQL = "INSERT INTO ProductCreators (ProductID, CreatorID) VALUES (@ProductID, @CreatorID)";
+                _cmdAddProductCreator = new SqlCommand(insertProductCreatorSQL, DB);
+                _cmdAddProductCreator.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+                _cmdAddProductCreator.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdAddProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+            _cmdAddProductCreator.Parameters["@ProductID"].Value = Product.ID;
+
+            foreach (int CreatorID in Product.Creators.Values)
+            {
+                _cmdAddProductCreator.Parameters["@CreatorID"].Value = CreatorID;
+                _cmdAddProductCreator.ExecuteScalar();
+            }
+
         }
 
         public static void AddProductFile(ArtContentManager.Content.Product Product, int fileID, string fileName)
@@ -185,7 +220,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             int installerSeq;
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdAddProductFile == null)
             {
@@ -209,7 +244,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 installerSeq = 0;
             }
 
-            _cmdAddProductFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdAddProductFile.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdAddProductFile.Parameters["@ProductID"].Value = Product.ID;
             _cmdAddProductFile.Parameters["@InstallerSequence"].Value = installerSeq;
             _cmdAddProductFile.Parameters["@FileID"].Value = fileID;

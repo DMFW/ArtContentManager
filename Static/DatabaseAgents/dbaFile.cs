@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace ArtContentManager.Static.DatabaseAgents
 {
@@ -24,6 +25,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdUpdateFileLocationAntiVerified;
         static SqlCommand _cmdUpdateFile;
 
+        static SqlCommand _cmdReadFileTextNotesWithinParent;
         static SqlCommand _cmdReadFileTextNotes;
         static SqlCommand _cmdInsertFileTextNotes;
 
@@ -32,7 +34,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             // This function assumes the ID is set within the File object and on that basis loads all the rest of the object properties
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
             if (_cmdReadFileByID == null)
             {
@@ -43,15 +45,15 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             _cmdReadFileByID.Parameters["@FileID"].Value = File.ID;
 
-            _cmdReadFileByID.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
-            SqlDataReader reader = _cmdReadFiles.ExecuteReader();
+            _cmdReadFileByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            SqlDataReader reader = _cmdReadFileByID.ExecuteReader();
 
             while (reader.Read())
             {
                 File.Name = reader["FileName"].ToString();
                 File.Extension = reader["Extension"].ToString();
-                File.Size = (long)reader["Size"];
-                File.RoleID = (int)reader["RoleID"];
+                File.Size = (int)reader["Size"];
+                File.RoleID = (Int16)reader["RoleID"];
                 File.ParentID = (int)reader["ParentID"];
                 File.ExtractUnreadable = (bool)reader["ExtractUnreadable"];
             }
@@ -64,7 +66,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static bool IsFileRecorded(ArtContentManager.Content.File File)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
             // Set default return value and output parameters
             bool isFileRecorded = false;
@@ -80,7 +82,8 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdReadFiles.Parameters["@FileName"].Value = File.Name;
             _cmdReadFiles.Parameters["@Checksum"].Value = File.Checksum;
 
-            _cmdReadFiles.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.ReadOnly);
+            _cmdReadFiles.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
             SqlDataReader reader = _cmdReadFiles.ExecuteReader();
 
             while (reader.Read())
@@ -94,12 +97,13 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
 
             reader.Close();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.ReadOnly);
             return isFileRecorded;
         }
 
         public static void RecordFile(ArtContentManager.Content.File File)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdInsertFile == null)
             {
@@ -117,7 +121,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             }
 
-            _cmdInsertFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdInsertFile.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertFile.Parameters["@FileName"].Value = File.Name; 
             _cmdInsertFile.Parameters["@Extension"].Value = File.Extension;
             _cmdInsertFile.Parameters["@Checksum"].Value = File.Checksum;
@@ -155,7 +159,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         private static void RecordDefaultRelativeLocation(ArtContentManager.Content.File File)
         {
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             // Assume we need to record (or re-record) the relative location
 
@@ -168,7 +172,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdInsertDefaultRelativeLocations.Parameters.Add("@RelativeLocation", System.Data.SqlDbType.NVarChar, 255);              
             }
 
-            _cmdInsertDefaultRelativeLocations.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdInsertDefaultRelativeLocations.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertDefaultRelativeLocations.Parameters["@FileID"].Value = File.ID;
             _cmdInsertDefaultRelativeLocations.Parameters["@RelativeLocation"].Value = File.RelativeInstallationPath;
 
@@ -187,7 +191,8 @@ namespace ArtContentManager.Static.DatabaseAgents
         private static void RecordFileInstance(ArtContentManager.Content.File File, DateTime scanDateTime)
         {
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DBReadOnly = ArtContentManager.Static.Database.DBReadOnly;
+            SqlConnection DBActive = ArtContentManager.Static.Database.DBActive;
 
             // Set default return value and output parameters
             bool locationRecorded = false;
@@ -195,12 +200,13 @@ namespace ArtContentManager.Static.DatabaseAgents
             if (_cmdReadFileLocations == null)
             {
                 string readFileLocationsSQL = "SELECT * FROM FileLocations WHERE FileID = @FileID AND Location = @Location";
-                _cmdReadFileLocations = new SqlCommand(readFileLocationsSQL, DB);
+                _cmdReadFileLocations = new SqlCommand(readFileLocationsSQL, DBReadOnly);
                 _cmdReadFileLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                 _cmdReadFileLocations.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
-            }   
+            }
 
-            _cmdReadFileLocations.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.ReadOnly);
+            _cmdReadFileLocations.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
             _cmdReadFileLocations.Parameters["@FileID"].Value = File.ID;
             _cmdReadFileLocations.Parameters["@Location"].Value = File.Location;
 
@@ -210,19 +216,21 @@ namespace ArtContentManager.Static.DatabaseAgents
             {
                 locationRecorded = true; 
             }
+            reader.Close();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.ReadOnly);
 
             if (locationRecorded)
             {
                 if (_cmdUpdateFileLocationVerified == null)
                 {
                     string updateFileLocationsSQL = "UPDATE FileLocations SET VerificationDate = @VerificationDate WHERE FileID = @FileID and Location = @Location";
-                    _cmdUpdateFileLocationVerified = new SqlCommand(updateFileLocationsSQL, DB);
+                    _cmdUpdateFileLocationVerified = new SqlCommand(updateFileLocationsSQL, DBActive);
                     _cmdUpdateFileLocationVerified.Parameters.Add("@VerificationDate", System.Data.SqlDbType.DateTime);
                     _cmdUpdateFileLocationVerified.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                     _cmdUpdateFileLocationVerified.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
                 }
 
-                _cmdUpdateFileLocationVerified.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+                _cmdUpdateFileLocationVerified.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
                 _cmdUpdateFileLocationVerified.Parameters["@VerificationDate"].Value = scanDateTime;
                 _cmdUpdateFileLocationVerified.Parameters["@FileID"].Value = File.ID;
                 _cmdUpdateFileLocationVerified.Parameters["@Location"].Value = File.Location;
@@ -234,19 +242,19 @@ namespace ArtContentManager.Static.DatabaseAgents
                 if (_cmdInsertFileLocations == null)
                 {
                     string insertFileLocationsSQL = "INSERT INTO FileLocations (FileID, Location, VerificationDate) VALUES (@FileID, @Location, @VerificationDate)";
-                    _cmdInsertFileLocations = new SqlCommand(insertFileLocationsSQL, DB);
+                    _cmdInsertFileLocations = new SqlCommand(insertFileLocationsSQL, DBActive);
                     _cmdInsertFileLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                     _cmdInsertFileLocations.Parameters.Add("@Location", System.Data.SqlDbType.NVarChar, 300);
                     _cmdInsertFileLocations.Parameters.Add("@VerificationDate", System.Data.SqlDbType.DateTime);
                 }
 
-                _cmdInsertFileLocations.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+                _cmdInsertFileLocations.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
                 _cmdInsertFileLocations.Parameters["@FileID"].Value = File.ID;
                 _cmdInsertFileLocations.Parameters["@Location"].Value = File.Location;
                 _cmdInsertFileLocations.Parameters["@VerificationDate"].Value = scanDateTime;
                 _cmdInsertFileLocations.ExecuteNonQuery();
             }
-            reader.Close();
+            
        }
 
        public static void RecordFileTextNotes(ArtContentManager.Content.File File)
@@ -258,7 +266,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 return;
             }
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
             string textNotes;
 
             if (_cmdInsertFileTextNotes == null)
@@ -275,7 +283,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 textNotes = streamReader.ReadToEnd();
             }
 
-            _cmdInsertFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdInsertFileTextNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertFileTextNotes.Parameters["@FileID"].Value = File.ID;
             _cmdInsertFileTextNotes.Parameters["@Text"].Value = textNotes;
 
@@ -300,27 +308,29 @@ namespace ArtContentManager.Static.DatabaseAgents
             Content.File textFile;
             Content.FileTextData fileTextData = null;
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
-            if (_cmdReadFileTextNotes == null)
+            if (_cmdReadFileTextNotesWithinParent == null)
             {
                 string sqlReadFileTextNotes = "SELECT * from TextNotesForParent WHERE ParentID = @ParentFileID";
-                _cmdReadFileByID = new SqlCommand(sqlReadFileTextNotes, DB);
-                _cmdReadFileTextNotes.Parameters.Add("@ParentFileID", System.Data.SqlDbType.Int);
+                _cmdReadFileTextNotesWithinParent = new SqlCommand(sqlReadFileTextNotes, DB);
+                _cmdReadFileTextNotesWithinParent.Parameters.Add("@ParentFileID", System.Data.SqlDbType.Int);
             }
 
-            _cmdReadFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
-            _cmdReadFileTextNotes.Parameters["@ParentFileID"].Value = parentFile.ID;
+            _cmdReadFileTextNotesWithinParent.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            _cmdReadFileTextNotesWithinParent.Parameters["@ParentFileID"].Value = parentFile.ID;
 
-            SqlDataReader reader = _cmdReadFiles.ExecuteReader();
+            SqlDataReader reader = _cmdReadFileTextNotesWithinParent.ExecuteReader();
 
             while (reader.Read())
             {
                 textFileName = reader["FileName"].ToString();
 
-                if (textFileName.Contains("EULA") | textFileName.Contains("Licence"))
+                Regex objLicenceFile = new Regex(@"EULA|icense|ICENSE|icence|ICENCE");
+
+                if (objLicenceFile.IsMatch(textFileName))
                 {
-                    // Ignore licence files
+
                 }
                 else
                 {
@@ -340,7 +350,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             string textData = "";
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
             if (_cmdReadFileTextNotes == null)
             {
@@ -349,7 +359,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdReadFileTextNotes.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
             }
 
-            _cmdReadFileTextNotes.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdReadFileTextNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
             _cmdReadFileTextNotes.Parameters["@FileID"].Value = File.ID;
 
             SqlDataReader reader = _cmdReadFileTextNotes.ExecuteReader();
@@ -370,13 +380,13 @@ namespace ArtContentManager.Static.DatabaseAgents
 
        public static void UpdateFile(ArtContentManager.Content.File File)
        {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DBActive = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdUpdateFile == null)
             {
                 string updateFilesSQL = " UPDATE Files Set FileName = @FileName, Extension = @Extension, Checksum = @Checksum, Size = @Size, RoleID = @RoleID, ParentID = @ParentID, ExtractUnreadable = @ExtractUnreadable " +
                                         " WHERE FileID = @FileID";
-                _cmdUpdateFile = new SqlCommand(updateFilesSQL, DB);
+                _cmdUpdateFile = new SqlCommand(updateFilesSQL, DBActive);
 
                 _cmdUpdateFile.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
                 _cmdUpdateFile.Parameters.Add("@FileName", System.Data.SqlDbType.NVarChar, 255);
@@ -389,7 +399,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 
             }
 
-            _cmdUpdateFile.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdUpdateFile.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdUpdateFile.Parameters["@FileID"].Value = File.ID;
             _cmdUpdateFile.Parameters["@FileName"].Value = File.Name;
             _cmdUpdateFile.Parameters["@Extension"].Value = File.Extension;
@@ -407,7 +417,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             // After completing a directory scan, if a file is not verified it has implicitly failed as not found and so is "anti-verified".
             // Flag all files that were found previously in the directory but do not have the new verification date as anti-verified.
 
-           SqlConnection DB = ArtContentManager.Static.Database.DB;
+           SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
            if (_cmdUpdateFileLocationAntiVerified == null)
            {
@@ -418,7 +428,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                _cmdUpdateFileLocationAntiVerified.Parameters.Add("@VerificationDate", System.Data.SqlDbType.DateTime);
            }
 
-           _cmdUpdateFileLocationAntiVerified.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+           _cmdUpdateFileLocationAntiVerified.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
            _cmdUpdateFileLocationAntiVerified.Parameters["@AntiVerificationDate"].Value = scanDateTime;
            _cmdUpdateFileLocationAntiVerified.Parameters["@Location"].Value = location;
            _cmdUpdateFileLocationAntiVerified.Parameters["@VerificationDate"].Value = scanDateTime;

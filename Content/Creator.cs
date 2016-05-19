@@ -23,34 +23,33 @@ namespace ArtContentManager.Content
 
         public string CreatorNameCode
         {
-            get { return _CreatorNameCode; }
+            get { return "" + _CreatorNameCode; }
             set { _CreatorNameCode = value; }
         }
 
         public string CreatorTrueName
         {
-            get { return _CreatorTrueName; }
+            get { return "" + _CreatorTrueName; }
             set { _CreatorTrueName = value; }
         }
 
         public string CreatorDirectoryName
         {
-            get { return _CreatorDirectoryName; }
+            get { return "" + _CreatorDirectoryName; }
             set { _CreatorDirectoryName = value; }
         }
 
         public string Notes
         {
-            get { return _Notes; }
+            get { return "" + _Notes; }
             set { _Notes = value; }
         }
 
         public string ContactEmail
         {
-            get { return _ContactEmail; }
+            get { return "" + _ContactEmail; }
             set { _ContactEmail = value; }
         }
-
 
     }
 }

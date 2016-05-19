@@ -232,9 +232,9 @@ namespace ArtContentManager.Static
                             }
                         }
 
-                        ArtContentManager.Static.Database.BeginTransaction();
+                        ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
                         ArtContentManager.Static.DatabaseAgents.dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
-                        ArtContentManager.Static.Database.CommitTransaction();
+                        ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
 
                         if (activeScan != rootScan)
                         {

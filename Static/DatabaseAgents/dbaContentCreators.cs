@@ -16,7 +16,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static bool IsCreatorRecorded(ArtContentManager.Content.Creator Creator)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
             // Set default return value and output parameters
             bool isContentCreatorRecorded = false;
@@ -30,7 +30,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             _cmdReadContentCreators.Parameters["@CreatorNameCode"].Value = Creator.CreatorNameCode;
 
-            _cmdReadContentCreators.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdReadContentCreators.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Static.Database.TransactionType.ReadOnly);
             SqlDataReader reader = _cmdReadContentCreators.ExecuteReader();
 
             while (reader.Read())
@@ -53,11 +53,11 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static void RecordContentCreator(ArtContentManager.Content.Creator Creator)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdInsertContentCreator == null)
             {
-                string insertFileSQL = "INSERT INTO ContentCreators (CreatorNameCode, CreatorDirectoryName, CreatorTrueName, ContactEmail, Notes) VALUES (@CreatorNameCode, @CreatorDirectoryName, @CreatorTrueName, @ContactEmail, @Notes) SET @ContactID = SCOPE_IDENTITY();";
+                string insertFileSQL = "INSERT INTO ContentCreators (CreatorNameCode, CreatorDirectoryName, CreatorTrueName, ContactEmail, Notes) VALUES (@CreatorNameCode, @CreatorDirectoryName, @CreatorTrueName, @ContactEmail, @Notes) SET @CreatorID = SCOPE_IDENTITY();";
                 _cmdInsertContentCreator = new SqlCommand(insertFileSQL, DB);
 
                 _cmdInsertContentCreator.Parameters.Add("@CreatorNameCode", System.Data.SqlDbType.NVarChar, 50);
@@ -65,17 +65,17 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdInsertContentCreator.Parameters.Add("@CreatorTrueName", System.Data.SqlDbType.NVarChar, 255);
                 _cmdInsertContentCreator.Parameters.Add("@ContactEmail", System.Data.SqlDbType.NVarChar, 255);
                 _cmdInsertContentCreator.Parameters.Add("@Notes", System.Data.SqlDbType.NVarChar, 255);
-                _cmdInsertContentCreator.Parameters.Add("@ContactID", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+                _cmdInsertContentCreator.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
 
             }
 
-            _cmdInsertContentCreator.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
             _cmdInsertContentCreator.Parameters["@CreatorNameCode"].Value = Creator.CreatorNameCode;
             _cmdInsertContentCreator.Parameters["@CreatorDirectoryName"].Value = Creator.CreatorDirectoryName;
             _cmdInsertContentCreator.Parameters["@CreatorTrueName"].Value = Creator.CreatorTrueName;
             _cmdInsertContentCreator.Parameters["@ContactEmail"].Value = Creator.ContactEmail;
             _cmdInsertContentCreator.Parameters["@Notes"].Value = Creator.Notes;
-           
+
+            _cmdInsertContentCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertContentCreator.ExecuteScalar();
 
             Creator.ID = (int)_cmdInsertContentCreator.Parameters["@CreatorID"].Value;

@@ -19,7 +19,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         {
             _Settings = new Dictionary<string, Tuple<string, int>>();
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
             
             if (_cmdSelectSettings == null)
             {
@@ -48,7 +48,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static void SaveSetting(string SettingName, Tuple<string, int> SettingValues)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_Settings.ContainsKey(SettingName))
             {
@@ -67,10 +67,10 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdSaveSetting.Parameters["@SettingTextValue"].Value = SettingValues.Item1;
                 _cmdSaveSetting.Parameters["@SettingIntValue"].Value = SettingValues.Item2;
 
-                ArtContentManager.Static.Database.BeginTransaction();
-                _cmdSaveSetting.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+                ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+                _cmdSaveSetting.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
                 _cmdSaveSetting.ExecuteScalar();
-                ArtContentManager.Static.Database.CommitTransaction();
+                ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
             }
             else
             {
@@ -85,15 +85,15 @@ namespace ArtContentManager.Static.DatabaseAgents
                 }
 
 
-                _cmdInsertSetting.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+                _cmdInsertSetting.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
                 _cmdInsertSetting.Parameters["@SettingName"].Value = SettingName;
                 _cmdInsertSetting.Parameters["@SettingTextValue"].Value = SettingValues.Item1;
                 _cmdInsertSetting.Parameters["@SettingIntValue"].Value = SettingValues.Item2;
 
-                ArtContentManager.Static.Database.BeginTransaction();
-                _cmdInsertSetting.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+                ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+                _cmdInsertSetting.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
                 _cmdInsertSetting.ExecuteScalar();
-                ArtContentManager.Static.Database.CommitTransaction();
+                ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
             }
 
         }

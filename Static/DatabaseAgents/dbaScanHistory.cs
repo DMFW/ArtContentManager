@@ -21,7 +21,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static void RecordStartScan(Actions.Scan scan)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdInsertScan == null)
             {
@@ -43,10 +43,10 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdInsertScan.Parameters["@TotalFiles"].Value = scan.TotalFiles;
             _cmdInsertScan.Parameters["@NewFiles"].Value = scan.NewFiles;
 
-            ArtContentManager.Static.Database.BeginTransaction();
-            _cmdInsertScan.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+            _cmdInsertScan.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertScan.ExecuteScalar();
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
 
             scan.ID = (int)_cmdInsertScan.Parameters["@ScanID"].Value;
 
@@ -55,7 +55,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         public static void SetLastCompletedScanTime(Actions.Scan scan)
         {
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
             scan.PreviousCompletedScanTime = DateTime.MinValue; // Assume no prior successful scan
 
             if (_cmdSelectScan == null)
@@ -88,7 +88,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         public static void UpdateInitialFileCounts(Actions.Scan scan)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdUpdateScanInitialFileCounts == null)
             {
@@ -104,15 +104,15 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdUpdateScanInitialFileCounts.Parameters["@TotalFiles"].Value = scan.TotalFiles;
             _cmdUpdateScanInitialFileCounts.Parameters["@NewFiles"].Value = scan.NewFiles;
 
-            ArtContentManager.Static.Database.BeginTransaction();
-            _cmdUpdateScanInitialFileCounts.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+            _cmdUpdateScanInitialFileCounts.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdUpdateScanInitialFileCounts.ExecuteScalar();
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
         }
 
         public static void UpdateFilesProcessed(Actions.Scan scan)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdUpdateScanFilesProcessed == null)
             {
@@ -125,15 +125,15 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdUpdateScanFilesProcessed.Parameters["@ScanID"].Value = scan.ID;
             _cmdUpdateScanFilesProcessed.Parameters["@FilesProcessed"].Value = scan.ProcessedFiles;
 
-            ArtContentManager.Static.Database.BeginTransaction();
-            _cmdUpdateScanFilesProcessed.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+            _cmdUpdateScanFilesProcessed.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdUpdateScanFilesProcessed.ExecuteScalar();
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
         }
 
         public static void RecordScanAbort(Actions.Scan scan)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdRecordScanAbort == null)
             {
@@ -151,14 +151,14 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdRecordScanAbort.Parameters["@ProcessedFiles"].Value = scan.ProcessedFiles;
             _cmdRecordScanAbort.Parameters["@Aborted"].Value = scan.AbortScanTime;
     
-            _cmdRecordScanAbort.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdRecordScanAbort.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdRecordScanAbort.ExecuteScalar();
         
         }
 
         public static void RecordScanComplete(Actions.Scan scan)
         {
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdRecordScanComplete == null)
             {
@@ -175,7 +175,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdRecordScanComplete.Parameters["@ProcessedFiles"].Value = scan.ProcessedFiles;
             _cmdRecordScanComplete.Parameters["@Completed"].Value = scan.CompleteScanTime;
 
-            _cmdRecordScanComplete.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            _cmdRecordScanComplete.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdRecordScanComplete.ExecuteScalar();
 
         }
@@ -184,7 +184,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         public static void UpdateAll(Actions.Scan scan)
         {
 
-            SqlConnection DB = ArtContentManager.Static.Database.DB;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdUpdateAll == null)
             {
@@ -214,10 +214,10 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdUpdateAll.Parameters["@Aborted"].Value = scan.AbortScanTime;
             _cmdUpdateAll.Parameters["@Completed"].Value = scan.CompleteScanTime;
 
-            ArtContentManager.Static.Database.BeginTransaction();
-            _cmdUpdateAll.Transaction = ArtContentManager.Static.Database.ActiveTransaction;
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+            _cmdUpdateAll.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdUpdateAll.ExecuteScalar();
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
         }
 
     }

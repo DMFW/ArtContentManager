@@ -312,7 +312,7 @@ namespace ArtContentManager.Content
             // Adds new files and also inserts or updates their location instance(s)
             // After calling this method we will have an ID for the file (either an existing known one or a new one)
 
-            ArtContentManager.Static.Database.BeginTransaction();
+            ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
 
             if (ArtContentManager.Static.DatabaseAgents.dbaFile.IsFileRecorded(this))
             {
@@ -333,15 +333,15 @@ namespace ArtContentManager.Content
                 ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileTextNotes(this);
             }
 
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
 
         }
 
         private void Update()
         {
-            ArtContentManager.Static.Database.BeginTransaction();
+            ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
             ArtContentManager.Static.DatabaseAgents.dbaFile.UpdateFile(this);
-            ArtContentManager.Static.Database.CommitTransaction();
+            ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
         }
     }
 }

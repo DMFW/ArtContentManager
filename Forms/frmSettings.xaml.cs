@@ -27,7 +27,11 @@ namespace ArtContentManager.Forms
             showingInitialSettings = true;
 
             DataContext = skinSetting;
-            skinSetting.URIPath = Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri").Item1;
+            if (Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri") != null)
+            {
+                skinSetting.URIPath = Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri").Item1;
+            }
+
             InitializeComponent();
 
             if (Static.DatabaseAgents.dbaSettings.Setting("WorkFolder") != null)
@@ -66,12 +70,28 @@ namespace ArtContentManager.Forms
 
         private void btnReset_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Do you wish to reset the database to empty?", "Database Reset", MessageBoxButton.OKCancel);
 
-            if (result == MessageBoxResult.OK)
+            if (rdoResetLevel_All.IsChecked == true)
             {
-                ArtContentManager.Static.Database.Reset();
+                MessageBoxResult result = MessageBox.Show("Do you wish to reset the database to empty?", "Database Reset", MessageBoxButton.OKCancel);
+
+                if (result == MessageBoxResult.OK)
+                {
+                    ArtContentManager.Static.Database.Reset(Static.Database.ResetLevel.AllDynamicData);
+                }
             }
+
+            if (rdoResetLevel_Product.IsChecked == true)
+            {
+                MessageBoxResult result = MessageBox.Show("Do you wish to reset all product code data (file data will be retained)?", "Database Reset", MessageBoxButton.OKCancel);
+
+                if (result == MessageBoxResult.OK)
+                {
+                    ArtContentManager.Static.Database.Reset(Static.Database.ResetLevel.ProductData);
+                }
+            }
+
+
         }
 
         private void btnBrowseWorkFolder_Click(object sender, RoutedEventArgs e)

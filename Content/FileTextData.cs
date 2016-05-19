@@ -86,29 +86,37 @@ namespace ArtContentManager.Content
                 goto VendorNameResolved;
             }
 
+            // A second stab at the vendor name is searching for "created by" and looking for the following word.
 
-            // A second stab at the vendor name is using the documentation subfolder name
-            // Note that in this scenario and all following ones we are going to assume the name code is directly available
-            // and we do not attempt to break up brackets as per the previous more complex example 
-
-            Regex objVendorNamePattern02 = new Regex(@"(?<=Documentation/)(.*?)(?=\n)");
+            Regex objVendorNamePattern02 = new Regex(@"(?<=created by\s)(?<word>\b\S+\b)");
 
             if (objVendorNamePattern02.IsMatch(allText))
             {
                 patternMatch = objVendorNamePattern02.Match(allText);
-                _vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/' });  // Trim may need to remove directory character as well
-                if (_vendorNameCode.Length > 0) { goto VendorNameResolved; }                    // Unless we have a non-zero string this didn't work so try the next method
+                _vendorNameCode = patternMatch.ToString().Trim();
+                goto VendorNameResolved;
             }
 
-            // A third stab at the vendor name is searching for "created by" and looking for the following word.
+            // A third and fourth stab at the vendor name is using the documentation subfolder name with forward and backslash delimitors
+            // Note that in this scenario and all following ones we are going to assume the name code is directly available
+            // and we do not attempt to break up brackets as per the previous more complex example. 
 
-            Regex objVendorNamePattern03 = new Regex(@"(?<=created by\s)(?<word>\b\S+\b)");
+            Regex objVendorNamePattern03 = new Regex(@"(?<=Documentation/)(.*?)(?=\n)");
 
             if (objVendorNamePattern03.IsMatch(allText))
             {
                 patternMatch = objVendorNamePattern03.Match(allText);
-                _vendorNameCode = patternMatch.ToString().Trim();
-                goto VendorNameResolved;
+                _vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
+                if (_vendorNameCode.Length > 0) { goto VendorNameResolved; }                    // Unless we have a non-zero string this didn't work so try the next method
+            }
+
+            Regex objVendorNamePattern04 = new Regex(@"(?<=Documentation\\)(.*?)(?=\n)");
+
+            if (objVendorNamePattern04.IsMatch(allText))
+            {
+                patternMatch = objVendorNamePattern04.Match(allText);
+                _vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
+                if (_vendorNameCode.Length > 0) { goto VendorNameResolved; }                    // Unless we have a non-zero string this didn't work so try the next method
             }
 
             VendorNameResolved:

@@ -11,7 +11,7 @@
                     <Button x:Name="btnBrowseScanRoot" Content="..." HorizontalAlignment="Left" Margin="401,44,0,0" VerticalAlignment="Top" Width="26" RenderTransformOrigin="2.516,1.894" Click="btnBrowseScanRoot_Click"/>
                     <Label x:Name="lblScanRoot" Content="Select the root folder to scan :" HorizontalAlignment="Left" Height="29" Margin="24,10,0,0" VerticalAlignment="Top" Width="212"/>
                     <Button x:Name="btnScan" Content="Scan" HorizontalAlignment="Left" Height="48" Margin="34,188,0,0" VerticalAlignment="Top" Width="97" Click="btnScan_Click"/>
-                    <ProgressBar x:Name="pbgScan" HorizontalAlignment="Left" Height="28" Margin="0,373,0,0" VerticalAlignment="Top" Width="437"/>
+                    <ProgressBar x:Name="pbgScan" HorizontalAlignment="Left" Margin="-4,368,0,28" Width="437"/>
                     <StatusBar x:Name="stsScan" HorizontalAlignment="Left" Height="39" Margin="0,329,0,0" VerticalAlignment="Top" Width="437">
                         <Label x:Name="lblStatusMessage" Content="" Height="29" Width="427" FontSize="10"/>
                     </StatusBar>

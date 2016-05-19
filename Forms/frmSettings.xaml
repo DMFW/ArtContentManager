@@ -7,12 +7,14 @@
         <TabControl HorizontalAlignment="Left" Height="350" Margin="25,22,0,0" VerticalAlignment="Top" Width="439">
             <TabItem Header="System Functions">
                 <Grid Background="#FFE5E5E5" Margin="0,1,-3,-92">
-                    <Button x:Name="btnReset" Content="Reset Database" HorizontalAlignment="Left" Height="41" Margin="25,25,0,0" VerticalAlignment="Top" Width="104" Click="btnReset_Click"/>
+                    <Button x:Name="btnReset" Content="Reset Database" HorizontalAlignment="Left" Height="41" Margin="25,25,0,0" VerticalAlignment="Top" Width="130" Click="btnReset_Click"/>
                     <TextBox x:Name="txtWorkFolder" HorizontalAlignment="Left" Height="62" Margin="25,115,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="385" TextChanged="txtWorkFolder_TextChanged"/>
                     <Label x:Name="lblWorkFolder" Content="Work Folder Location:-" HorizontalAlignment="Left" Height="29" Margin="25,81,0,0" VerticalAlignment="Top" Width="176"/>
                     <Button x:Name="btnBrowseWorkFolder" Content="Browse" HorizontalAlignment="Left" Height="19" Margin="315,81,0,0" VerticalAlignment="Top" Width="95" Click="btnBrowseWorkFolder_Click"/>
                     <TextBox x:Name="txtProductPatternMatchLength" HorizontalAlignment="Left" Height="27" Margin="338,200,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="72" TextChanged="txtProductPatternMatchLength_TextChanged"/>
                     <Label x:Name="lblProductPatternMatchLength" Content="Auto Assign Product Pattern Match Length" HorizontalAlignment="Left" Margin="25,200,0,0" VerticalAlignment="Top" Width="248"/>
+                    <RadioButton x:Name="rdoResetLevel_All" GroupName="ResetLevel" Content="Reset All" HorizontalAlignment="Left" Height="17" Margin="214,28,0,0" VerticalAlignment="Top" Width="74"/>
+                    <RadioButton x:Name="rdoResetLevel_Product" GroupName="ResetLevel" Content="Reset Products" HorizontalAlignment="Left" Height="17" Margin="214,49,0,0" VerticalAlignment="Top" Width="101" IsChecked="True"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Skins">
