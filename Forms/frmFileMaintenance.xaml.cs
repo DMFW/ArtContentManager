@@ -30,6 +30,7 @@ namespace ArtContentManager.Forms
         private string _formScanRoot;
         private Actions.Scan _currentRootScan;
 
+        private bool showRootScansOnly;
         private List<Actions.Scan> _existingScans;
 
         public frmFileMaintenance()
@@ -160,19 +161,28 @@ namespace ArtContentManager.Forms
         {
 
             txtScanRoot.Text = Static.DatabaseAgents.dbaSettings.Setting("LastScanPath").Item1;
-            LoadExistingScans();
+            showRootScansOnly = true;
+            LoadExistingScans(showRootScansOnly);
         }
 
-        private void LoadExistingScans()
+        private void LoadExistingScans(bool rootScansOnly)
         { 
             _existingScans = new List<Actions.Scan>();
             Actions.Scan existingScan;
 
+            SqlCommand cmdLoadExistingScans;
             SqlDataReader drLoadExistingScans;
-            SqlCommand cmdLoadExistingScans = new SqlCommand("SELECT * from ScanHistory WHERE IsRequestRoot = @IsRequestRoot", Static.Database.DBReadOnly);
 
-            cmdLoadExistingScans.Parameters.Add("@IsRequestRoot", System.Data.SqlDbType.Bit);
-            cmdLoadExistingScans.Parameters["@IsRequestRoot"].Value = true;
+            if (rootScansOnly)
+            {
+                cmdLoadExistingScans = new SqlCommand("SELECT * from ScanHistory WHERE IsRequestRoot = @IsRequestRoot ORDER BY Started DESC, ScanID", Static.Database.DBReadOnly);
+                cmdLoadExistingScans.Parameters.Add("@IsRequestRoot", System.Data.SqlDbType.Bit);
+                cmdLoadExistingScans.Parameters["@IsRequestRoot"].Value = true;
+            }
+            else
+            {
+                cmdLoadExistingScans = new SqlCommand("SELECT * from ScanHistory ORDER BY Started DESC, ScanID", Static.Database.DBReadOnly);
+            }
 
             drLoadExistingScans = cmdLoadExistingScans.ExecuteReader();
             while (drLoadExistingScans.Read())
@@ -180,6 +190,7 @@ namespace ArtContentManager.Forms
                 existingScan = new Actions.Scan();
                 existingScan.ID = (int)drLoadExistingScans["ScanID"];
                 existingScan.FolderName = drLoadExistingScans["FolderName"].ToString();
+                existingScan.IsRequestRoot = (bool)drLoadExistingScans["IsRequestRoot"];
 
                 if (drLoadExistingScans["Started"] != DBNull.Value) { existingScan.StartScanTime = (DateTime)drLoadExistingScans["Started"]; }
                 if (drLoadExistingScans["Aborted"] != DBNull.Value) { existingScan.AbortScanTime = (DateTime)drLoadExistingScans["Aborted"]; }
@@ -192,7 +203,13 @@ namespace ArtContentManager.Forms
                 _existingScans.Add(existingScan);
             }
             drLoadExistingScans.Close();
+            lvwExistingScans.ItemsSource = _existingScans;
 
+        }
+
+        private List<Actions.Scan> ExistingScans
+        {
+            get { return _existingScans; }
         }
 
         private void txtScanRoot_TextChanged(object sender, TextChangedEventArgs e)
@@ -219,6 +236,16 @@ namespace ArtContentManager.Forms
             Static.DatabaseAgents.dbaProduct.AutoAssignProducts();
         }
 
-        
+        private void chkRootScansOnly_Checked(object sender, RoutedEventArgs e)
+        {
+            showRootScansOnly = (bool)chkRootScansOnly.IsChecked;
+            LoadExistingScans(showRootScansOnly);
+        }
+
+        private void chkRootScansOnly_Unchecked(object sender, RoutedEventArgs e)
+        {
+            showRootScansOnly = (bool)chkRootScansOnly.IsChecked;
+            LoadExistingScans(showRootScansOnly);
+        }
     }
  }
