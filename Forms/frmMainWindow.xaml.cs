@@ -23,6 +23,8 @@ namespace ArtContentManager.Forms
     {
         frmFileMaintenance frmFileMaintenance;
         frmSettings frmSettings;
+        frmOrganisation frmOrganisation;
+        frmProductReview frmProductReview;
 
         public frmMainWindow()
         {
@@ -42,6 +44,12 @@ namespace ArtContentManager.Forms
             }
         }
 
+        private void btnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            frmSettings = new frmSettings();
+            frmSettings.ShowDialog();
+        }
+
         private void btnFiles_Click(object sender, RoutedEventArgs e)
         {
             frmFileMaintenance = new frmFileMaintenance();
@@ -50,14 +58,14 @@ namespace ArtContentManager.Forms
 
         private void btnOrganisation_Click(object sender, RoutedEventArgs e)
         {
-            frmSettings = new frmSettings();
-            frmSettings.ShowDialog();
+            frmOrganisation = new frmOrganisation();
+            frmOrganisation.ShowDialog();
         }
 
-        private void btnSettings_Click(object sender, RoutedEventArgs e)
+        private void btnProducts_Click(object sender, RoutedEventArgs e)
         {
-            frmSettings = new frmSettings();
-            frmSettings.ShowDialog();
+            frmProductReview = new frmProductReview();
+            frmProductReview.ShowDialog();
         }
 
         private void frmMainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -67,5 +75,6 @@ namespace ArtContentManager.Forms
            Static.Database.Close();
         }
 
+        
     }
 }

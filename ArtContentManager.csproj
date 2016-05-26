@@ -63,6 +63,9 @@
     <Compile Include="Content\FileTextData.cs" />
     <Compile Include="Content\Product.cs" />
     <Compile Include="Content\Skin.cs" />
+    <Compile Include="Forms\frmProductReview.xaml.cs">
+      <DependentUpon>frmProductReview.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
     <Compile Include="Static\DatabaseAgents\dbaContentType.cs" />
     <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
@@ -105,6 +108,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Forms\frmSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Forms\frmProductReview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -170,6 +177,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Organisation.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Products.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

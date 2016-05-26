@@ -354,9 +354,9 @@ namespace ArtContentManager.Static
                 SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DBActive);
                 cmdContentSpecialTypes.ExecuteNonQuery();
 
-                string sqlDefinitionGroupID = "DELETE FROM DefinitionGroupID";
-                SqlCommand cmdDefinitionGroupID = new SqlCommand(sqlDefinitionGroupID, _DBActive);
-                cmdDefinitionGroupID.ExecuteNonQuery();
+                string sqlDefinitionGroup = "DELETE FROM DefinitionGroup";
+                SqlCommand cmdDefinitionGroup = new SqlCommand(sqlDefinitionGroup, _DBActive);
+                cmdDefinitionGroup.ExecuteNonQuery();
 
                 string sqlProductGroupMembers = "TRUNCATE TABLE ProductGroupMembers";
                 SqlCommand cmdProductGroupMembers = new SqlCommand(sqlProductGroupMembers, _DBActive);

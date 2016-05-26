@@ -28,7 +28,9 @@ namespace ArtContentManager.Forms
         private BackgroundWorker _scanImportWorker;
 
         private string _formScanRoot;
-        private Actions.Scan _currentRootScan; 
+        private Actions.Scan _currentRootScan;
+
+        private List<Actions.Scan> _existingScans;
 
         public frmFileMaintenance()
         {
@@ -156,7 +158,41 @@ namespace ArtContentManager.Forms
 
         private void frmFileMaintenance_Loaded(object sender, RoutedEventArgs e)
         {
+
             txtScanRoot.Text = Static.DatabaseAgents.dbaSettings.Setting("LastScanPath").Item1;
+            LoadExistingScans();
+        }
+
+        private void LoadExistingScans()
+        { 
+            _existingScans = new List<Actions.Scan>();
+            Actions.Scan existingScan;
+
+            SqlDataReader drLoadExistingScans;
+            SqlCommand cmdLoadExistingScans = new SqlCommand("SELECT * from ScanHistory WHERE IsRequestRoot = @IsRequestRoot", Static.Database.DBReadOnly);
+
+            cmdLoadExistingScans.Parameters.Add("@IsRequestRoot", System.Data.SqlDbType.Bit);
+            cmdLoadExistingScans.Parameters["@IsRequestRoot"].Value = true;
+
+            drLoadExistingScans = cmdLoadExistingScans.ExecuteReader();
+            while (drLoadExistingScans.Read())
+            {
+                existingScan = new Actions.Scan();
+                existingScan.ID = (int)drLoadExistingScans["ScanID"];
+                existingScan.FolderName = drLoadExistingScans["FolderName"].ToString();
+
+                if (drLoadExistingScans["Started"] != DBNull.Value) { existingScan.StartScanTime = (DateTime)drLoadExistingScans["Started"]; }
+                if (drLoadExistingScans["Aborted"] != DBNull.Value) { existingScan.AbortScanTime = (DateTime)drLoadExistingScans["Aborted"]; }
+                if (drLoadExistingScans["Completed"] != DBNull.Value) { existingScan.CompleteScanTime = (DateTime)drLoadExistingScans["Completed"]; }
+
+                existingScan.TotalFiles = (int)drLoadExistingScans["TotalFiles"];
+                existingScan.NewFiles = (int)drLoadExistingScans["NewFiles"];
+                existingScan.ProcessedFiles = (int)drLoadExistingScans["ProcessedFiles"];
+
+                _existingScans.Add(existingScan);
+            }
+            drLoadExistingScans.Close();
+
         }
 
         private void txtScanRoot_TextChanged(object sender, TextChangedEventArgs e)
