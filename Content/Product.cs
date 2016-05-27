@@ -14,6 +14,8 @@ namespace ArtContentManager.Content
         private string _Name;
         private Image _Thumbnail;
         private bool _IsPrimary;
+        private DateTime _DatePurchased;
+        private string _ProductURI;
         private Dictionary<int, int> _dctCreatorIDs = new Dictionary<int, int>();
 
         private List<File> _ComponentFiles; // Just the parent files
@@ -30,6 +32,12 @@ namespace ArtContentManager.Content
             set { _Name = value; }
         }
 
+        public string ProductURI
+        {
+            get { return _ProductURI; }
+            set { _ProductURI = value; }
+        }
+
         public Image Thumbnail
         {
             get { return _Thumbnail; }
@@ -40,6 +48,12 @@ namespace ArtContentManager.Content
         {
             get { return _IsPrimary; }
             set { _IsPrimary = value; }
+        }
+
+        public DateTime DatePurchased
+        {
+            get { return _DatePurchased; }
+            set { _DatePurchased = value; }
         }
 
         public Dictionary<int, int> Creators

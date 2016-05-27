@@ -7,8 +7,21 @@
         mc:Ignorable="d"
         Title="ProductReview" Height="555.08" Width="628.075"
         Background="{DynamicResource stdFormBackground}">
-    <Grid>
-        <DataGrid x:Name="dataGrid" HorizontalAlignment="Left" Height="483" Margin="10,31,0,0" VerticalAlignment="Top" Width="600"/>
+    <StackPanel>
+        <DataGrid x:Name="dgProducts" AutoGenerateColumns ="False" HorizontalAlignment="Left" Height="483" Margin="10,31,0,0" VerticalAlignment="Top" Width="600" ItemsSource="{Binding Products}" >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Product" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Date Purchased" Binding="{Binding DatePurchased}" />
+                <DataGridTextColumn Header="ProductURI" Binding="{Binding ProductURI}" />
+                <DataGridTemplateColumn Header="Thumbnail" Width="SizeToCells" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding Thumbnail}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
 
-    </Grid>
+        </DataGrid>
+    </StackPanel>
 </Window>

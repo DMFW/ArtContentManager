@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Collections.ObjectModel;
 
 namespace ArtContentManager.Forms
 {
@@ -19,6 +20,8 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmProductReview : Window
     {
+        private ObservableCollection<ArtContentManager.Content.Product> DisplayedProducts;
+
         public frmProductReview()
         {
             InitializeComponent();
