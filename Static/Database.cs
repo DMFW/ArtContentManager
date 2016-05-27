@@ -354,7 +354,7 @@ namespace ArtContentManager.Static
                 SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DBActive);
                 cmdContentSpecialTypes.ExecuteNonQuery();
 
-                string sqlDefinitionGroup = "DELETE FROM DefinitionGroup";
+                string sqlDefinitionGroup = "DELETE FROM OrganisationScheme";
                 SqlCommand cmdDefinitionGroup = new SqlCommand(sqlDefinitionGroup, _DBActive);
                 cmdDefinitionGroup.ExecuteNonQuery();
 

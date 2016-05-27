@@ -1,14 +1,15 @@
-﻿<Window x:Class="ArtContentManager.Forms.frmProductReview"
+﻿<src:SkinableWindow x:Class="ArtContentManager.Forms.frmProductReview"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:src="clr-namespace:ArtContentManager.Forms"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ArtContentManager.Forms"
         mc:Ignorable="d"
-        Title="ProductReview" Height="555.08" Width="628.075"
+        Title="ProductReview" Height="555.08" Width="762"
         Background="{DynamicResource stdFormBackground}">
-    <StackPanel>
-        <DataGrid x:Name="dgProducts" AutoGenerateColumns ="False" HorizontalAlignment="Left" Height="483" Margin="10,31,0,0" VerticalAlignment="Top" Width="600" ItemsSource="{Binding Products}" >
+    <StackPanel x:Name="spOuterFrame" Height="514" VerticalAlignment="Top" Orientation="Vertical">
+        <DataGrid x:Name="dgProducts" AutoGenerateColumns="False" HorizontalAlignment="Left" Height="449" Margin="10,31,0,0" VerticalAlignment="Bottom" Width="722" ItemsSource="{Binding Products}" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Product" Binding="{Binding Name}" />
                 <DataGridTextColumn Header="Date Purchased" Binding="{Binding DatePurchased}" />
@@ -24,4 +25,4 @@
 
         </DataGrid>
     </StackPanel>
-</Window>
+</src:SkinableWindow>

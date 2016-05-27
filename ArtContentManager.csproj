@@ -56,6 +56,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Actions\FilterExpression.cs" />
+    <Compile Include="Actions\FilterExpressionRow.cs" />
+    <Compile Include="Actions\FilterField.cs" />
     <Compile Include="Content\ContentType.cs" />
     <Compile Include="Content\Creator.cs" />
     <Compile Include="Content\File.cs" />
@@ -65,6 +68,9 @@
     <Compile Include="Content\Skin.cs" />
     <Compile Include="Forms\frmProductReview.xaml.cs">
       <DependentUpon>frmProductReview.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmProductReviewSelection.xaml.cs">
+      <DependentUpon>frmProductReviewSelection.xaml</DependentUpon>
     </Compile>
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
     <Compile Include="Static\DatabaseAgents\dbaContentType.cs" />
@@ -104,6 +110,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Forms\frmOrganisation.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Forms\frmProductReviewSelection.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

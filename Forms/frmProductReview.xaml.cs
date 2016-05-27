@@ -18,9 +18,8 @@ namespace ArtContentManager.Forms
     /// <summary>
     /// Interaction logic for ProductReview.xaml
     /// </summary>
-    public partial class frmProductReview : Window
+    public partial class frmProductReview : SkinableWindow
     {
-        private ObservableCollection<ArtContentManager.Content.Product> DisplayedProducts;
 
         public frmProductReview()
         {

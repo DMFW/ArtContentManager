@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace ArtContentManager.Forms
 {
     /// <summary>
-    /// Interaction logic for frmOrganisation.xaml
+    /// Interaction logic for frmProductReviewSelection.xaml
     /// </summary>
-    public partial class frmOrganisation : SkinableWindow
+    public partial class frmProductReviewSelection : SkinableWindow
     {
-        public frmOrganisation()
+        public frmProductReviewSelection()
         {
             InitializeComponent();
         }

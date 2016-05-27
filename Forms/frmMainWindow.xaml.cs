@@ -24,7 +24,7 @@ namespace ArtContentManager.Forms
         frmFileMaintenance frmFileMaintenance;
         frmSettings frmSettings;
         frmOrganisation frmOrganisation;
-        frmProductReview frmProductReview;
+        frmProductReviewSelection frmProductReviewSelection;
 
         public frmMainWindow()
         {
@@ -64,8 +64,8 @@ namespace ArtContentManager.Forms
 
         private void btnProducts_Click(object sender, RoutedEventArgs e)
         {
-            frmProductReview = new frmProductReview();
-            frmProductReview.ShowDialog();
+            frmProductReviewSelection = new frmProductReviewSelection();
+            frmProductReviewSelection.ShowDialog();
         }
 
         private void frmMainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
