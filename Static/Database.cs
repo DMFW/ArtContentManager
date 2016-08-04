@@ -21,6 +21,7 @@ namespace ArtContentManager.Static
 
         private static int _trnLevelActive = 0;
         private static int _trnLevelReadOnly = 0;
+        private static bool _scanReferenceDataLoaded = false;
 
         public enum ResetLevel
         {
@@ -34,11 +35,13 @@ namespace ArtContentManager.Static
             ReadOnly
         }
 
-        // Static dictionaries loaded for performance purposes during scanning 
+        // Static dictionaries loaded for performance purposes during scanning
+         
         public static Dictionary<string, int> ProcessRoleExtensionsPrimary;
         public static Dictionary<string, int> ProcessRoles;
         public static Dictionary<string, string> ExcludedFiles;
         public static Dictionary<string, int> ReservedFiles;
+        public static Dictionary<string, Content.InstallationType> InstallationTypes;
 
         public static SqlConnection DBActive
         {
@@ -95,6 +98,11 @@ namespace ArtContentManager.Static
                 MessageBox.Show(e.Message);
                 return false;
             }
+        }
+
+        public static bool ScanReferenceDataLoaded
+        {
+            get { return _scanReferenceDataLoaded; }
         }
 
         public static void BeginTransaction(TransactionType tt)
@@ -200,6 +208,9 @@ namespace ArtContentManager.Static
             Trace.WriteLine("Process role primary extensions loaded");
             LoadSpecialFiles();
             Trace.WriteLine("Special files loaded");
+            LoadInstallationTypes();
+            Trace.WriteLine("Installation types loaded");
+            _scanReferenceDataLoaded = true;
         }
 
         public static void UnloadScanReferenceData()
@@ -208,6 +219,7 @@ namespace ArtContentManager.Static
             ProcessRoleExtensionsPrimary = null;
             ExcludedFiles = null;
             ReservedFiles = null;
+            _scanReferenceDataLoaded = false;
         }
 
         private static void LoadProcessRoles()
@@ -284,6 +296,33 @@ namespace ArtContentManager.Static
             }
         }
 
+        private static void LoadInstallationTypes()
+        {
+
+            InstallationTypes = new Dictionary<string, Content.InstallationType>();
+
+            try
+            {
+                SqlDataReader myReader = null;
+                SqlCommand myCommand = new SqlCommand("SELECT * from InstallationTypes", _DBReadOnly);
+                myReader = myCommand.ExecuteReader();
+                while (myReader.Read())
+                {
+                    Content.InstallationType installationType = new Content.InstallationType();
+                    installationType.TypeID = (int)myReader["InstallationTypeID"];
+                    installationType.SoftwareType = myReader["SoftwareType"].ToString();
+                    installationType.IdentifyingDirectoryName = myReader["IdentifyingDirectoryName"].ToString();
+
+                    InstallationTypes.Add(myReader["IdentifyingDirectoryName"].ToString(), installationType);
+                }
+                myReader.Close();
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.ToString());
+            }
+        }
+
         public static void Reset(ResetLevel resetLevel)
         {
 
@@ -324,6 +363,14 @@ namespace ArtContentManager.Static
 
                     cmdArt.CommandText = "DBCC CHECKIDENT (Art,RESEED, 0)";
                     cmdArt.ExecuteNonQuery();
+
+                    string sqlInstallations = "DELETE FROM Installations";
+                    SqlCommand cmdInstallations = new SqlCommand(sqlInstallations, _DBActive);
+                    cmdInstallations.ExecuteNonQuery();
+
+                    cmdInstallations.CommandText = "DBCC CHECKIDENT (Installations,RESEED, 0)";
+                    cmdInstallations.ExecuteNonQuery();
+
                 }
 
                 string sqlProductInstaller = "TRUNCATE TABLE ProductInstaller";
@@ -342,9 +389,13 @@ namespace ArtContentManager.Static
                 SqlCommand cmdProductImages = new SqlCommand(sqlProductImagesTruncate, _DBActive);
                 cmdProductImages.ExecuteNonQuery();
 
-                string sqlProductContentTypes = "TRUNCATE TABLE ProductContentTypes";
-                SqlCommand cmdProductContentTypes = new SqlCommand(sqlProductContentTypes, _DBActive);
-                cmdProductContentTypes.ExecuteNonQuery();
+                string sqlProductContentTypesFractured = "TRUNCATE TABLE ProductContentTypesFractured";
+                SqlCommand cmdProductContentTypesFractured = new SqlCommand(sqlProductContentTypesFractured, _DBActive);
+                cmdProductContentTypesFractured.ExecuteNonQuery();
+
+                string sqlProductContentTypesOrganised = "TRUNCATE TABLE ProductContentTypesOrganised";
+                SqlCommand cmdProductContentTypesOrganised = new SqlCommand(sqlProductContentTypesOrganised, _DBActive);
+                cmdProductContentTypesOrganised.ExecuteNonQuery();
 
                 string sqlContentTypes = "TRUNCATE TABLE ContentTypes";
                 SqlCommand cmdContentTypes = new SqlCommand(sqlContentTypes, _DBActive);
@@ -353,10 +404,6 @@ namespace ArtContentManager.Static
                 string sqlContentSpecialTypes = "TRUNCATE TABLE ContentSpecialTypes";
                 SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DBActive);
                 cmdContentSpecialTypes.ExecuteNonQuery();
-
-                string sqlDefinitionGroup = "DELETE FROM OrganisationScheme";
-                SqlCommand cmdDefinitionGroup = new SqlCommand(sqlDefinitionGroup, _DBActive);
-                cmdDefinitionGroup.ExecuteNonQuery();
 
                 string sqlProductGroupMembers = "TRUNCATE TABLE ProductGroupMembers";
                 SqlCommand cmdProductGroupMembers = new SqlCommand(sqlProductGroupMembers, _DBActive);
@@ -386,6 +433,30 @@ namespace ArtContentManager.Static
 
                 if (resetLevel == ResetLevel.AllDynamicData)
                 {
+
+                    string sqlFilterExpressionRows = "DELETE FROM FilterExpressionRows";
+                    SqlCommand cmdFilterExpressionRows = new SqlCommand(sqlFilterExpressionRows, _DBActive);
+                    cmdFilterExpressionRows.ExecuteNonQuery();
+
+                    string sqlFilterExpressionFavourites = "TRUNCATE TABLE FilterExpressionFavourites";
+                    SqlCommand cmdFilterExpressionFavourites = new SqlCommand(sqlFilterExpressionFavourites, _DBActive);
+                    cmdFilterExpressionFavourites.ExecuteNonQuery();
+
+                    cmdFilterExpressionFavourites.CommandText = "DBCC CHECKIDENT (FilterExpressionFavourites,RESEED, 0)";
+                    cmdFilterExpressionFavourites.ExecuteNonQuery();
+
+                    string sqlOrganisationScheme = "DELETE FROM OrganisationScheme";
+                    SqlCommand cmdOrganisationScheme = new SqlCommand(sqlOrganisationScheme, _DBActive);
+                    cmdOrganisationScheme.ExecuteNonQuery();
+
+                    cmdOrganisationScheme.CommandText = "DBCC CHECKIDENT (OrganisationScheme,RESEED, 0)";
+                    cmdOrganisationScheme.ExecuteNonQuery();
+
+                    sqlOrganisationScheme = "INSERT INTO OrganisationScheme (Description, GroupType, DateCreated, Status) VALUES('Derived From Scanning', 0, @CurrentTime ,0)";
+                    cmdOrganisationScheme.CommandText = sqlOrganisationScheme;
+                    cmdOrganisationScheme.Parameters.Add("@CurrentTime", SqlDbType.DateTime);
+                    cmdOrganisationScheme.Parameters["@CurrentTime"].Value = DateTime.Now;
+                    cmdOrganisationScheme.ExecuteNonQuery();
 
                     string sqlFileLocationsTruncate = "TRUNCATE TABLE FileLocations";
                     SqlCommand cmdFileLocations = new SqlCommand(sqlFileLocationsTruncate, _DBActive);

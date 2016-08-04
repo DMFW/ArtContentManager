@@ -65,7 +65,7 @@ namespace ArtContentManager.Content
                 patternMatch = objVendorNamePattern01.Match(allText);
                 _vendorFullName = patternMatch.ToString().Trim();
 
-                if ((_vendorFullName.IndexOf("(") != 0) & (_vendorFullName.IndexOf(")") != 0))
+                if ((_vendorFullName.IndexOf("(") != -1) & (_vendorFullName.IndexOf(")") != -1))
                 {
                     // Deals with e.g. Vendor Name: johnbarker (Barker)
                     // or              Author: Atenais (Liudmila Metaeva)

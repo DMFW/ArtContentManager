@@ -23,7 +23,20 @@ namespace ArtContentManager.Forms
 
         public frmProductReview()
         {
+            LoadGrid("Select * from ProductGridView");
             InitializeComponent();
         }
+
+        public frmProductReview(string selectionSQL)
+        {
+            LoadGrid(selectionSQL);
+            InitializeComponent();
+        }
+
+        void LoadGrid(string selectionSQL)
+        {
+
+        }
+
     }
 }

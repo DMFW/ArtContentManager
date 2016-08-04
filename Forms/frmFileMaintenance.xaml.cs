@@ -24,7 +24,7 @@ namespace ArtContentManager.Forms
     public partial class frmFileMaintenance : SkinableWindow
     {
 
-        private BackgroundWorker _scanCountWorker;
+        private BackgroundWorker _scanWorker;
         private BackgroundWorker _scanImportWorker;
 
         private string _formScanRoot;
@@ -50,9 +50,33 @@ namespace ArtContentManager.Forms
             }
         }
 
-        private void btnScan_Click(object sender, RoutedEventArgs e)
+        private void btnFullScan_Click(object sender, RoutedEventArgs e)
+        {
+            Queue <Static.FileSystemScan.ScanMode> qScanDirectives = new Queue<Static.FileSystemScan.ScanMode>();
+
+            // Do the count then the full import
+
+            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smFullImportCount);
+            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smFullImport);
+
+            StartScan(qScanDirectives);
+        }
+
+        private void btnCategoryScan_Click(object sender, RoutedEventArgs e)
         {
 
+            Queue<Static.FileSystemScan.ScanMode> qScanDirectives = new Queue<Static.FileSystemScan.ScanMode>();
+
+            // Do the count then the full import
+
+            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smCategoryImportCount);
+            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smCategoryImport);
+
+            StartScan(qScanDirectives);
+        }
+
+        private void StartScan(Queue<Static.FileSystemScan.ScanMode> qScanMode)
+        {
             if (!Directory.Exists(_formScanRoot))
             {
                 MessageBoxResult invalidScanPath = System.Windows.MessageBox.Show("You have selected an invalid root path. The scan cannot be performed.", "Scan Request Invalid");
@@ -67,49 +91,56 @@ namespace ArtContentManager.Forms
                 return;
             }
 
-            _scanCountWorker = new BackgroundWorker();
-            _scanCountWorker.WorkerReportsProgress = true;
-            _scanCountWorker.WorkerSupportsCancellation = true;
-            _scanCountWorker.DoWork += scanCountWorker_DoWork;
-            _scanCountWorker.RunWorkerCompleted += scanCountWorker_RunWorkerCompleted;
-            _scanCountWorker.ProgressChanged += scanCountWorker_ReportProgress;
+            _scanWorker = new BackgroundWorker();
+            _scanWorker.WorkerReportsProgress = true;
+            _scanWorker.WorkerSupportsCancellation = true;
+            _scanWorker.DoWork += scanWorker_DoWork;
+            _scanWorker.RunWorkerCompleted += scanWorker_RunWorkerCompleted;
+            _scanWorker.ProgressChanged += scanWorker_ReportProgress;
 
-            btnScan.IsEnabled = false;
+            btnFullScan.IsEnabled = false;
+            btnCategoryScan.IsEnabled = false;
             btnScanCancel.IsEnabled = true;
-            _scanCountWorker.RunWorkerAsync();   // Count all the files
-           
-        }
-
-        private void scanCountWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
 
             _currentRootScan = new Actions.Scan();
-
             _currentRootScan.FolderName = _formScanRoot;
             _currentRootScan.IsRequestRoot = true;
-            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(_currentRootScan);
-
             _currentRootScan.StartScanTime = DateTime.Now;
             ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(_currentRootScan);
+            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(_currentRootScan);
 
-            Static.FileSystemScan.scanMode = Static.FileSystemScan.ScanMode.smCount;
-            Static.FileSystemScan.Scan(_currentRootScan, _scanCountWorker);   
+            _scanWorker.RunWorkerAsync(qScanMode);
+
         }
 
-        private void scanCountWorker_ReportProgress(object sender, ProgressChangedEventArgs e)
+        private void scanWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+
+            Queue<Static.FileSystemScan.ScanMode> qScanMode = (Queue <Static.FileSystemScan.ScanMode>) e.Argument;
+            Static.FileSystemScan.ScanMode scanMode = qScanMode.Dequeue();
+            Static.FileSystemScan.Scan(scanMode, _currentRootScan, _scanWorker);
+
+            // Return the current scan and the queue of remaining scan types in a tuple.
+            Tuple<Static.FileSystemScan.ScanMode, Queue<Static.FileSystemScan.ScanMode>> tplScanDirectives = new Tuple<Static.FileSystemScan.ScanMode, Queue<Static.FileSystemScan.ScanMode>>(scanMode, qScanMode);
+            e.Result = tplScanDirectives;
+        }
+
+        private void scanWorker_ReportProgress(object sender, ProgressChangedEventArgs e)
         {
             lblStatusMessage.Content = Static.ScanProgress.Message;
+            pbgScan.Value = Static.ScanProgress.CompletionPct;
         }
 
-        private void scanCountWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void scanWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
 
-            _scanImportWorker = new BackgroundWorker();
-            _scanImportWorker.WorkerReportsProgress = true;
-            _scanImportWorker.WorkerSupportsCancellation = true;
-            _scanImportWorker.DoWork += scanImportWorker_DoWork;
-            _scanImportWorker.RunWorkerCompleted += scanImportWorker_RunWorkerCompleted;
-            _scanImportWorker.ProgressChanged += scanImportWorker_ReportProgress;
+            Tuple<Static.FileSystemScan.ScanMode, Queue<Static.FileSystemScan.ScanMode>> tplScanDirectives = (Tuple <Static.FileSystemScan.ScanMode, Queue<Static.FileSystemScan.ScanMode>>) e.Result;
+
+            // Retrieve the last scan mode we completed and the queue of remaining modes we want to execute.
+
+            Static.FileSystemScan.ScanMode completedScanMode = tplScanDirectives.Item1;
+            Queue<Static.FileSystemScan.ScanMode> qScanMode = tplScanDirectives.Item2;
+
 
             if (e.Cancelled)
             {
@@ -119,42 +150,29 @@ namespace ArtContentManager.Forms
             }
             else
             {
-                _scanImportWorker.RunWorkerAsync(); // Process all the files
+
+                if (completedScanMode == Static.FileSystemScan.ScanMode.smFullImport)
+                {
+                    lblStatusMessage.Content = "Completed scanning of " + _currentRootScan.TotalFiles + " files [" + _currentRootScan.ProcessedFiles + " new imports]";
+                    _currentRootScan.CompleteScanTime = DateTime.Now;
+                    ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
+                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
+                    ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
+                }
+
+                if (qScanMode.Count > 0)
+                {
+                    // Dive back in and do another scan
+                    _scanWorker.RunWorkerAsync(qScanMode);
+                }
+                else
+                {
+                    _scanWorker = null;
+                    btnFullScan.IsEnabled = true;
+                    btnCategoryScan.IsEnabled = true;
+                    btnScanCancel.IsEnabled = false;
+                }
             }
-        }
-
-        private void scanImportWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            Static.FileSystemScan.scanMode = Static.FileSystemScan.ScanMode.smImport;
-            Static.FileSystemScan.Scan(_currentRootScan, _scanImportWorker);
-        }
-
-        private void scanImportWorker_ReportProgress(object sender, ProgressChangedEventArgs e)
-        {
-            lblStatusMessage.Content = Static.ScanProgress.Message;
-            pbgScan.Value = Static.ScanProgress.CompletionPct;
-        }
-
-        private void scanImportWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            _scanCountWorker = null;
-            _scanImportWorker = null;
-            btnScan.IsEnabled = true;
-            btnScanCancel.IsEnabled = false;
-            ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
-
-            if (e.Cancelled)
-            {
-                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(_currentRootScan);
-            }
-            else
-            {
-                lblStatusMessage.Content = "Completed scanning of " + _currentRootScan.TotalFiles + " files [" + _currentRootScan.ProcessedFiles + " new imports]";
-                _currentRootScan.CompleteScanTime = DateTime.Now;
-                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
-            }
-            ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
-
         }
 
         private void frmFileMaintenance_Loaded(object sender, RoutedEventArgs e)
@@ -196,9 +214,9 @@ namespace ArtContentManager.Forms
                 if (drLoadExistingScans["Aborted"] != DBNull.Value) { existingScan.AbortScanTime = (DateTime)drLoadExistingScans["Aborted"]; }
                 if (drLoadExistingScans["Completed"] != DBNull.Value) { existingScan.CompleteScanTime = (DateTime)drLoadExistingScans["Completed"]; }
 
-                existingScan.TotalFiles = (int)drLoadExistingScans["TotalFiles"];
-                existingScan.NewFiles = (int)drLoadExistingScans["NewFiles"];
-                existingScan.ProcessedFiles = (int)drLoadExistingScans["ProcessedFiles"];
+                existingScan.TotalFiles = drLoadExistingScans["TotalFiles"] as int? ?? 0;
+                existingScan.NewFiles = drLoadExistingScans["NewFiles"] as int? ?? 0;
+                existingScan.ProcessedFiles = drLoadExistingScans["ProcessedFiles"] as int? ?? 0;
 
                 _existingScans.Add(existingScan);
             }
@@ -220,9 +238,9 @@ namespace ArtContentManager.Forms
 
         private void btnScanCancel_Click(object sender, RoutedEventArgs e)
         {
-            if (_scanCountWorker != null)
+            if (_scanWorker != null)
             {
-                _scanCountWorker.CancelAsync();
+                _scanWorker.CancelAsync();
             }
 
             if (_scanImportWorker != null)
@@ -246,6 +264,11 @@ namespace ArtContentManager.Forms
         {
             showRootScansOnly = (bool)chkRootScansOnly.IsChecked;
             LoadExistingScans(showRootScansOnly);
+        }
+
+        private void btnAutoProducts_Click_1(object sender, RoutedEventArgs e)
+        {
+
         }
     }
  }

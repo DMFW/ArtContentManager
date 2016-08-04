@@ -19,9 +19,20 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmProductReviewSelection : SkinableWindow
     {
+        frmProductReview frmProductReview;
+
         public frmProductReviewSelection()
         {
             InitializeComponent();
         }
+
+        private void btnShowProducts_Click(object sender, RoutedEventArgs e)
+        {
+            frmProductReview = new frmProductReview();
+            frmProductReview.ShowDialog();
+        }
+
+
+
     }
 }

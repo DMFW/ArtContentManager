@@ -54,7 +54,7 @@
         </DataGrid>
         <Button x:Name="btnCalculateCount" Content="Calculate Count" HorizontalAlignment="Left" Height="30" Grid.Row="3" VerticalAlignment="Top" Width="100"/>
         <Label x:Name="lblSelectionCount" Content="Selection Count [Not Calculated]" HorizontalAlignment="Center" Grid.Row="3" VerticalAlignment="Top"/>
-        <Button x:Name="btnShowProducts" Content="Show Products" HorizontalAlignment="Right" Height="30" Grid.Row="3" VerticalAlignment="Top" Width="100"/>
+        <Button x:Name="btnShowProducts" Content="Show Products" HorizontalAlignment="Right" Grid.Row="3" Width="100" Click="btnShowProducts_Click" Height="30" VerticalAlignment="Bottom"/>
         <Button x:Name="btnSaveAsFavourite" Content="Save as Favourite" HorizontalAlignment="Left" Height="30" Grid.Row="4" VerticalAlignment="Top" Width="100"/>
         <Button x:Name="btnDeleteFavourite" Content="Delete Favourite" HorizontalAlignment="Center" Height="30" Grid.Row="4" VerticalAlignment="Top" Width="100"/>
     </Grid>

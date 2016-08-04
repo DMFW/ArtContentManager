@@ -59,11 +59,13 @@
     <Compile Include="Actions\FilterExpression.cs" />
     <Compile Include="Actions\FilterExpressionRow.cs" />
     <Compile Include="Actions\FilterField.cs" />
+    <Compile Include="Content\Category.cs" />
     <Compile Include="Content\ContentType.cs" />
     <Compile Include="Content\Creator.cs" />
     <Compile Include="Content\File.cs" />
     <Compile Include="Actions\Scan.cs" />
     <Compile Include="Content\FileTextData.cs" />
+    <Compile Include="Content\InstallationType.cs" />
     <Compile Include="Content\Product.cs" />
     <Compile Include="Content\Skin.cs" />
     <Compile Include="Forms\frmProductReview.xaml.cs">

@@ -13,24 +13,43 @@ namespace ArtContentManager.Static
     static internal class FileSystemScan
     {
 
-        public enum ScanMode { smCount, smImport };
-        public static ScanMode scanMode = ScanMode.smCount;
+        public enum ScanMode
+        {
+          smCategoryImportCount,
+          smCategoryImport,
+          smFullImportCount,
+          smFullImport
+        };
+
+        private static List<string> _lstCategoryParentFolderNames = new List<string>
+        { "character", "Hair", "Pose", "props" };
+ 
         private static int _internalZipInstance;
         private static Dictionary<string, Actions.Scan> _folderScan;
 
-        public static void Scan(Actions.Scan rootScan, BackgroundWorker bw)
+        public static List<string> CategoryParentFolderNames
+        {
+            get { return _lstCategoryParentFolderNames; }
+        }
+
+        public static void Scan(ScanMode scanMode, Actions.Scan rootScan, BackgroundWorker bw)
         {
 
             Actions.Scan subScan;
             Actions.Scan activeScan;
             DirectoryInfo dirInfo;
-            Database.LoadScanReferenceData();
-           
+
+            if (Database.ScanReferenceDataLoaded == false)
+            {
+                Database.LoadScanReferenceData();
+            }
+
             string phase;
            
             switch (scanMode)
             {
-                case ScanMode.smCount :
+                case ScanMode.smCategoryImportCount:
+                case ScanMode.smFullImportCount:
                     phase = "counting";
                     rootScan.TotalFiles = 0;
                     rootScan.NewFiles = 0;
@@ -38,8 +57,13 @@ namespace ArtContentManager.Static
                     _folderScan = new Dictionary<string, Actions.Scan>();
                     _folderScan.Add(rootScan.FolderName, rootScan);
                     break;
-                case ScanMode.smImport :
-                    phase = "importing";
+                case ScanMode.smCategoryImport:
+                    phase = "importing categories only";
+                    ScanProgress.TotalFileCount = rootScan.TotalFiles;
+                    ScanProgress.CurrentFileCount = 0;
+                    break;
+                case ScanMode.smFullImport:
+                    phase = "importing all";
                     ScanProgress.TotalFileCount = rootScan.TotalFiles;
                     ScanProgress.CurrentFileCount = 0;
                     break;
@@ -128,7 +152,8 @@ namespace ArtContentManager.Static
                 {
                     switch (scanMode)
                     {
-                        case ScanMode.smCount:
+                        case ScanMode.smCategoryImportCount:
+                        case ScanMode.smFullImportCount:
                             subScan = new Actions.Scan();
                             subScan.FolderName = currentDir;
                             subScan.StartScanTime = DateTime.Now;
@@ -138,7 +163,8 @@ namespace ArtContentManager.Static
                             activeScan = subScan;
                             break;
 
-                        case ScanMode.smImport:
+                        case ScanMode.smCategoryImport:
+                        case ScanMode.smFullImport:
                             Debug.Assert(_folderScan.ContainsKey(currentDir.ToUpperInvariant())); // Indicates either a logic error or that someone has been adding folders between the counting and import phases. Just don't do that OK? 
                             subScan = _folderScan[currentDir.ToUpperInvariant()];
                             activeScan = subScan;
@@ -153,8 +179,8 @@ namespace ArtContentManager.Static
 
                 switch (scanMode)
                 {
-         
-                    case ScanMode.smCount:
+                    case ScanMode.smCategoryImportCount:
+                    case ScanMode.smFullImportCount:
 
                         activeScan.TotalFiles += dirInfo.GetFiles().Length;
                         activeScan.NewFiles += newFiles.Length;
@@ -181,7 +207,24 @@ namespace ArtContentManager.Static
 
                         break;
 
-                    case ScanMode.smImport:
+                    case ScanMode.smCategoryImport:
+
+                        // Where there are no subdirectories we are down to the level of an individual product directory
+                        // This is not a category so ignore it and continue
+
+                        if (subDirs.Count() != 0)
+                        {
+                            // There are sub directories, so determine if the current directory belongs to a runtime
+                            if (currentDir.Contains("Runtime"))
+                            {
+                                Content.Category potentialCategory = new Content.Category(currentDir);
+
+                            }
+                        }
+
+                        break;
+
+                    case ScanMode.smFullImport:
 
                         foreach (FileInfo file in newFiles)
                         {
@@ -253,10 +296,13 @@ namespace ArtContentManager.Static
 
             switch (scanMode)
             {
-                case ScanMode.smCount:
+                case ScanMode.smCategoryImportCount:
+                    // The category counting shouldn't write to the scan history table
+                    break;
+                case ScanMode.smFullImportCount:
                     ArtContentManager.Static.DatabaseAgents.dbaScanHistory.UpdateInitialFileCounts(rootScan);
                     break;
-                case ScanMode.smImport:
+                case ScanMode.smFullImport:
                     // Free up any static memory structures which are only needed by the scan
                     // This includes the dictionary of scans we persist between the count and import phases
                     Database.UnloadScanReferenceData();
