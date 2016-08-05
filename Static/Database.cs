@@ -42,6 +42,7 @@ namespace ArtContentManager.Static
         public static Dictionary<string, string> ExcludedFiles;
         public static Dictionary<string, int> ReservedFiles;
         public static Dictionary<string, Content.InstallationType> InstallationTypes;
+        public static Dictionary<string, Content.Installation> Installations;
 
         public static SqlConnection DBActive
         {
@@ -210,6 +211,8 @@ namespace ArtContentManager.Static
             Trace.WriteLine("Special files loaded");
             LoadInstallationTypes();
             Trace.WriteLine("Installation types loaded");
+            LoadInstallations();
+            Trace.WriteLine("Installations loaded");
             _scanReferenceDataLoaded = true;
         }
 
@@ -219,6 +222,8 @@ namespace ArtContentManager.Static
             ProcessRoleExtensionsPrimary = null;
             ExcludedFiles = null;
             ReservedFiles = null;
+            InstallationTypes = null;
+            Installations = null;
             _scanReferenceDataLoaded = false;
         }
 
@@ -322,6 +327,42 @@ namespace ArtContentManager.Static
                 Trace.WriteLine(e.ToString());
             }
         }
+
+        private static void LoadInstallations()
+        {
+
+            Installations = new Dictionary<string, Content.Installation>();
+
+            try
+            {
+                SqlDataReader myReader = null;
+                SqlCommand myCommand = new SqlCommand("SELECT * from Installations INNER JOIN InstallationTypes ON Installations.InstallationTypeID = InstallationTypes.InstallationTypeID", _DBReadOnly);
+                myReader = myCommand.ExecuteReader();
+                while (myReader.Read())
+                {
+                    Content.Installation installation = new Content.Installation();
+                    installation.RootID = (int)myReader["InstallationRootID"];
+                    installation.RootPath = myReader["InstallationRootPath"].ToString();
+
+                    if (InstallationTypes.ContainsKey(myReader["IdentifyingDirectoryName"].ToString()))
+                    {
+                        // Set the type from the previously loaded distcionary of types keyed by identifying directory name
+                        installation.Type = InstallationTypes[myReader["IdentifyingDirectoryName"].ToString()];
+                    }
+                    else
+                    {
+                        // Something has gone seriously wrong here with installations and their types.
+                        Trace.WriteLine("Installation " + installation.RootID + " is not of a recognised type.");
+                    }
+                }
+                myReader.Close();
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.ToString());
+            }
+        }
+
 
         public static void Reset(ResetLevel resetLevel)
         {

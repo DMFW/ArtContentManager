@@ -65,6 +65,7 @@
     <Compile Include="Content\File.cs" />
     <Compile Include="Actions\Scan.cs" />
     <Compile Include="Content\FileTextData.cs" />
+    <Compile Include="Content\Installation.cs" />
     <Compile Include="Content\InstallationType.cs" />
     <Compile Include="Content\Product.cs" />
     <Compile Include="Content\Skin.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
     <Compile Include="Static\DatabaseAgents\dbaContentType.cs" />
     <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaInstallations.cs" />
     <Compile Include="Static\DatabaseAgents\dbaProduct.cs" />
     <Compile Include="Static\DatabaseAgents\dbaScanHistory.cs" />
     <Compile Include="Forms\frmOrganisation.xaml.cs">

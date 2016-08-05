@@ -360,5 +360,56 @@ namespace ArtContentManager.Static
             }
             return false;
         }
+
+        public static Content.Installation Installation(string path)
+        {
+            // Returns an Installation object if we are an installation root.
+            // The object is automatically read from the database or written to it if new
+            // and so carries and installation root ID.
+
+            // Null is returned if we are not an installation root object
+
+            int dirStartPos;
+            int dirFirstStartPos = Int32.MaxValue;
+            string firstInstallationDir = string.Empty;
+
+            if (Database.Installations.ContainsKey(path))
+            {
+                // We are a known installation root so return the database object
+
+                return Database.Installations[path];
+            }
+
+            // We are not known but we might be a newly identified installation root
+
+            foreach (string indentifyingDirectoryName in Database.InstallationTypes.Keys)
+            {
+                dirStartPos = path.IndexOf(indentifyingDirectoryName);
+
+                if (dirStartPos > -1)
+                {
+                    if (dirStartPos < dirFirstStartPos)
+                    {
+                        dirFirstStartPos = dirStartPos;
+                        firstInstallationDir = indentifyingDirectoryName;
+                    }
+                }
+            }
+
+            if (firstInstallationDir == string.Empty)
+            {
+                // We are not an installation root at all so just return null
+
+                return null;
+            }
+
+            // We are a newly discovered installation root so write a new database object
+            Content.Installation installation = new Content.Installation();
+            installation.RootPath = path;
+            installation.Type = Database.InstallationTypes[firstInstallationDir];
+            ArtContentManager.Static.DatabaseAgents.dbaInstallations.RecordInstallation(installation);
+            return installation;
+        }
+
     }
 }
