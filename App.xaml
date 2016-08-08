@@ -1,14 +1,14 @@
 ﻿<Application x:Class="ArtContentManager.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:ArtContentManager.Content"
+             xmlns:local="clr-namespace:ArtContentManager.Skins"
              StartupUri="Forms/frmMainWindow.xaml"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <x:Array x:Key="Skins" Type="local:Skin">
-            <local:Skin Name="Fire" URIPath=".\Skins\FireSkin.xaml" />
-            <local:Skin Name="Midnight" URIPath=".\Skins\MidnightSkin.xaml" />
-            <local:Skin Name="SeaGreen" URIPath=".\Skins\SeaGreenSkin.xaml" />
+            <local:Skin x:Name="Fire" URIPath="FireSkin.xaml" />
+            <local:Skin x:Name="Midnight" URIPath="MidnightSkin.xaml" />
+            <local:Skin x:Name="SeaGreen" URIPath="SeaGreenSkin.xaml" />
         </x:Array>
     </Application.Resources>
 </Application>

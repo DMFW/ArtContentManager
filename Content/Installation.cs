@@ -30,5 +30,21 @@ namespace ArtContentManager.Content
             set { _type = value; }
         }
 
+        public bool IsInstallationCategory(string path)
+        {
+            // Return true if the specified directory can be classified as an organisation category for the installation
+
+            foreach (string categoryRoot in _type.CategoryRoots.Keys)
+            {
+                if (path.Contains(categoryRoot))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+
+        }
+
     }
 }

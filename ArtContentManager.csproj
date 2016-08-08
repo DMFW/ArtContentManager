@@ -59,7 +59,6 @@
     <Compile Include="Actions\FilterExpression.cs" />
     <Compile Include="Actions\FilterExpressionRow.cs" />
     <Compile Include="Actions\FilterField.cs" />
-    <Compile Include="Content\Category.cs" />
     <Compile Include="Content\ContentType.cs" />
     <Compile Include="Content\Creator.cs" />
     <Compile Include="Content\File.cs" />
@@ -68,17 +67,18 @@
     <Compile Include="Content\Installation.cs" />
     <Compile Include="Content\InstallationType.cs" />
     <Compile Include="Content\Product.cs" />
-    <Compile Include="Content\Skin.cs" />
+    <Compile Include="Skins\Skin.cs" />
     <Compile Include="Forms\frmProductReview.xaml.cs">
       <DependentUpon>frmProductReview.xaml</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmProductReviewSelection.xaml.cs">
       <DependentUpon>frmProductReviewSelection.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Static\DatabaseAgents\dbaContentTypes.cs" />
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
-    <Compile Include="Static\DatabaseAgents\dbaContentType.cs" />
     <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
     <Compile Include="Static\DatabaseAgents\dbaInstallations.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaOrganisationSchema.cs" />
     <Compile Include="Static\DatabaseAgents\dbaProduct.cs" />
     <Compile Include="Static\DatabaseAgents\dbaScanHistory.cs" />
     <Compile Include="Forms\frmOrganisation.xaml.cs">
@@ -93,7 +93,6 @@
     <Compile Include="Static\FileSystemScan.cs" />
     <Compile Include="Static\Log.cs" />
     <Compile Include="Static\ScanProgress.cs" />
-    <Compile Include="Static\Skins.cs" />
     <Page Include="Forms\frmFileMaintenance.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

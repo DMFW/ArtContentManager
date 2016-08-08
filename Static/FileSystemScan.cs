@@ -15,22 +15,13 @@ namespace ArtContentManager.Static
 
         public enum ScanMode
         {
-          smCategoryImportCount,
-          smCategoryImport,
+          smContentTypeImport,
           smFullImportCount,
           smFullImport
         };
-
-        private static List<string> _lstCategoryParentFolderNames = new List<string>
-        { "character", "Hair", "Pose", "props" };
  
         private static int _internalZipInstance;
         private static Dictionary<string, Actions.Scan> _folderScan;
-
-        public static List<string> CategoryParentFolderNames
-        {
-            get { return _lstCategoryParentFolderNames; }
-        }
 
         public static void Scan(ScanMode scanMode, Actions.Scan rootScan, BackgroundWorker bw)
         {
@@ -38,6 +29,8 @@ namespace ArtContentManager.Static
             Actions.Scan subScan;
             Actions.Scan activeScan;
             DirectoryInfo dirInfo;
+            Dictionary<string, Content.Installation> scanInstallations = new Dictionary<string, Content.Installation>();
+            Content.Installation currentInstallation = null;
 
             if (Database.ScanReferenceDataLoaded == false)
             {
@@ -48,7 +41,13 @@ namespace ArtContentManager.Static
            
             switch (scanMode)
             {
-                case ScanMode.smCategoryImportCount:
+                case ScanMode.smContentTypeImport:
+                    phase = "importing categories only";
+                    ScanProgress.TotalFileCount = rootScan.TotalFiles;
+                    ScanProgress.CurrentFileCount = 0;
+                    _folderScan = new Dictionary<string, Actions.Scan>();
+                    _folderScan.Add(rootScan.FolderName, rootScan);
+                    break;
                 case ScanMode.smFullImportCount:
                     phase = "counting";
                     rootScan.TotalFiles = 0;
@@ -56,11 +55,6 @@ namespace ArtContentManager.Static
                     rootScan.ProcessedFiles = 0;
                     _folderScan = new Dictionary<string, Actions.Scan>();
                     _folderScan.Add(rootScan.FolderName, rootScan);
-                    break;
-                case ScanMode.smCategoryImport:
-                    phase = "importing categories only";
-                    ScanProgress.TotalFileCount = rootScan.TotalFiles;
-                    ScanProgress.CurrentFileCount = 0;
                     break;
                 case ScanMode.smFullImport:
                     phase = "importing all";
@@ -81,7 +75,7 @@ namespace ArtContentManager.Static
             // Data structure to hold names of subfolders to be 
             // examined for files.
 
-            Stack<string> dirs = new Stack<string>(20);
+            Stack<string> dirs = new Stack<string>();
 
             if (!System.IO.Directory.Exists(rootScan.FolderName))
             {
@@ -93,6 +87,21 @@ namespace ArtContentManager.Static
             {
                 
                 string currentDir = dirs.Pop();
+
+                foreach (string installationRootDir in scanInstallations.Keys)
+                {
+                    if (currentDir.Contains(installationRootDir))
+                    {
+                        currentInstallation = scanInstallations[installationRootDir];
+                    }
+                }
+
+                if (currentInstallation == null)
+                {
+                    // This might return an installation if we don't have one
+                    // or it might STILL return null
+                    currentInstallation = Installation(currentDir);
+                }
 
                 FileInfo[] newFiles;
 
@@ -152,7 +161,6 @@ namespace ArtContentManager.Static
                 {
                     switch (scanMode)
                     {
-                        case ScanMode.smCategoryImportCount:
                         case ScanMode.smFullImportCount:
                             subScan = new Actions.Scan();
                             subScan.FolderName = currentDir;
@@ -163,7 +171,15 @@ namespace ArtContentManager.Static
                             activeScan = subScan;
                             break;
 
-                        case ScanMode.smCategoryImport:
+                        case ScanMode.smContentTypeImport:
+                            subScan = new Actions.Scan();
+                            subScan.FolderName = currentDir;
+                            subScan.StartScanTime = DateTime.Now;
+                            subScan.IsRequestRoot = false;
+                            _folderScan.Add(subScan.FolderName, subScan);
+                            activeScan = subScan;
+                            break;
+
                         case ScanMode.smFullImport:
                             Debug.Assert(_folderScan.ContainsKey(currentDir.ToUpperInvariant())); // Indicates either a logic error or that someone has been adding folders between the counting and import phases. Just don't do that OK? 
                             subScan = _folderScan[currentDir.ToUpperInvariant()];
@@ -171,121 +187,127 @@ namespace ArtContentManager.Static
                             break;
                     }
                 }
-
-                newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
-
-                // Perform the required action on each file here. 
-                // Modify this block to perform your required task.
-
-                switch (scanMode)
+                
+                // Pure directory level analysis which is for content type analysis
+                // whether by specific request or as a by product of a full import 
+                     
+                if ((scanMode == ScanMode.smContentTypeImport) | (scanMode == ScanMode.smFullImport))
                 {
-                    case ScanMode.smCategoryImportCount:
-                    case ScanMode.smFullImportCount:
+                    // Where there are no subdirectories we are down to the level of an individual product directory
+                    // This is not a content type so ignore it and continue
+                    if (subDirs.Count() != 0)
+                    {
 
-                        activeScan.TotalFiles += dirInfo.GetFiles().Length;
-                        activeScan.NewFiles += newFiles.Length;
-
-                        // When we are not the root, roll subtotals into the root total and add the sub scan
-                        // The root scan will be updated outside the loop at the end of the process
-                        if (activeScan != rootScan)
+                        if (currentInstallation != null)
                         {
-                            rootScan.TotalFiles += activeScan.TotalFiles;
-                            rootScan.NewFiles += activeScan.NewFiles;
-                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(activeScan);
-                            ScanProgress.Message = "Directory " + currentDir + " [+" + activeScan.NewFiles + " (" + activeScan.TotalFiles + ")] -> " + rootScan.NewFiles + " (" + rootScan.TotalFiles + ")";
-                        }
-
-                        ScanProgress.CurrentFileCount = rootScan.TotalFiles;
-                        bw.ReportProgress(ScanProgress.CompletionPct); // This will be zero
-
-                        if (bw.CancellationPending)
-                        {
-                            ScanProgress.Message = "Scan cancelled after directory " + currentDir + " in the " + phase + " phase";
-                            bw.ReportProgress(ScanProgress.CompletionPct);
-                            return;
-                        }
-
-                        break;
-
-                    case ScanMode.smCategoryImport:
-
-                        // Where there are no subdirectories we are down to the level of an individual product directory
-                        // This is not a category so ignore it and continue
-
-                        if (subDirs.Count() != 0)
-                        {
-                            // There are sub directories, so determine if the current directory belongs to a runtime
-                            if (currentDir.Contains("Runtime"))
+                            if (currentInstallation.IsInstallationCategory(currentDir))
                             {
-                                Content.Category potentialCategory = new Content.Category(currentDir);
-
+                                ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+                                Content.ContentType contentType = new Content.ContentType(1, currentInstallation, currentDir);
+                                DatabaseAgents.dbaContentTypes.RecordContentType(contentType);
+                                ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
                             }
+
                         }
+                    }
+                }
 
-                        break;
+                // File level analysis, required for counting and full importing but not pure content type
 
-                    case ScanMode.smFullImport:
+                if (scanMode != ScanMode.smContentTypeImport)
+                {
+                    newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
+                    switch (scanMode)
+                    {
+                        case ScanMode.smFullImportCount:
 
-                        foreach (FileInfo file in newFiles)
-                        {
-                            activeScan.ProcessedFiles++;
-                            _internalZipInstance = 0;
+                            activeScan.TotalFiles += dirInfo.GetFiles().Length;
+                            activeScan.NewFiles += newFiles.Length;
 
+                            // When we are not the root, roll subtotals into the root total and add the sub scan
+                            // The root scan will be updated outside the loop at the end of the process
                             if (activeScan != rootScan)
                             {
-                                rootScan.ProcessedFiles++;
+                                rootScan.TotalFiles += activeScan.TotalFiles;
+                                rootScan.NewFiles += activeScan.NewFiles;
+                                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(activeScan);
+                                ScanProgress.Message = "Directory " + currentDir + " [+" + activeScan.NewFiles + " (" + activeScan.TotalFiles + ")] -> " + rootScan.NewFiles + " (" + rootScan.TotalFiles + ")";
                             }
 
-                            ScanProgress.CurrentFileCount = rootScan.ProcessedFiles;
+                            ScanProgress.CurrentFileCount = rootScan.TotalFiles;
+                            bw.ReportProgress(ScanProgress.CompletionPct); // This will be zero
 
                             if (bw.CancellationPending)
                             {
-                                ScanProgress.Message = "Scan cancelled before file " + file.Name + " in the " + phase + " phase";
+                                ScanProgress.Message = "Scan cancelled after directory " + currentDir + " in the " + phase + " phase";
                                 bw.ReportProgress(ScanProgress.CompletionPct);
-                                if (activeScan != rootScan)
-                                {
-                                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(activeScan);
-                                }
                                 return;
                             }
 
-                            try
+                            break;
+
+                        case ScanMode.smFullImport:
+
+                            foreach (FileInfo file in newFiles)
                             {
-                                if (Database.ExcludedFiles.ContainsKey(file.Name))
+                                activeScan.ProcessedFiles++;
+                                _internalZipInstance = 0;
+
+                                if (activeScan != rootScan)
                                 {
-                                    ScanProgress.Message = "Skipping " + file;
+                                    rootScan.ProcessedFiles++;
                                 }
-                                else
+
+                                ScanProgress.CurrentFileCount = rootScan.ProcessedFiles;
+
+                                if (bw.CancellationPending)
                                 {
-                                    Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
-                                    ScanProgress.Message = "Importing " + file.Name;
-                                    // The creation of the file object, also saves it. Everything is encapsulated in the constructor
-                                    ArtContentManager.Content.File currentFile = new Content.File(activeScan.StartScanTime, null, file);
-                                    Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
+                                    ScanProgress.Message = "Scan cancelled before file " + file.Name + " in the " + phase + " phase";
+                                    bw.ReportProgress(ScanProgress.CompletionPct);
+                                    if (activeScan != rootScan)
+                                    {
+                                        ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanAbort(activeScan);
+                                    }
+                                    return;
                                 }
-                                bw.ReportProgress(ScanProgress.CompletionPct);
+
+                                try
+                                {
+                                    if (Database.ExcludedFiles.ContainsKey(file.Name))
+                                    {
+                                        ScanProgress.Message = "Skipping " + file;
+                                    }
+                                    else
+                                    {
+                                        Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
+                                        ScanProgress.Message = "Importing " + file.Name;
+                                        // The creation of the file object, also saves it. Everything is encapsulated in the constructor
+                                        ArtContentManager.Content.File currentFile = new Content.File(activeScan.StartScanTime, null, file);
+                                        Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
+                                    }
+                                    bw.ReportProgress(ScanProgress.CompletionPct);
+                                }
+                                catch (System.IO.FileNotFoundException e)
+                                {
+                                    // If file was deleted by a separate application 
+                                    //  or thread since the call to TraverseTree() 
+                                    // then just continue.
+                                    Trace.WriteLine(e.Message);
+                                    continue;
+                                }
                             }
-                            catch (System.IO.FileNotFoundException e)
+
+                            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
+                            ArtContentManager.Static.DatabaseAgents.dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
+                            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
+
+                            if (activeScan != rootScan)
                             {
-                                // If file was deleted by a separate application 
-                                //  or thread since the call to TraverseTree() 
-                                // then just continue.
-                                Trace.WriteLine(e.Message);
-                                continue;
+                                activeScan.CompleteScanTime = DateTime.Now;
+                                ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(activeScan);
                             }
-                        }
-
-                        ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
-                        ArtContentManager.Static.DatabaseAgents.dbaFile.UpdateAntiVerifiedFiles(currentDir, activeScan.StartScanTime);
-                        ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
-
-                        if (activeScan != rootScan)
-                        {
-                            activeScan.CompleteScanTime = DateTime.Now;
-                            ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(activeScan);
-                        }
-
-                        break;
+                            break;
+                    }
                 }
 
                 // Push the subdirectories onto the stack for traversal. 
@@ -296,9 +318,6 @@ namespace ArtContentManager.Static
 
             switch (scanMode)
             {
-                case ScanMode.smCategoryImportCount:
-                    // The category counting shouldn't write to the scan history table
-                    break;
                 case ScanMode.smFullImportCount:
                     ArtContentManager.Static.DatabaseAgents.dbaScanHistory.UpdateInitialFileCounts(rootScan);
                     break;
@@ -361,22 +380,24 @@ namespace ArtContentManager.Static
             return false;
         }
 
-        public static Content.Installation Installation(string path)
+        private static Content.Installation Installation(string path)
         {
             // Returns an Installation object if we are an installation root.
+            // Also returns the root object if we are within a root.
+            
             // The object is automatically read from the database or written to it if new
-            // and so carries and installation root ID.
-
-            // Null is returned if we are not an installation root object
+            // and so carries an installation root ID.
 
             int dirStartPos;
             int dirFirstStartPos = Int32.MaxValue;
+            bool dirFound = false;
+            int nextDirectoryMarkerPosOrEnd;
             string firstInstallationDir = string.Empty;
+            string highestRootPath;
 
             if (Database.Installations.ContainsKey(path))
             {
                 // We are a known installation root so return the database object
-
                 return Database.Installations[path];
             }
 
@@ -384,31 +405,79 @@ namespace ArtContentManager.Static
 
             foreach (string indentifyingDirectoryName in Database.InstallationTypes.Keys)
             {
-                dirStartPos = path.IndexOf(indentifyingDirectoryName);
+                dirStartPos = path.IndexOf(@"\" + indentifyingDirectoryName);
 
                 if (dirStartPos > -1)
                 {
-                    if (dirStartPos < dirFirstStartPos)
+                    // The +2 includes the initial directory symbol and one more to take us to the next directory symbol or past end of string
+                    nextDirectoryMarkerPosOrEnd = dirStartPos + indentifyingDirectoryName.Length + 2;
+
+                    if (nextDirectoryMarkerPosOrEnd > path.Length)
                     {
-                        dirFirstStartPos = dirStartPos;
-                        firstInstallationDir = indentifyingDirectoryName;
+                        // We are the final directory and this is valid
+                        dirFound = true;
+                    }
+                    else
+                    {
+                        if (path.Substring(nextDirectoryMarkerPosOrEnd) == @"\")
+                        {
+                            // The next character is a directory separator.
+                            // This check elimiates directories that use our identifying key as a substring of their name.
+                            dirFound = true;
+                        }
+                    }
+
+                    if (dirFound)
+                    {
+                        // we've found a valid installation marker but is it the BEST one (highest level)
+                        if (dirStartPos < dirFirstStartPos)
+                        {
+                            dirFirstStartPos = dirStartPos;
+                            firstInstallationDir = indentifyingDirectoryName;
+                        }
+                        dirFound = false; // Reset the found indicator to false for the next iteration 
                     }
                 }
             }
 
             if (firstInstallationDir == string.Empty)
             {
-                // We are not an installation root at all so just return null
-
+                // We are not an installation root and nor do we match valid identifying directories
+                // at all at any higher level, so just return null
                 return null;
             }
 
-            // We are a newly discovered installation root so write a new database object
+            // We are an installation but are we the root of one or just a pseudo root?
+            // A pseudo root has an installation root vald name but is inside a higher true root.
+
+            if ((dirFirstStartPos + firstInstallationDir.Length + 2) < path.Length)
+            {
+                // Pseudo root; we need to get to the true root
+                highestRootPath = path.Substring(0, dirFirstStartPos + firstInstallationDir.Length + 1);
+            }
+            else
+            {
+                highestRootPath = path;
+            }
+
+            if (Database.Installations.ContainsKey(highestRootPath))
+            {
+                // We have already calculated the true root and it exists so return it
+                return Database.Installations[highestRootPath];
+            }
+
+            // Newly discovered installation root so write a new database object
+            // and add it to the dictionary of all root installations
+
             Content.Installation installation = new Content.Installation();
-            installation.RootPath = path;
+            installation.RootPath = highestRootPath;
             installation.Type = Database.InstallationTypes[firstInstallationDir];
+
             ArtContentManager.Static.DatabaseAgents.dbaInstallations.RecordInstallation(installation);
+            Database.Installations.Add(installation.RootPath, installation);
+
             return installation;
+
         }
 
     }

@@ -62,15 +62,13 @@ namespace ArtContentManager.Forms
             StartScan(qScanDirectives);
         }
 
-        private void btnCategoryScan_Click(object sender, RoutedEventArgs e)
+        private void btnContentTypeScan_Click(object sender, RoutedEventArgs e)
         {
 
             Queue<Static.FileSystemScan.ScanMode> qScanDirectives = new Queue<Static.FileSystemScan.ScanMode>();
 
-            // Do the count then the full import
-
-            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smCategoryImportCount);
-            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smCategoryImport);
+            // Go straight to content type importing. A queue length of one will do
+            qScanDirectives.Enqueue(Static.FileSystemScan.ScanMode.smContentTypeImport);
 
             StartScan(qScanDirectives);
         }
@@ -99,7 +97,7 @@ namespace ArtContentManager.Forms
             _scanWorker.ProgressChanged += scanWorker_ReportProgress;
 
             btnFullScan.IsEnabled = false;
-            btnCategoryScan.IsEnabled = false;
+            btnContentTypeScan.IsEnabled = false;
             btnScanCancel.IsEnabled = true;
 
             _currentRootScan = new Actions.Scan();
@@ -169,7 +167,7 @@ namespace ArtContentManager.Forms
                 {
                     _scanWorker = null;
                     btnFullScan.IsEnabled = true;
-                    btnCategoryScan.IsEnabled = true;
+                    btnContentTypeScan.IsEnabled = true;
                     btnScanCancel.IsEnabled = false;
                 }
             }

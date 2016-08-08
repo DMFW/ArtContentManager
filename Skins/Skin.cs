@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 
-namespace ArtContentManager.Content
+namespace ArtContentManager.Skins
 {
     public class Skin : INotifyPropertyChanged
     {

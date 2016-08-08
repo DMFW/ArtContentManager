@@ -20,7 +20,7 @@ namespace ArtContentManager.Forms
     public partial class frmSettings : SkinableWindow
     {
         private bool showingInitialSettings;
-        private ArtContentManager.Content.Skin skinSetting = new ArtContentManager.Content.Skin();
+        private ArtContentManager.Skins.Skin skinSetting = new ArtContentManager.Skins.Skin();
 
         public frmSettings()
         {
@@ -52,7 +52,7 @@ namespace ArtContentManager.Forms
             string selectedURI;
             Uri skinURI;
 
-            selectedURI = ((ArtContentManager.Content.Skin)cboSkin.SelectedItem).URIPath;
+            selectedURI = ((ArtContentManager.Skins.Skin)cboSkin.SelectedItem).URIPath;
             skinURI = new Uri(selectedURI, UriKind.Relative);
 
             foreach (Window openWindow in Application.Current.Windows)

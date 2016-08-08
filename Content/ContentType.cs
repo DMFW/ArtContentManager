@@ -3,31 +3,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ArtContentManager.Content
 {
     class ContentType
     {
-        private string _ContentDirectoryName;
-        private string _Description;
-        private int _Importance;
+        private int _organisationSchemeID;
+        private Installation _installation;
+        private string _directoryPath;
+        private string _description;
 
-        public string ContentDirectoryName
+        public ContentType(int organisationSchemeID, Installation installation, string directoryPath)
         {
-            get { return _ContentDirectoryName; }
-            set { _ContentDirectoryName = value; }
+            _organisationSchemeID = organisationSchemeID;
+            _installation = installation;
+            _directoryPath = directoryPath;
+            _description = "";
+        }
+
+        public int OrganisationSchemeID
+        {
+            get { return _organisationSchemeID; }
+            set { _organisationSchemeID = value; }
+        }
+
+        public Installation Installation
+        {
+            get { return _installation; }
+            set { _installation = value; }
+        }
+
+        public string DirectoryPath
+        {
+            get { return _directoryPath; }
+            set { _directoryPath = value; }
         }
 
         public string Description
         {
-            get { return _Description; }
-            set { _Description = value; }
-        }
-
-        public int Importance
-        {
-            get { return _Importance; }
-            set { _Importance = value; }
+            get { return _description; }
+            set { _description = value; }
         }
 
     }

@@ -308,19 +308,28 @@ namespace ArtContentManager.Static
 
             try
             {
-                SqlDataReader myReader = null;
-                SqlCommand myCommand = new SqlCommand("SELECT * from InstallationTypes", _DBReadOnly);
-                myReader = myCommand.ExecuteReader();
-                while (myReader.Read())
+                SqlDataReader rdrIT = null;
+                SqlCommand cmdIT = new SqlCommand("SELECT * from InstallationTypes", _DBReadOnly);
+                rdrIT = cmdIT.ExecuteReader();
+                while (rdrIT.Read())
                 {
                     Content.InstallationType installationType = new Content.InstallationType();
-                    installationType.TypeID = (int)myReader["InstallationTypeID"];
-                    installationType.SoftwareType = myReader["SoftwareType"].ToString();
-                    installationType.IdentifyingDirectoryName = myReader["IdentifyingDirectoryName"].ToString();
+                    installationType.TypeID = (int)rdrIT["InstallationTypeID"];
+                    installationType.SoftwareType = rdrIT["SoftwareType"].ToString();
+                    installationType.IdentifyingDirectoryName = rdrIT["IdentifyingDirectoryName"].ToString();
 
-                    InstallationTypes.Add(myReader["IdentifyingDirectoryName"].ToString(), installationType);
+                    SqlDataReader rdrITCR = null;
+                    SqlCommand cmdITCR = new SqlCommand("SELECT * from InstallationTypeCategoryRoot", _DBReadOnly);
+                    rdrITCR = cmdITCR.ExecuteReader();
+                    while (rdrITCR.Read())
+                    {
+                        installationType.CategoryRoots.Add(rdrITCR["CategoryRoot"].ToString(), rdrITCR["CategoryRoot"].ToString());
+                    }
+                    rdrITCR.Close();
+
+                    InstallationTypes.Add(rdrIT["IdentifyingDirectoryName"].ToString(), installationType);
                 }
-                myReader.Close();
+                rdrIT.Close();
             }
             catch (Exception e)
             {

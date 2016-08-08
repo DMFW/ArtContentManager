@@ -59,17 +59,14 @@ namespace ArtContentManager.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=UKBAINSWS009203\\SQLEXPRESS;AttachDbFilename=C:\\Program Files\\Microsof" +
-            "t SQL Server\\MSSQL12.SQLEXPRESS\\MSSQL\\DATA\\ArtProducts.mdf;Integrated Security=T" +
-            "rue;Connect Timeout=30;MultipleActiveResultSets=true")]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=COMMANDER-64\\SQLEXPRESS;Initial Catalog=ArtProducts;Integrated Securi" +
+            "ty=True;MultipleActiveResultSets=True;Connect Timeout=30")]
         public string DatabaseConnection {
             get {
                 return ((string)(this["DatabaseConnection"]));
-            }
-            set {
-                this["DatabaseConnection"] = value;
             }
         }
     }
