@@ -30,19 +30,21 @@ namespace ArtContentManager.Content
             set { _type = value; }
         }
 
-        public bool IsInstallationCategory(string path)
+        public InstallationType.Category InstallationCategory(string path)
         {
-            // Return true if the specified directory can be classified as an organisation category for the installation
+            // Return a category object if the specified directory
+            // can be classified as an organisation category for the installation.
+            // Otherwise return null.
 
-            foreach (string categoryRoot in _type.CategoryRoots.Keys)
+            foreach (KeyValuePair<string, InstallationType.Category> kvpCategory in _type.Categories)
             {
-                if (path.Contains(categoryRoot))
+                if (path.Contains(kvpCategory.Key))
                 {
-                    return true;
+                    return kvpCategory.Value;
                 }
             }
 
-            return false;
+            return null;
 
         }
 

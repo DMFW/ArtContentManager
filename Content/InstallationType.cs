@@ -11,7 +11,14 @@ namespace ArtContentManager.Content
         private int _typeID;
         private string _softwareType;
         private string _identifyingDirectoryName;
-        private Dictionary<string, string> _categoryRoots = new Dictionary<string, string>();
+
+        public class Category
+        {
+            public string RelativePath;
+            public string Name;
+        }
+
+        private Dictionary<string, Category> _categories = new Dictionary<string, Category>();
 
         public int TypeID
         {
@@ -31,9 +38,9 @@ namespace ArtContentManager.Content
             set { _identifyingDirectoryName = value; }
         }
 
-        public Dictionary<string,string> CategoryRoots
+        public Dictionary<string, Category> Categories
         {
-            get { return _categoryRoots; }
+            get { return _categories; }
         }
 
     }

@@ -59,7 +59,7 @@
     <Compile Include="Actions\FilterExpression.cs" />
     <Compile Include="Actions\FilterExpressionRow.cs" />
     <Compile Include="Actions\FilterField.cs" />
-    <Compile Include="Content\ContentType.cs" />
+    <Compile Include="Content\ContentLocation.cs" />
     <Compile Include="Content\Creator.cs" />
     <Compile Include="Content\File.cs" />
     <Compile Include="Actions\Scan.cs" />
@@ -74,7 +74,7 @@
     <Compile Include="Forms\frmProductReviewSelection.xaml.cs">
       <DependentUpon>frmProductReviewSelection.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Static\DatabaseAgents\dbaContentTypes.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaContentLocations.cs" />
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
     <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
     <Compile Include="Static\DatabaseAgents\dbaInstallations.cs" />

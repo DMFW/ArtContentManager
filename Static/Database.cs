@@ -319,11 +319,16 @@ namespace ArtContentManager.Static
                     installationType.IdentifyingDirectoryName = rdrIT["IdentifyingDirectoryName"].ToString();
 
                     SqlDataReader rdrITCR = null;
-                    SqlCommand cmdITCR = new SqlCommand("SELECT * from InstallationTypeCategoryRoot", _DBReadOnly);
+                    SqlCommand cmdITCR = new SqlCommand("SELECT * from InstallationTypeCategory", _DBReadOnly);
                     rdrITCR = cmdITCR.ExecuteReader();
                     while (rdrITCR.Read())
                     {
-                        installationType.CategoryRoots.Add(rdrITCR["CategoryRoot"].ToString(), rdrITCR["CategoryRoot"].ToString());
+                        Content.InstallationType.Category category = new Content.InstallationType.Category();
+
+                        category.RelativePath = rdrITCR["RelativePath"].ToString();
+                        category.Name = rdrITCR["CategoryName"].ToString();
+                         
+                        installationType.Categories.Add(category.RelativePath, category);
                     }
                     rdrITCR.Close();
 
@@ -447,9 +452,9 @@ namespace ArtContentManager.Static
                 SqlCommand cmdProductContentTypesOrganised = new SqlCommand(sqlProductContentTypesOrganised, _DBActive);
                 cmdProductContentTypesOrganised.ExecuteNonQuery();
 
-                string sqlContentTypes = "TRUNCATE TABLE ContentTypes";
-                SqlCommand cmdContentTypes = new SqlCommand(sqlContentTypes, _DBActive);
-                cmdContentTypes.ExecuteNonQuery();
+                string sqlContentLocations = "TRUNCATE TABLE ContentLocations";
+                SqlCommand cmdContentLocations = new SqlCommand(sqlContentLocations, _DBActive);
+                cmdContentLocations.ExecuteNonQuery();
 
                 string sqlContentSpecialTypes = "TRUNCATE TABLE ContentSpecialTypes";
                 SqlCommand cmdContentSpecialTypes = new SqlCommand(sqlContentSpecialTypes, _DBActive);
@@ -502,7 +507,7 @@ namespace ArtContentManager.Static
                     cmdOrganisationScheme.CommandText = "DBCC CHECKIDENT (OrganisationScheme,RESEED, 0)";
                     cmdOrganisationScheme.ExecuteNonQuery();
 
-                    sqlOrganisationScheme = "INSERT INTO OrganisationScheme (Description, GroupType, DateCreated, Status) VALUES('Derived From Scanning', 0, @CurrentTime ,0)";
+                    sqlOrganisationScheme = "INSERT INTO OrganisationScheme (Description, DateCreated) VALUES('Derived From Scanning', @CurrentTime)";
                     cmdOrganisationScheme.CommandText = sqlOrganisationScheme;
                     cmdOrganisationScheme.Parameters.Add("@CurrentTime", SqlDbType.DateTime);
                     cmdOrganisationScheme.Parameters["@CurrentTime"].Value = DateTime.Now;

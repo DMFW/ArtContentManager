@@ -195,16 +195,27 @@ namespace ArtContentManager.Static
                 {
                     // Where there are no subdirectories we are down to the level of an individual product directory
                     // This is not a content type so ignore it and continue
+
+                    ScanProgress.Message = "Directory " + currentDir;
+
                     if (subDirs.Count() != 0)
                     {
 
                         if (currentInstallation != null)
                         {
-                            if (currentInstallation.IsInstallationCategory(currentDir))
+                            Content.InstallationType.Category category = currentInstallation.InstallationCategory(currentDir);
+
+                            if (category != null)
                             {
+
+                                ScanProgress.Message = "Directory " + currentDir + " assigned to category " + category.Name;
                                 ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.Active);
-                                Content.ContentType contentType = new Content.ContentType(1, currentInstallation, currentDir);
-                                DatabaseAgents.dbaContentTypes.RecordContentType(contentType);
+                                Content.ContentLocation contentLocation = new Content.ContentLocation(1, currentInstallation, currentDir, category);
+
+                                contentLocation.SubFolderCount = subDirs.Count();
+                                contentLocation.ItemCount = System.IO.Directory.GetFiles(currentDir).Count();
+
+                                DatabaseAgents.dbaContentLocations.RecordContentLocation(contentLocation);
                                 ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.Active);
                             }
 
