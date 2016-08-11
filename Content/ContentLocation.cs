@@ -40,7 +40,7 @@ namespace ArtContentManager.Content
                 _contentTagPath = _contentDirectoryName.Substring(_contentDirectoryName.IndexOf(_category.RelativePath) + _category.RelativePath.Length + 1);
             }
 
-            _contentTag = _contentDirectoryName.Substring(0, _contentDirectoryName.LastIndexOf(@"\") + 1);
+            _contentTag = _contentDirectoryName.Substring(_contentDirectoryName.LastIndexOf(@"\") + 1);
         }
 
         public int OrganisationSchemeID

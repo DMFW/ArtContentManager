@@ -148,16 +148,6 @@ namespace ArtContentManager.Forms
             }
             else
             {
-
-                if (completedScanMode == Static.FileSystemScan.ScanMode.smFullImport)
-                {
-                    lblStatusMessage.Content = "Completed scanning of " + _currentRootScan.TotalFiles + " files [" + _currentRootScan.ProcessedFiles + " new imports]";
-                    _currentRootScan.CompleteScanTime = DateTime.Now;
-                    ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
-                    ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
-                    ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
-                }
-
                 if (qScanMode.Count > 0)
                 {
                     // Dive back in and do another scan
@@ -165,6 +155,20 @@ namespace ArtContentManager.Forms
                 }
                 else
                 {
+                    if (completedScanMode == Static.FileSystemScan.ScanMode.smContentTypeImport)
+                    {
+                        lblStatusMessage.Content = "Completed content analysis of " + _currentRootScan.FolderName;
+                    }
+
+                    if (completedScanMode == Static.FileSystemScan.ScanMode.smFullImport)
+                    {
+                        lblStatusMessage.Content = "Completed scanning of " + _currentRootScan.TotalFiles + " files [" + _currentRootScan.ProcessedFiles + " new imports]";
+                        _currentRootScan.CompleteScanTime = DateTime.Now;
+                        ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
+                        ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordScanComplete(_currentRootScan);
+                        ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);
+                    }
+
                     _scanWorker = null;
                     btnFullScan.IsEnabled = true;
                     btnContentTypeScan.IsEnabled = true;
