@@ -11,7 +11,7 @@ using System.Data.SqlClient;
 
 namespace ArtContentManager.Content
 {
-    class File
+    public class File
     {
 
         private DateTime _ScanDateTime;

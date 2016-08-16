@@ -15,10 +15,184 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         // Handles database related updates and reads for the Product and closely related extension objects
 
+        public struct ProductLoadOptions
+        {
+            public bool basic;
+            public bool installationFiles;
+            public bool contentFiles;
+            public bool creators;
+            public bool images;
+        }
+
+        static SqlCommand _cmdReadProductByID;
+        static SqlCommand _cmdReadProductInstallationFilesByID;
+        static SqlCommand _cmdReadProductContentFilesByID;
+        static SqlCommand _cmdReadProductCreatorsByID;
+        static SqlCommand _cmdReadProductImagesByID;
         static SqlCommand _cmdSelectUnassignedParentFiles;
         static SqlCommand _cmdAddProduct;
         static SqlCommand _cmdAddProductFile;
         static SqlCommand _cmdAddProductCreator;
+
+        public static void Load(ArtContentManager.Content.Product Product, ProductLoadOptions loadOptions)
+        {
+
+            // This function assumes the ID is set within the Product object and on that basis loads 
+            // whatever level of detail is requested in the load options.
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            if (_cmdReadProductByID == null)
+            {
+                string readProductByID_SQL = "Select * from Products where ProductID = @ProductID";
+                _cmdReadProductByID = new SqlCommand(readProductByID_SQL, DB);
+                _cmdReadProductByID.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+            }
+
+            if (loadOptions.basic)
+            {
+                _cmdReadProductByID.Parameters["@ProductID"].Value = Product.ID;
+
+                _cmdReadProductByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+                SqlDataReader reader = _cmdReadProductByID.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Product.Name = reader["ProductName"].ToString();
+                    Product.Thumbnail.ImageContent = (System.Drawing.Image)reader["Thumbnail"];
+                    Product.IsPrimary = (bool)reader["IsPrimary"];
+                    Product.DatePurchased = (DateTime)reader["DatePurchased"];
+                    Product.MarketPlaceID = (int)reader["MarketPlaceID"];
+                    Product.ProductURI = reader["ProductURI"].ToString();
+                }
+                reader.Close();
+            }
+
+            if (loadOptions.installationFiles) { LoadProductInstallationFiles(Product); }
+            if (loadOptions.contentFiles) { LoadProductContentFiles(Product); }
+            if (loadOptions.creators) { LoadProductCreators(Product); }
+            if (loadOptions.images) { LoadProductImages(Product); }
+
+        }
+
+        #region PrivateLoadMethods
+
+        private static void LoadProductInstallationFiles(ArtContentManager.Content.Product Product)
+        {
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            if (_cmdReadProductInstallationFilesByID == null)
+            {
+                string readProductInstallationFilesByID_SQL = "Select * from ProductFiles where ProductID = @ProductID ORDER BY InstallerSequence";
+                _cmdReadProductInstallationFilesByID = new SqlCommand(readProductInstallationFilesByID_SQL, DB);
+                _cmdReadProductInstallationFilesByID.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadProductInstallationFilesByID.Parameters["@ProductID"].Value = Product.ID;
+
+            _cmdReadProductInstallationFilesByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            SqlDataReader reader = _cmdReadProductInstallationFilesByID.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Content.File installationFile = new Content.File((int)reader["FileID"]);
+                dbaFile.Load(installationFile);
+                Product.InstallationFiles.Add(installationFile);
+            }
+            reader.Close();
+        }
+
+
+        private static void LoadProductContentFiles(ArtContentManager.Content.Product Product)
+        {
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            if (_cmdReadProductContentFilesByID == null)
+            {
+                string readProductContentFilesByID_SQL = "Select FileID from Files where ParentID = @ParentFileID";
+                _cmdReadProductContentFilesByID = new SqlCommand(readProductContentFilesByID_SQL, DB);
+                _cmdReadProductContentFilesByID.Parameters.Add("@ParentFileID", System.Data.SqlDbType.Int);
+            }
+
+            if (Product.InstallationFiles.Count == 0)
+            {
+                LoadProductInstallationFiles(Product);
+            }
+
+            foreach (Content.File installationFile in Product.InstallationFiles)
+            {
+                _cmdReadProductContentFilesByID.Parameters["@ParentFileID"].Value = installationFile.ID;
+
+                _cmdReadProductContentFilesByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+                SqlDataReader reader = _cmdReadProductContentFilesByID.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Content.File contentFile = new Content.File((int)reader["FileID"]);
+                    dbaFile.Load(contentFile);
+                    Product.ContentFiles.Add(contentFile);
+                }
+                reader.Close();
+            } 
+        }
+
+        private static void LoadProductCreators(ArtContentManager.Content.Product Product)
+        {
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            if (_cmdReadProductCreatorsByID == null)
+            {
+                string readProductCreatorsByID_SQL = "Select * from ProductCreators where ProductID = @ProductID";
+                _cmdReadProductCreatorsByID = new SqlCommand(readProductCreatorsByID_SQL, DB);
+                _cmdReadProductCreatorsByID.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadProductCreatorsByID.Parameters["@ProductID"].Value = Product.ID;
+
+            _cmdReadProductCreatorsByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            SqlDataReader reader = _cmdReadProductCreatorsByID.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Content.Creator creator = new Content.Creator();
+                creator.ID = (int)reader["CreatorID"];
+                dbaContentCreators.Load(creator);
+                Product.Creators.Add(creator);
+            }
+            reader.Close();
+
+        }
+
+        private static void LoadProductImages(ArtContentManager.Content.Product Product)
+        {
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            if (_cmdReadProductImagesByID == null)
+            {
+                string readProductImagesByID_SQL = "Select * from ProductImages where ProductID = @ProductID ORDER BY ImageSeqeuence";
+                _cmdReadProductImagesByID = new SqlCommand(readProductImagesByID_SQL, DB);
+                _cmdReadProductImagesByID.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadProductImagesByID.Parameters["@ProductID"].Value = Product.ID;
+
+            _cmdReadProductImagesByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            SqlDataReader reader = _cmdReadProductImagesByID.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Content.ImageResource imageResource = new Content.ImageResource();
+                imageResource.ImageContent = (System.Drawing.Image)reader["ProductImage"];
+                Product.SupportingImages.Add(imageResource);
+            }
+            reader.Close();
+
+        }
+
+        #endregion PrivateLoadMethods
 
         public static void AutoAssignProducts()
         {
@@ -146,11 +320,11 @@ namespace ArtContentManager.Static.DatabaseAgents
                                     creator.CreatorDirectoryName = fileTextData.VendorNameCode;
                                     creator.CreatorTrueName = fileTextData.VendorName;
                                     dbaContentCreators.RecordContentCreator(creator);
-                                    product.Creators.Add(creator.ID, creator.ID);
+                                    product.Creators.Add(creator);
                                 }
                                 else
                                 {
-                                    product.Creators.Add(creator.ID, creator.ID);
+                                    product.Creators.Add(creator);
                                 }
                             }
                         }
@@ -207,9 +381,9 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdAddProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdAddProductCreator.Parameters["@ProductID"].Value = Product.ID;
 
-            foreach (int CreatorID in Product.Creators.Values)
+            foreach (Content.Creator creator in Product.Creators)
             {
-                _cmdAddProductCreator.Parameters["@CreatorID"].Value = CreatorID;
+                _cmdAddProductCreator.Parameters["@CreatorID"].Value = creator.ID;
                 _cmdAddProductCreator.ExecuteScalar();
             }
 

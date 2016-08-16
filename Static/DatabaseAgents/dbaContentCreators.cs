@@ -11,8 +11,39 @@ namespace ArtContentManager.Static.DatabaseAgents
 {
     static class dbaContentCreators
     {
-        static SqlCommand _cmdReadContentCreators;
-        static SqlCommand _cmdInsertContentCreator;
+        static SqlCommand _cmdReadContentCreatorsByID;
+        static SqlCommand _cmdReadContentCreatorsByName;
+        static SqlCommand _cmdInsertContentCreator  ;
+
+        public static void Load(ArtContentManager.Content.Creator Creator)
+        {
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            // Assume the ID is set and then load the rest of the data
+            if (_cmdReadContentCreatorsByID == null)
+            {
+                string readContentCreatorsSQL = "Select * from ContentCreators where CreatorID = @CreatorID";
+                _cmdReadContentCreatorsByName = new SqlCommand(readContentCreatorsSQL, DB);
+                _cmdReadContentCreatorsByName.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadContentCreatorsByName.Parameters["@CreatorID"].Value = Creator.ID;
+
+            _cmdReadContentCreatorsByName.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Static.Database.TransactionType.ReadOnly);
+            SqlDataReader reader = _cmdReadContentCreatorsByName.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Creator.ID = (int)reader["CreatorID"];
+                Creator.CreatorTrueName = reader["CreatorTrueName"].ToString();
+                Creator.CreatorDirectoryName = reader["CreatorDirectoryName"].ToString();
+                Creator.ContactEmail = reader["ContactEmail"].ToString();
+                Creator.Notes = reader["Notes"].ToString();
+            }
+
+            reader.Close();
+
+        }
 
         public static bool IsCreatorRecorded(ArtContentManager.Content.Creator Creator)
         {
@@ -21,17 +52,17 @@ namespace ArtContentManager.Static.DatabaseAgents
             // Set default return value and output parameters
             bool isContentCreatorRecorded = false;
 
-            if (_cmdReadContentCreators == null)
+            if (_cmdReadContentCreatorsByName == null)
             {
                 string readContentCreatorsSQL = "Select * from ContentCreators where CreatorNameCode = @CreatorNameCode";
-                _cmdReadContentCreators = new SqlCommand(readContentCreatorsSQL, DB);
-                _cmdReadContentCreators.Parameters.Add("@CreatorNameCode", System.Data.SqlDbType.NVarChar, 50);
+                _cmdReadContentCreatorsByName = new SqlCommand(readContentCreatorsSQL, DB);
+                _cmdReadContentCreatorsByName.Parameters.Add("@CreatorNameCode", System.Data.SqlDbType.NVarChar, 50);
             }
 
-            _cmdReadContentCreators.Parameters["@CreatorNameCode"].Value = Creator.CreatorNameCode;
+            _cmdReadContentCreatorsByName.Parameters["@CreatorNameCode"].Value = Creator.CreatorNameCode;
 
-            _cmdReadContentCreators.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Static.Database.TransactionType.ReadOnly);
-            SqlDataReader reader = _cmdReadContentCreators.ExecuteReader();
+            _cmdReadContentCreatorsByName.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Static.Database.TransactionType.ReadOnly);
+            SqlDataReader reader = _cmdReadContentCreatorsByName.ExecuteReader();
 
             while (reader.Read())
             {

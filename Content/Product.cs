@@ -8,17 +8,22 @@ using System.Windows.Controls;
 
 namespace ArtContentManager.Content
 {
-    class Product
+    public class Product
     {
         private int _ID;
         private string _Name;
-        private Image _Thumbnail;
         private bool _IsPrimary;
         private DateTime _DatePurchased;
+        private int _MarketPlaceID;
         private string _ProductURI;
-        private Dictionary<int, int> _dctCreatorIDs = new Dictionary<int, int>();
+              
+        // Just the parent files
+        private List<File> _lstInstallationFiles = new List<File>();
+        private List<File> _lstContentFiles = new List<File>();
+        private List<Creator> _lstCreators = new List<Creator>();
+        private List<ImageResource> _lstSupportingImages = new List<ImageResource>();
 
-        private List<File> _ComponentFiles; // Just the parent files
+        private ImageResource _Thumbnail = new ImageResource();
 
         public int ID
         {
@@ -38,12 +43,6 @@ namespace ArtContentManager.Content
             set { _ProductURI = value; }
         }
 
-        public Image Thumbnail
-        {
-            get { return _Thumbnail; }
-            set { _Thumbnail = value; }
-        }
-
         public bool IsPrimary
         {
             get { return _IsPrimary; }
@@ -56,9 +55,62 @@ namespace ArtContentManager.Content
             set { _DatePurchased = value; }
         }
 
-        public Dictionary<int, int> Creators
+        public int MarketPlaceID
         {
-            get { return _dctCreatorIDs; }
+            get { return _MarketPlaceID; }
+            set { _MarketPlaceID = value; }
         }
+
+        public List<File> InstallationFiles
+        {
+            get { return _lstInstallationFiles; }
+            set { _lstInstallationFiles = value; }
+        }
+
+        public List<File> ContentFiles
+        {
+            get { return _lstContentFiles; }
+            set { _lstContentFiles = value; }
+        }
+
+        public List<Creator> Creators
+        {
+            get { return _lstCreators; }
+            set { _lstCreators = value; }
+        }
+
+        public List<ImageResource> SupportingImages
+        {
+            get { return _lstSupportingImages; }
+            set { _lstSupportingImages = value; }
+        }
+
+        public ImageResource Thumbnail
+        {
+            get { return _Thumbnail; }
+            set { _Thumbnail = value; }
+        }
+
+        public ImageResource PrimaryImage
+        {
+            get {
+                    if (_lstSupportingImages != null)
+                    {
+                        if (_lstSupportingImages.Count > 0)
+                        {
+                            return _lstSupportingImages[0];
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }   
+                }
+        }
+
     }
 }

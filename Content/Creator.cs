@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ArtContentManager.Content
 {
-    class Creator
+    public class Creator
     {
         private int _ID;
         private string _CreatorNameCode;
