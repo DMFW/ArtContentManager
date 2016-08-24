@@ -31,6 +31,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdAddProduct;
         static SqlCommand _cmdAddProductFile;
         static SqlCommand _cmdAddProductCreator;
+        static SqlCommand _cmdUpdateProduct;
 
         public static void Load(ArtContentManager.Content.Product Product, ProductLoadOptions loadOptions)
         {
@@ -56,7 +57,8 @@ namespace ArtContentManager.Static.DatabaseAgents
 
                 while (reader.Read())
                 {
-                    Product.Name = reader["ProductName"].ToString();                    
+                    Product.Name = reader["ProductName"].ToString();
+                    Product.NameSavedToDatabase = reader["ProductName"].ToString();
                     Product.IsPrimary = (bool)reader["IsPrimary"];
                     Product.DatePurchased = reader["DatePurchased"] as DateTime?;
                     Product.MarketPlaceID = reader["MarketPlaceID"] as int? ?? default(int);
@@ -405,6 +407,57 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdAddProductFile.Parameters["@FileID"].Value = fileID;
 
             _cmdAddProductFile.ExecuteScalar();
+
+        }
+
+        static public bool UpdateProduct(Content.Product product)
+        {
+
+            try
+            {
+                SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+                if (_cmdUpdateProduct == null)
+                {
+                    string updateProductFileSQL = "UPDATE Product SET ProductName = @ProductName, IsPrimary = @IsPrimary, DatePurchased = @DatePurchased," + 
+                                                  "MarketPlaceID = @MarketPlaceID, ProductURI = @ProductURI WHERE ProductID = @ProductID;";
+                    _cmdUpdateProduct = new SqlCommand(updateProductFileSQL, DB);
+
+                    _cmdUpdateProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+                    _cmdUpdateProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar, 255);
+                    _cmdUpdateProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Bit);
+                    _cmdUpdateProduct.Parameters.Add("@DatePurchased", System.Data.SqlDbType.DateTime2);
+                    _cmdUpdateProduct.Parameters.Add("@MarketPlaceID", System.Data.SqlDbType.Int);
+                    _cmdUpdateProduct.Parameters.Add("@ProductURI", System.Data.SqlDbType.NVarChar, 255);
+
+                }
+
+                Static.Database.BeginTransaction(Database.TransactionType.Active);
+
+                _cmdUpdateProduct.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+
+                _cmdUpdateProduct.Parameters["@ProductID"].Value = product.ID;
+                _cmdUpdateProduct.Parameters["@ProductName"].Value = product.Name;
+                _cmdUpdateProduct.Parameters["@IsPrimary"].Value = product.IsPrimary;
+                _cmdUpdateProduct.Parameters["@DatePurchased"].Value = product.DatePurchased;
+                _cmdUpdateProduct.Parameters["@MarketPlaceID"].Value = product.MarketPlaceID;
+                _cmdUpdateProduct.Parameters["@ProductURI"].Value = product.ProductURI;
+
+                _cmdUpdateProduct.ExecuteScalar();
+
+                // Here we will post updates to child files
+
+                Static.Database.CommitTransaction(Database.TransactionType.Active);
+
+                product.MoveImageFiles();
+
+                return true;
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+                return false;
+            }
 
         }
     }

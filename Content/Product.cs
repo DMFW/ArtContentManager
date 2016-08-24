@@ -132,46 +132,48 @@ namespace ArtContentManager.Content
             set { _lstCreators = value; }
         }
 
-        public Dictionary<string, string> ImageFiles
+        public Dictionary<string, string> ImageFiles(string productName)
         {
             // Returns a dictionary of images, indexed by a role key 
             // The role key is a three charcter string which is either a numeric presentation order
-            // or the coded value "TBN" for a thumb nail image 
+            // or the coded value "TBN" for a thumb nail image.
 
-            get
+            // The location is determined by the productName. The routine allows the value
+            // passed for the name to be specified as a parameter so that we can used the routine
+            // when moving image items from one name to another. 
+                        
+            Dictionary<string, string> imageFiles = new Dictionary<string, string>();
+
+            // The position where we start our three character index (000, 001 ... or TBN for Thumbnail)
+            int startOfImageIndex = ImageFolder(productName).Length + Name.Length + 1;
+
+            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(ImageFolder(productName));
+
+            if (dir.Exists)
             {
-                Dictionary<string, string> imageFiles = new Dictionary<string, string>();
+                IEnumerable<System.IO.FileInfo> fileList = dir.GetFiles("*.*", System.IO.SearchOption.AllDirectories);
 
-                // The position where we start our three character index (000, 001 ... or TBN for Thumbnail)
-                int startOfImageIndex = ImageFolder().Length + Name.Length + 1;
+                var queryMatchingFiles =
+                from file in fileList
+                where file.Name.Substring(0, Name.Length).ToUpperInvariant() == Name.ToUpperInvariant()
+                select file.FullName;
 
-                System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(ImageFolder());
-
-                if (dir.Exists)
+                foreach (string filename in queryMatchingFiles)
                 {
-                    IEnumerable<System.IO.FileInfo> fileList = dir.GetFiles("*.*", System.IO.SearchOption.AllDirectories);
-
-                    var queryMatchingFiles =
-                    from file in fileList
-                    where file.Name.Substring(0, Name.Length).ToUpperInvariant() == Name.ToUpperInvariant()
-                    select file.FullName;
-
-                    foreach (string filename in queryMatchingFiles)
-                    {
-                        imageFiles.Add(filename.Substring(startOfImageIndex, 3), filename);
-                    }
+                    imageFiles.Add(filename.Substring(startOfImageIndex, 3), filename);
                 }
-                return imageFiles;
             }
+            return imageFiles;
+          
         }
 
-        private string ImageFolder()
+        private string ImageFolder(string productName)
         {
             string subFolderName;
 
-            if (_Name.Length >= SUBFOLDER_NAME_LENGTH)
+            if (productName.Length >= SUBFOLDER_NAME_LENGTH)
             {
-                subFolderName = _Name.Substring(0, SUBFOLDER_NAME_LENGTH);
+                subFolderName = productName.Substring(0, SUBFOLDER_NAME_LENGTH);
             }
             else
             {
@@ -179,6 +181,39 @@ namespace ArtContentManager.Content
             }
 
             return Static.DatabaseAgents.dbaSettings.Setting("ImageStoreFolder").Item1 + @"\" + subFolderName;
+
+        }
+
+        public void MoveImageFiles()
+        {
+
+            // Checks to see if a product has been renamed and if so, renames and moves image resources
+
+            if (_Name == _NameSavedToDatabase)
+            {
+                // Nothing to do so bail out...
+                goto ImageMoveComplete;
+            }
+
+            if (!Directory.Exists(ImageFolder(_Name)))
+            {
+                Directory.CreateDirectory(ImageFolder(_Name));
+            }
+
+            foreach (string oldImageFileName in ImageFiles(_NameSavedToDatabase).Values)
+            {
+                // First amend the full path to point to the new directory
+                string newImageFileName = oldImageFileName.Replace(ImageFolder(_Name), ImageFolder(_NameSavedToDatabase));
+                // Now change the name of the file itself
+                newImageFileName = newImageFileName.Replace(_NameSavedToDatabase, _Name);
+
+                System.IO.File.Move(oldImageFileName, newImageFileName);
+            }
+
+        ImageMoveComplete:
+
+            _NameSavedToDatabase = _Name;
+            return;
 
         }
     }

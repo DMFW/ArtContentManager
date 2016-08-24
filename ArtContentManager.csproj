@@ -69,6 +69,7 @@
     <Compile Include="Content\ImageResource.cs" />
     <Compile Include="Content\Installation.cs" />
     <Compile Include="Content\InstallationType.cs" />
+    <Compile Include="Content\MarketPlace.cs" />
     <Compile Include="Content\Product.cs" />
     <Compile Include="Forms\frmProductDetails.xaml.cs">
       <DependentUpon>frmProductDetails.xaml</DependentUpon>
@@ -84,6 +85,7 @@
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
     <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
     <Compile Include="Static\DatabaseAgents\dbaInstallations.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaMarketPlaces.cs" />
     <Compile Include="Static\DatabaseAgents\dbaOrganisationSchema.cs" />
     <Compile Include="Static\DatabaseAgents\dbaProduct.cs" />
     <Compile Include="Static\DatabaseAgents\dbaScanHistory.cs" />

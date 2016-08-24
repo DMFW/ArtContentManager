@@ -20,17 +20,21 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmProductDetails : Window
     {
+
+        Content.Product _displayProduct;
+
         public frmProductDetails(Content.Product displayProduct)
         {
 
-            DataContext = displayProduct;
+            _displayProduct = displayProduct;
+            DataContext = _displayProduct;
 
             InitializeComponent();
 
             TabItem imageTab = (TabItem)tabCtrlProduct.Items[0];
-            imageTab.Header = displayProduct.Name;
+            imageTab.Header = _displayProduct.Name;
 
-            Dictionary<string, string> imageFiles = displayProduct.ImageFiles;
+            Dictionary<string, string> imageFiles = _displayProduct.ImageFiles(_displayProduct.NameSavedToDatabase);
 
             if (imageFiles.ContainsKey("TBN"))
             {
@@ -80,17 +84,34 @@ namespace ArtContentManager.Forms
            {
                 TabItem tabText = new TabItem();
                 tabCtrlProductTextFiles.Items.Add(tabText);
-                tabText.Header = displayProduct.TextFiles[i].Name;
+                tabText.Header = _displayProduct.TextFiles[i].Name;
 
                 ScrollViewer svwText = new ScrollViewer();
                 tabText.Content = svwText;
                 TextBlock tbText = new TextBlock();
                 svwText.Content = tbText;
-                tbText.Text = displayProduct.TextFiles[i].Text;
+                tbText.Text = _displayProduct.TextFiles[i].Text;
 
             }
 
         }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (ArtContentManager.Static.DatabaseAgents.dbaProduct.UpdateProduct(_displayProduct))
+            {
+                lblStatusMessage.Content = "Updated product details saved to database and image resources moved and renamed as required.";
+            }
+            else
+            {
+                lblStatusMessage.Content = "Update to product details has failed.";
+            }
+        }
+        private void Hyperlink_RequestNavigate(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start((sender as Hyperlink).NavigateUri.AbsoluteUri);
+        }
+
 
     }
 }

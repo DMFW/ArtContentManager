@@ -30,7 +30,7 @@ namespace ArtContentManager.Forms
             foreach (Content.Product product in resolvedSelectedProducts.SelectedProducts)
             {
 
-                Dictionary<string, string> imageFiles = product.ImageFiles;
+                Dictionary<string, string> imageFiles = product.ImageFiles(product.NameSavedToDatabase);
 
                 if (imageFiles.ContainsKey("TBN"))
                 {
