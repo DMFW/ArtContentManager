@@ -6,9 +6,9 @@
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <x:Array x:Key="Skins" Type="local:Skin">
-            <local:Skin x:Name="Fire" URIPath="FireSkin.xaml" />
-            <local:Skin x:Name="Midnight" URIPath="MidnightSkin.xaml" />
-            <local:Skin x:Name="SeaGreen" URIPath="SeaGreenSkin.xaml" />
+            <local:Skin SkinName="Fire" URIPath="Skins/FireSkin.xaml" />
+            <local:Skin SkinName="Midnight" URIPath="Skins/MidnightSkin.xaml" />
+            <local:Skin SkinName="SeaGreen" URIPath="Skins/SeaGreenSkin.xaml" />
         </x:Array>
     </Application.Resources>
 </Application>

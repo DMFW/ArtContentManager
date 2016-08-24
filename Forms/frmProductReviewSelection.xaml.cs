@@ -19,16 +19,24 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmProductReviewSelection : SkinableWindow
     {
+
+        // The job of this form is to prepare and use _selectedProducts
+        // to construct a list of Product objects, which have been loaded to basic level only
+        // This is then passed down to the review screen which will show thumbnails.
+
+        Actions.SelectProducts _selectedProducts;
         frmProductReview frmProductReview;
 
         public frmProductReviewSelection()
         {
+            _selectedProducts = new Actions.SelectProducts();
             InitializeComponent();
         }
 
         private void btnShowProducts_Click(object sender, RoutedEventArgs e)
         {
-            frmProductReview = new frmProductReview();
+
+            frmProductReview = new frmProductReview(_selectedProducts);
             frmProductReview.ShowDialog();
         }
 

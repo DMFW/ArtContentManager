@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Collections.ObjectModel;
+using ArtContentManager.Static.DatabaseAgents;
 
 namespace ArtContentManager.Forms
 {
@@ -21,20 +22,74 @@ namespace ArtContentManager.Forms
     public partial class frmProductReview : SkinableWindow
     {
 
-        public frmProductReview()
+        public frmProductReview(Actions.SelectProducts resolvedSelectedProducts)
         {
-            LoadGrid("Select * from ProductGridView");
+
             InitializeComponent();
+
+            foreach (Content.Product product in resolvedSelectedProducts.SelectedProducts)
+            {
+
+                Dictionary<string, string> imageFiles = product.ImageFiles;
+
+                if (imageFiles.ContainsKey("TBN"))
+                {
+                    Content.ImageResource thumbNailImage = new Content.ImageResource(imageFiles["TBN"]);
+                    if (thumbNailImage.ImageSource != null)
+                    {
+                        AddProductThumb(product, thumbNailImage);
+                    }
+                    else
+                    {
+                        AddProductLabel(product);
+                    }
+                }
+                else
+                {
+                    AddProductLabel(product);
+                }
+                
+            }
+
         }
 
-        public frmProductReview(string selectionSQL)
+        private void AddProductThumb(Content.Product product, Content.ImageResource thumbNailImage)
         {
-            LoadGrid(selectionSQL);
-            InitializeComponent();
+
+            Image imgThumbnail = new System.Windows.Controls.Image();
+            imgThumbnail.Tag = product;
+            ugProducts.Children.Add(imgThumbnail);
+            imgThumbnail.Source = thumbNailImage.ImageSource;
+            imgThumbnail.MouseLeftButtonUp += new System.Windows.Input.MouseButtonEventHandler(this.ThumbnailSelected);
+
         }
 
-        void LoadGrid(string selectionSQL)
+        private void AddProductLabel(Content.Product product)
         {
+            Label lblProduct = new Label();
+            lblProduct.Content = product.Name;
+            lblProduct.Width = double.NaN;
+            lblProduct.Height = double.NaN;
+            lblProduct.Margin = new Thickness(0, 21, 0, 0);
+            lblProduct.Foreground = new SolidColorBrush(Colors.White);
+            lblProduct.Background = new SolidColorBrush(Colors.Black);
+            ugProducts.Children.Add(lblProduct);
+        }
+        private void ThumbnailSelected(object sender, MouseButtonEventArgs e)
+        {
+            Image imgThumbnail = (Image)sender;
+            Content.Product selectedProduct = (Content.Product)imgThumbnail.Tag;
+
+            dbaProduct.ProductLoadOptions loadOptions = new dbaProduct.ProductLoadOptions();
+
+            loadOptions.contentFiles = true;
+            loadOptions.creators = true;
+            loadOptions.installationFiles = true;
+
+            dbaProduct.Load(selectedProduct, loadOptions);
+
+            frmProductDetails frmProductDetails = new frmProductDetails(selectedProduct);
+            frmProductDetails.ShowDialog();
 
         }
 

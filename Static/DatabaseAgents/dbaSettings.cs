@@ -103,7 +103,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             if (_Settings == null)
             { 
                 return null;
-                }
+            }
 
             if (_Settings.ContainsKey(SettingName))
             {

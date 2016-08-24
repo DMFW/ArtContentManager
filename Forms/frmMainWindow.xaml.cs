@@ -25,7 +25,9 @@ namespace ArtContentManager.Forms
         frmSettings frmSettings;
         frmOrganisation frmOrganisation;
         frmProductReviewSelection frmProductReviewSelection;
-
+        frmProductReview frmProductReview;
+        frmProductDetails frmProductDetails;
+        
         public frmMainWindow()
         {
             Static.Log.InitiateTracer();
@@ -64,9 +66,46 @@ namespace ArtContentManager.Forms
 
         private void btnProducts_Click(object sender, RoutedEventArgs e)
         {
-            frmProductReviewSelection = new frmProductReviewSelection();
-            frmProductReviewSelection.ShowDialog();
+
+            // This will invoke the selection criteria and review list
+
+            // frmProductReviewSelection = new frmProductReviewSelection();
+            // frmProductReviewSelection.ShowDialog();
+
+            // For now we are bypassing the missing list functionality and skipping
+            // directly into the detail view for testing purposes
+
+            TestProductSelectDisplay();
+
         }
+
+        private void TestProductDetailDisplay()
+        {
+            Content.Product testProduct = new Content.Product();
+            testProduct.ID = 249;
+
+            ArtContentManager.Static.DatabaseAgents.dbaProduct.ProductLoadOptions loadOptions;
+
+            loadOptions.basic = true;
+            loadOptions.installationFiles = true;
+            loadOptions.contentFiles = true;
+            loadOptions.creators = true;
+            
+            ArtContentManager.Static.DatabaseAgents.dbaProduct.Load(testProduct, loadOptions);
+
+            frmProductDetails = new frmProductDetails(testProduct);
+            frmProductDetails.ShowDialog();
+        }
+
+        private void TestProductSelectDisplay()
+        {
+
+            Actions.SelectProducts testDisplayProducts = new Actions.SelectProducts();
+
+            frmProductReview = new frmProductReview(testDisplayProducts);
+            frmProductReview.ShowDialog();
+        }
+
 
         private void frmMainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {

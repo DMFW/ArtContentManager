@@ -32,6 +32,8 @@ namespace ArtContentManager.Content
         private string _WorkingExtractDirectory;
         private bool _ExtractUnreadable;
 
+        private string _Text; 
+
         public File(DateTime scanDateTime, File parentFile, FileInfo fi)
         {
 
@@ -47,6 +49,7 @@ namespace ArtContentManager.Content
             _Location = Path.GetDirectoryName(fi.FullName);
             _Size = fi.Length;
             _ExtractUnreadable = false;
+            _Text = string.Empty;
 
             if (parentFile != null)
             {
@@ -152,6 +155,12 @@ namespace ArtContentManager.Content
         {
             get { return _ExtractUnreadable; }
             set { _ExtractUnreadable = value; }
+        }
+
+        public string Text
+        {
+            get { return _Text; }
+            set { _Text = value; }
         }
 
         public List<File> ChildFiles
@@ -309,6 +318,10 @@ namespace ArtContentManager.Content
         private void Save(DateTime scanDateTime, out bool wasAlreadyRecorded)
         {
 
+            string[] documentFolder = new string[] { "Documentation" , "Readme", "ReadMe" };
+
+            bool readMeNotesRecorded = false;
+
             // Adds new files and also inserts or updates their location instance(s)
             // After calling this method we will have an ID for the file (either an existing known one or a new one)
 
@@ -326,11 +339,18 @@ namespace ArtContentManager.Content
 
             ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileLocation(this, scanDateTime);
 
-            if (this.Location.Contains("Documentation") & this._ParentID != 0)
+            if (this._ParentID != 0) 
             {
-                // We are a child file (i.e. within a zip or some such) and we are in a document location
-                // Attempt to pull the document into the database.
-                ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileTextNotes(this);
+                foreach (string folderName in documentFolder)
+                {
+                    if ((!readMeNotesRecorded) & (this.Location.Contains(folderName)))
+                    {
+                        // We are a child file (i.e. within a zip or some such) and we are in a document location
+                        // Attempt to pull the document into the database.
+                        ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileTextNotes(this);
+                        readMeNotesRecorded = true;
+                    }
+                }
             }
 
             ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);

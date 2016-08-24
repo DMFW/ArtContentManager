@@ -10,22 +10,22 @@ namespace ArtContentManager.Skins
     public class Skin : INotifyPropertyChanged
     {
 
-        private string _Name;
+        private string _SkinName;
         private string _URIPath;
 
         public Skin()
         {
         }
 
-        public string Name
+        public string SkinName
         {
-            get { return _Name; }
+            get { return _SkinName; }
             set
             {
-                if (_Name != value)
+                if (_SkinName != value)
                 {
-                    _Name = value;
-                    NotifyPropertyChanged("Name");
+                    _SkinName = value;
+                    NotifyPropertyChanged("SkinName");
                 }
             }
         }

@@ -21,14 +21,12 @@ namespace ArtContentManager.Static.DatabaseAgents
             public bool installationFiles;
             public bool contentFiles;
             public bool creators;
-            public bool images;
         }
 
         static SqlCommand _cmdReadProductByID;
         static SqlCommand _cmdReadProductInstallationFilesByID;
         static SqlCommand _cmdReadProductContentFilesByID;
         static SqlCommand _cmdReadProductCreatorsByID;
-        static SqlCommand _cmdReadProductImagesByID;
         static SqlCommand _cmdSelectUnassignedParentFiles;
         static SqlCommand _cmdAddProduct;
         static SqlCommand _cmdAddProductFile;
@@ -58,11 +56,10 @@ namespace ArtContentManager.Static.DatabaseAgents
 
                 while (reader.Read())
                 {
-                    Product.Name = reader["ProductName"].ToString();
-                    Product.Thumbnail.ImageContent = (System.Drawing.Image)reader["Thumbnail"];
+                    Product.Name = reader["ProductName"].ToString();                    
                     Product.IsPrimary = (bool)reader["IsPrimary"];
-                    Product.DatePurchased = (DateTime)reader["DatePurchased"];
-                    Product.MarketPlaceID = (int)reader["MarketPlaceID"];
+                    Product.DatePurchased = reader["DatePurchased"] as DateTime?;
+                    Product.MarketPlaceID = reader["MarketPlaceID"] as int? ?? default(int);
                     Product.ProductURI = reader["ProductURI"].ToString();
                 }
                 reader.Close();
@@ -71,7 +68,6 @@ namespace ArtContentManager.Static.DatabaseAgents
             if (loadOptions.installationFiles) { LoadProductInstallationFiles(Product); }
             if (loadOptions.contentFiles) { LoadProductContentFiles(Product); }
             if (loadOptions.creators) { LoadProductCreators(Product); }
-            if (loadOptions.images) { LoadProductImages(Product); }
 
         }
 
@@ -111,7 +107,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             if (_cmdReadProductContentFilesByID == null)
             {
-                string readProductContentFilesByID_SQL = "Select FileID from Files where ParentID = @ParentFileID";
+                string readProductContentFilesByID_SQL = "SELECT FileID FROM Files WHERE ParentID = @ParentFileID";
                 _cmdReadProductContentFilesByID = new SqlCommand(readProductContentFilesByID_SQL, DB);
                 _cmdReadProductContentFilesByID.Parameters.Add("@ParentFileID", System.Data.SqlDbType.Int);
             }
@@ -132,7 +128,18 @@ namespace ArtContentManager.Static.DatabaseAgents
                 {
                     Content.File contentFile = new Content.File((int)reader["FileID"]);
                     dbaFile.Load(contentFile);
+
                     Product.ContentFiles.Add(contentFile);
+
+                    // Also add to the text file list of there is associated text
+                    if (contentFile.Text != null)
+                    {
+                        if (contentFile.Text != string.Empty)
+                        {
+                            Product.TextFiles.Add(contentFile);
+                        }
+                    }
+
                 }
                 reader.Close();
             } 
@@ -161,32 +168,6 @@ namespace ArtContentManager.Static.DatabaseAgents
                 creator.ID = (int)reader["CreatorID"];
                 dbaContentCreators.Load(creator);
                 Product.Creators.Add(creator);
-            }
-            reader.Close();
-
-        }
-
-        private static void LoadProductImages(ArtContentManager.Content.Product Product)
-        {
-            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
-
-            if (_cmdReadProductImagesByID == null)
-            {
-                string readProductImagesByID_SQL = "Select * from ProductImages where ProductID = @ProductID ORDER BY ImageSeqeuence";
-                _cmdReadProductImagesByID = new SqlCommand(readProductImagesByID_SQL, DB);
-                _cmdReadProductImagesByID.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
-            }
-
-            _cmdReadProductImagesByID.Parameters["@ProductID"].Value = Product.ID;
-
-            _cmdReadProductImagesByID.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
-            SqlDataReader reader = _cmdReadProductImagesByID.ExecuteReader();
-
-            while (reader.Read())
-            {
-                Content.ImageResource imageResource = new Content.ImageResource();
-                imageResource.ImageContent = (System.Drawing.Image)reader["ProductImage"];
-                Product.SupportingImages.Add(imageResource);
             }
             reader.Close();
 
@@ -309,23 +290,23 @@ namespace ArtContentManager.Static.DatabaseAgents
                             }
                         }
 
-                        if (fileTextData.VendorNameCode != null)
+                        for (int i = 0; i < fileTextData.VendorNameCodes.Count; i++)
                         {
-                            if (fileTextData.VendorNameCode != String.Empty)
+                            Content.Creator creator = new Content.Creator();
+                            creator.CreatorNameCode = fileTextData.VendorNameCodes[i];
+                            if (!dbaContentCreators.IsCreatorRecorded(creator))
                             {
-                                Content.Creator creator = new Content.Creator();
-                                creator.CreatorNameCode = fileTextData.VendorNameCode;
-                                if (!dbaContentCreators.IsCreatorRecorded(creator))
+                                creator.CreatorTrueName = fileTextData.VendorNames[i];
+                                if (fileTextData.ContactEmails.Count > (i + 1))
                                 {
-                                    creator.CreatorDirectoryName = fileTextData.VendorNameCode;
-                                    creator.CreatorTrueName = fileTextData.VendorName;
-                                    dbaContentCreators.RecordContentCreator(creator);
-                                    product.Creators.Add(creator);
+                                    creator.ContactEmail = fileTextData.ContactEmails[i];
                                 }
-                                else
-                                {
-                                    product.Creators.Add(creator);
-                                }
+                                dbaContentCreators.RecordContentCreator(creator);
+                                product.Creators.Add(creator);
+                            }
+                            else
+                            {
+                                product.Creators.Add(creator);
                             }
                         }
 

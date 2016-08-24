@@ -440,10 +440,6 @@ namespace ArtContentManager.Static
                 SqlCommand cmdProductTags = new SqlCommand(sqlProductTagsTruncate, _DBActive);
                 cmdProductTags.ExecuteNonQuery();
 
-                string sqlProductImagesTruncate = "TRUNCATE TABLE ProductImages";
-                SqlCommand cmdProductImages = new SqlCommand(sqlProductImagesTruncate, _DBActive);
-                cmdProductImages.ExecuteNonQuery();
-
                 string sqlProductContentTypesFractured = "TRUNCATE TABLE ProductContentTypesFractured";
                 SqlCommand cmdProductContentTypesFractured = new SqlCommand(sqlProductContentTypesFractured, _DBActive);
                 cmdProductContentTypesFractured.ExecuteNonQuery();

@@ -9,14 +9,15 @@ namespace ArtContentManager.Content
 {
     public class FileTextData
     {
-        // A simple class to hold extracted results in denormalised format from analysing text files
+        // A class to hold extracted results in denormalised format from analysing text files
 
         private string _productName;
 
-        private string _vendorFullName; // A working name
+        private List<string> _vendorNameCodes;
+        private List<string> _vendorNames;
+        private List<string> _contactEmails;
 
-        private string _vendorNameCode;
-        private string _vendorName;
+        private string[] _splitMarkers = new string[] { " AND ", " and", " & " };
 
         public string ProductName
         {
@@ -24,77 +25,92 @@ namespace ArtContentManager.Content
             set { _productName = value; }
         }
 
-        public string VendorNameCode
+        public List<string> VendorNameCodes
         {
-            get { return _vendorNameCode; }
-            set { _vendorNameCode = value; }
+            get { return _vendorNameCodes; }
+            set { _vendorNameCodes = value; }
         }
 
-        public string VendorName
+        public List<string> VendorNames
         {
-            get { return _vendorName; }
-            set { _vendorName = value; }
+            get { return _vendorNames; }
+            set { _vendorNames = value; }
+        }
+
+        public List<string> ContactEmails
+        {
+            get { return _contactEmails; }
+            set { _contactEmails = value; }
         }
 
         public void ParseText(string allText)
         {
 
-            // Do our best to extract the atomic properties that may be available in the text file.
+            bool productNameFound;
+            bool vendorNamesFound;
+            bool contactEmailsFound;
+
+            _vendorNameCodes = new List<string>();
+            _vendorNames = new List<string>();
+            _contactEmails = new List<string>();
+
+            productNameFound = ParseProductName(allText);
+            vendorNamesFound = ParseVendorNames(allText);
+            contactEmailsFound = ParseContactEmails(allText);
+
+            return;
+
+        }
+
+        private bool ParseProductName(string allText)
+        {
 
             Match patternMatch;
-
-            // First attempt to extract the product name
-
             Regex objProductNamePattern01 = new Regex(@"(?<=Product Name:|Product Title:|Productname:)(.*?)(?=\n)");
 
             if (objProductNamePattern01.IsMatch(allText))
             {
                 patternMatch = objProductNamePattern01.Match(allText);
                 _productName = patternMatch.ToString().Trim();
-                goto ProductNameResolved;
+                return true;
             }
+            else
+            {
+                return false;
+            }
+        }
 
-            ProductNameResolved:
+        private bool ParseVendorNames(string allText)
+        {
 
-            // First attempt to extract the vendor name
+            string vendorNames;
+            string vendorNameCode = "";
 
-            Regex objVendorNamePattern01 = new Regex(@"(?<=Vendor Name:|Author:)(.*?)(?=\n)");
+            Match patternMatch;
+
+            // First attempt to extract the vendor name(s)
+
+            Regex objVendorNamePattern01 = new Regex(@"(?<=Vendor Name:|Author:|By:)(.*?)(?=\n)");
 
             if (objVendorNamePattern01.IsMatch(allText))
             {
                 patternMatch = objVendorNamePattern01.Match(allText);
-                _vendorFullName = patternMatch.ToString().Trim();
-
-                if ((_vendorFullName.IndexOf("(") != -1) & (_vendorFullName.IndexOf(")") != -1))
-                {
-                    // Deals with e.g. Vendor Name: johnbarker (Barker)
-                    // or              Author: Atenais (Liudmila Metaeva)
-                    //
-                    // (The name code is first in both these examples, then the "true" name in brackets)
-
-                    _vendorNameCode = _vendorFullName.Substring(0, _vendorFullName.IndexOf("(") - 1);
-
-                    int codeLength = _vendorFullName.IndexOf(")") - _vendorFullName.IndexOf("(") - 1;
-                    _vendorName = _vendorFullName.Substring(_vendorFullName.IndexOf("(") + 1, codeLength);
-                    
-                }
-                else
-                {
-                    // Assume if only one string is supplied it is the name code.
-                    _vendorNameCode = _vendorFullName;
-                }
-                goto VendorNameResolved;
+                vendorNames = patternMatch.ToString().Trim();
+                SplitParseVendorNames(vendorNames);
+                return true;
             }
 
+
             // A second stab at the vendor name is searching for "created by" and looking for the following word.
+            // Here we are unable to extract a code/name pair because we only have one word and must assume it is the code.
 
             Regex objVendorNamePattern02 = new Regex(@"(?<=created by\s)(?<word>\b\S+\b)");
 
             if (objVendorNamePattern02.IsMatch(allText))
             {
                 patternMatch = objVendorNamePattern02.Match(allText);
-                _vendorNameCode = patternMatch.ToString().Trim();
-                goto VendorNameResolved;
+                vendorNameCode = patternMatch.ToString().Trim();
+                if (vendorNameCode.Length > 0) { goto VendorCodeResolved; }
             }
 
             // A third and fourth stab at the vendor name is using the documentation subfolder name with forward and backslash delimitors
@@ -106,8 +122,8 @@ namespace ArtContentManager.Content
             if (objVendorNamePattern03.IsMatch(allText))
             {
                 patternMatch = objVendorNamePattern03.Match(allText);
-                _vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
-                if (_vendorNameCode.Length > 0) { goto VendorNameResolved; }                    // Unless we have a non-zero string this didn't work so try the next method
+                vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
+                if (vendorNameCode.Length > 0) { goto VendorCodeResolved; }  // Unless we have a non-zero string this didn't work so try the next method
             }
 
             Regex objVendorNamePattern04 = new Regex(@"(?<=Documentation\\)(.*?)(?=\n)");
@@ -115,14 +131,105 @@ namespace ArtContentManager.Content
             if (objVendorNamePattern04.IsMatch(allText))
             {
                 patternMatch = objVendorNamePattern04.Match(allText);
-                _vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
-                if (_vendorNameCode.Length > 0) { goto VendorNameResolved; }                    // Unless we have a non-zero string this didn't work so try the next method
+                vendorNameCode = patternMatch.ToString().Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
+                if (vendorNameCode.Length > 0) { goto VendorCodeResolved; }  // Unless we have a non-zero string this didn't work so try the next method
             }
 
-            VendorNameResolved:
-            return;
+            // Nothing worked so we don't know the vendor code or name.
+
+            return false;
+
+        VendorCodeResolved:
+
+            _vendorNameCodes.Add(vendorNameCode);
+            _vendorNames.Add("");
+            return true;
 
         }
 
+        private bool SplitParseVendorNames(string vendorNames)
+        {
+            // We are passed a string that may represent one or more vendors 
+            // separated by some split marker strings. Split the string then process each vendor.
+            // The individual split strings may themselves represent a compound name so pass
+            // the result to ParseVendorFullName to resolve this.
+
+            bool nameFound = false;
+
+            string[] vendorFullNames = vendorNames.Split(_splitMarkers, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string vendorFullName in vendorFullNames)
+            {
+                if (vendorFullName.Trim() != String.Empty)
+                {
+                    ParseVendorFullName(vendorFullName);
+                    nameFound = true;
+                }
+            }
+
+            return nameFound;
+        }
+
+        private bool ParseVendorFullName(string vendorFullName)
+        {
+
+            // This routine is passed a candidate vendor name which may be a simple code
+            // or may be a code with a true name in brackets after it.
+
+            // If it is a compound string it resolves it into the two parts, otherwise it sets the true name to blank.
+
+            string vendorNameCode;
+            string vendorName;
+
+            if ((vendorFullName.IndexOf("(") != -1) & (vendorFullName.IndexOf(")") != -1))
+            {
+                // Deals with e.g. Vendor Name: johnbarker (Barker)
+                // or              Author: Atenais (Liudmila Metaeva)
+                //
+                // (The name code is first in both these examples, then the "true" name in brackets)
+
+                vendorNameCode = vendorFullName.Substring(0, vendorFullName.IndexOf("(") - 1);
+
+                int codeLength = vendorFullName.IndexOf(")") - vendorFullName.IndexOf("(") - 1;
+                vendorName = vendorFullName.Substring(vendorFullName.IndexOf("(") + 1, codeLength);
+
+            }
+            else
+            {
+                // Assume if only one string is supplied it is the name code.
+                vendorNameCode = vendorFullName;
+                vendorName = "";
+            }
+
+            _vendorNameCodes.Add(vendorNameCode);
+            _vendorNames.Add(vendorName);
+
+            return true;
+
+        }
+
+        private bool ParseContactEmails(string allText)
+        {
+            Match patternMatch;
+            string allContactEmails;
+
+            Regex objContactEmail01 = new Regex(@"(?<=Contact:|Email:)(.*?)(?=\n)");
+
+            if (objContactEmail01.IsMatch(allText))
+            {
+                patternMatch = objContactEmail01.Match(allText);
+                allContactEmails = patternMatch.ToString();
+
+                string[] contactEmails = allContactEmails.Split(_splitMarkers, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string rawContactEmail in contactEmails)
+                {
+                    string contactEmail = rawContactEmail.Trim(new Char[] { ' ', '\\', '/', '\r' });  // Trim may need to remove directory character as well
+                    if (contactEmail.Length > 0) { _contactEmails.Add(contactEmail); }
+                }
+                return true;
+            }
+            return false;
+        }
     }
 }

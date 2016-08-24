@@ -38,7 +38,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             if (_cmdReadFileByID == null)
             {
-                string readFilesByID_SQL = "Select * from Files where FileID = @FileID";
+                string readFilesByID_SQL = "SELECT * FROM Files LEFT JOIN FileTextNotes ON Files.FileID = FileTextNotes.FileID WHERE Files.FileID = @FileID ";
                 _cmdReadFileByID = new SqlCommand(readFilesByID_SQL, DB);
                 _cmdReadFileByID.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
             }
@@ -56,6 +56,14 @@ namespace ArtContentManager.Static.DatabaseAgents
                 File.RoleID = (Int16)reader["RoleID"];
                 File.ParentID = (int)reader["ParentID"];
                 File.ExtractUnreadable = (bool)reader["ExtractUnreadable"];
+
+                if (reader["Text"] != DBNull.Value)
+                {
+                    if (reader["Text"].ToString() != String.Empty)
+                    {
+                        File.Text = reader["Text"].ToString();
+                    }
+                }
             }
 
             reader.Close();

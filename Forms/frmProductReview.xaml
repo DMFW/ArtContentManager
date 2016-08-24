@@ -6,23 +6,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ArtContentManager.Forms"
         mc:Ignorable="d"
-        Title="ProductReview" Height="555.08" Width="762"
+        Title="ProductReview" Height="847.08" Width="1165.225"
         Background="{DynamicResource stdFormBackground}">
-    <StackPanel x:Name="spOuterFrame" Height="514" VerticalAlignment="Top" Orientation="Vertical">
-        <DataGrid x:Name="dgProducts" AutoGenerateColumns="False" HorizontalAlignment="Left" Height="449" Margin="10,31,0,0" VerticalAlignment="Bottom" Width="722" ItemsSource="{Binding Products}" >
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Product" Binding="{Binding Name}" />
-                <DataGridTextColumn Header="Date Purchased" Binding="{Binding DatePurchased}" />
-                <DataGridTextColumn Header="ProductURI" Binding="{Binding ProductURI}" />
-                <DataGridTemplateColumn Header="Thumbnail" Width="SizeToCells" IsReadOnly="True">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Image Source="{Binding Thumbnail}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-
-        </DataGrid>
-    </StackPanel>
+    <ScrollViewer CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
+        <UniformGrid x:Name="ugProducts" Columns="5" Rows="4" Height="823">
+        </UniformGrid>
+    </ScrollViewer>
 </src:SkinableWindow>

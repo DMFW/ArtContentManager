@@ -24,19 +24,25 @@ namespace ArtContentManager.Forms
 
         public frmSettings()
         {
-            showingInitialSettings = true;
 
             DataContext = skinSetting;
+            InitializeComponent();
+
+            showingInitialSettings = true;
+
             if (Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri") != null)
             {
                 skinSetting.URIPath = Static.DatabaseAgents.dbaSettings.Setting("CurrentSkinUri").Item1;
             }
 
-            InitializeComponent();
-
             if (Static.DatabaseAgents.dbaSettings.Setting("WorkFolder") != null)
             {
                 txtWorkFolder.Text = Static.DatabaseAgents.dbaSettings.Setting("WorkFolder").Item1;
+            }
+
+            if (Static.DatabaseAgents.dbaSettings.Setting("ImageStoreFolder") != null)
+            {
+                txtImageFolder.Text = Static.DatabaseAgents.dbaSettings.Setting("ImageStoreFolder").Item1;
             }
 
             if (Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength") != null)
@@ -106,6 +112,18 @@ namespace ArtContentManager.Forms
 
         }
 
+        private void btnBrowseImageFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                txtImageFolder.Text = dialog.SelectedPath;
+            }
+
+        }
+
         private void txtWorkFolder_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!showingInitialSettings)
@@ -113,6 +131,17 @@ namespace ArtContentManager.Forms
                 if (Static.FileSystemScan.IsWritableDirectory(txtWorkFolder.Text))
                 {
                     Static.DatabaseAgents.dbaSettings.SaveSetting("WorkFolder", new Tuple<string, int>(txtWorkFolder.Text, 0));
+                }
+            }
+        }
+
+        private void txtImageFolder_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!showingInitialSettings)
+            {
+                if (Static.FileSystemScan.IsWritableDirectory(txtImageFolder.Text))
+                {
+                    Static.DatabaseAgents.dbaSettings.SaveSetting("ImageStoreFolder", new Tuple<string, int>(txtImageFolder.Text, 0));
                 }
             }
         }

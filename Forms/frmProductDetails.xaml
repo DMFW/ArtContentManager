@@ -5,24 +5,44 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ArtContentManager.Forms"
         mc:Ignorable="d"
-        Title="frmProductDetails" Height="855.218" Width="763.605">
-    <Grid>
-        <TabControl x:Name="tabControl" HorizontalAlignment="Left" Height="790" Margin="10,10,0,0" VerticalAlignment="Top" Width="736">
-            <TabItem Header="TabItem">
+        Title="frmProductDetails" Height="855.218" Width="1061.605">
+    <Viewbox>
+        <TabControl x:Name="tabCtrlProduct" HorizontalAlignment="Left" Height="763" Margin="10,10,0,0" VerticalAlignment="Top" Width="990">
+            <TabItem Header="Product Name">
                 <Grid Background="#FFE5E5E5">
-                    <Image x:Name="image" HorizontalAlignment="Left" Height="742" Margin="10,10,0,0" VerticalAlignment="Top" Width="710">
-                        <Image.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Paste" />
-                            </ContextMenu>
-                        </Image.ContextMenu>
+                    <Image x:Name="imgThumbnail" HorizontalAlignment="Left" Height="349" Margin="24,10,0,0" VerticalAlignment="Top" Width="366"/>
+                    <Image x:Name="imgPrimaryImage" HorizontalAlignment="Left" Height="725" Margin="458,10,0,0" VerticalAlignment="Top" Width="516">
                     </Image>
+                    <TextBox x:Name="txtProductName" Text="{Binding Name}" HorizontalAlignment="Left" Height="26" Margin="24,395,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="366"/>
+                    <Label x:Name="lblDatePurchased" Content="Date Purchased :" HorizontalAlignment="Left" Height="26" Margin="24,438,0,0" VerticalAlignment="Top" Width="96"/>
+                    <TextBox x:Name="txtDatePurchased" Text="{Binding DatePurchased, ConverterCulture=en-GB, StringFormat=d}" HorizontalAlignment="Left" Height="26" Margin="250,438,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="140"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="TabItem">
+            <TabItem Header="Promotional Images">
+                <Grid Background="#FFE5E5E5">
+                    <ScrollViewer x:Name="svPromotionImages" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Hidden" HorizontalContentAlignment="Stretch" IsTabStop="True" CanContentScroll="True">
+                        <StackPanel x:Name="splPromotionImages" HorizontalAlignment="Left" Height="733" Margin="10,10,0,0" VerticalAlignment="Top" Width="710" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Orientation="Horizontal">
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Product Details">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="Text Files">
+                <Grid Background="#FFE5E5E5">
+                    <TabControl x:Name="tabCtrlProductTextFiles" HorizontalAlignment="Left" Height="732" Margin="10,10,0,-7" VerticalAlignment="Top" Width="964">
+                        <TabItem Header="Read Me">
+                            <ScrollViewer>
+                                <TextBlock Background="#FFE5E5E5" />
+                            </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Personal Art">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
         </TabControl>
-
-    </Grid>
+    </Viewbox>
 </Window>
