@@ -22,61 +22,17 @@ namespace ArtContentManager.Forms
     {
 
         Content.Product _displayProduct;
+        bool hyperLinkEditMode = false;
 
         public frmProductDetails(Content.Product displayProduct)
         {
 
-            _displayProduct = displayProduct;
-            DataContext = _displayProduct;
+           _displayProduct = displayProduct;
+           DataContext = _displayProduct;
 
-            InitializeComponent();
+           InitializeComponent();
 
-            TabItem imageTab = (TabItem)tabCtrlProduct.Items[0];
-            imageTab.Header = _displayProduct.Name;
-
-            Dictionary<string, string> imageFiles = _displayProduct.ImageFiles(_displayProduct.NameSavedToDatabase);
-
-            if (imageFiles.ContainsKey("TBN"))
-            {
-                Content.ImageResource thumbNailImage = new Content.ImageResource(imageFiles["TBN"]);
-                if (thumbNailImage.ImageSource != null)
-                {
-                    imgThumbnail.Source = thumbNailImage.ImageSource;
-                }
-            }
-
-            if (imageFiles.ContainsKey("000"))
-            {
-                Content.ImageResource primaryImage = new Content.ImageResource(imageFiles["000"]);
-                if (primaryImage.ImageSource != null)
-                {
-                    imgPrimaryImage.Source = primaryImage.ImageSource;
-                }
-            }
-
-            splPromotionImages.Children.Clear();
-
-            foreach (KeyValuePair<string,string> kvpImageFile in imageFiles)
-            {
-
-                if (kvpImageFile.Key != "000" & kvpImageFile.Key!="TBN")
-                {
-                    // Ignore the primary image and the thumbnail but process everything else
-
-                    System.Windows.Controls.Image promotionImageCtl = new System.Windows.Controls.Image();
-                    promotionImageCtl.Height = splPromotionImages.Height;
-                    splPromotionImages.Children.Add(promotionImageCtl);
-
-                    Content.ImageResource promotionImage = new Content.ImageResource(kvpImageFile.Value);
-                    if (promotionImage.ImageSource != null)
-                    {
-                        promotionImageCtl.Source = promotionImage.ImageSource;
-                    }
-
-                }
-            }
-
-           svPromotionImages.InvalidateScrollInfo();
+           LoadImages();
 
            tabCtrlProductTextFiles.Items.Clear();
 
@@ -96,11 +52,72 @@ namespace ArtContentManager.Forms
 
         }
 
+        private void LoadImages()
+        {
+
+            TabItem imageTab = (TabItem)tabCtrlProduct.Items[0];
+            imageTab.Header = _displayProduct.Name;
+
+            Dictionary<string, string> imageFiles = _displayProduct.ImageFiles(true);
+
+            if (imageFiles.ContainsKey("tbn"))
+            {
+                Content.ImageResource thumbNailImage = new Content.ImageResource(imageFiles["tbn"]);
+                if (thumbNailImage.ImageSource != null)
+                {
+                    imgThumbnail.Source = thumbNailImage.ImageSource;
+                    imgThumbnail.InvalidateVisual();
+                }
+            }
+
+            if (imageFiles.ContainsKey("000"))
+            {
+                Content.ImageResource primaryImage = new Content.ImageResource(imageFiles["000"]);
+                if (primaryImage.ImageSource != null)
+                {
+                    imgPrimaryImage.Source = primaryImage.ImageSource;
+                    imgPrimaryImage.InvalidateVisual();
+                }
+            }
+
+            splPromotionImages.Children.Clear();
+
+            foreach (KeyValuePair<string, string> kvpImageFile in imageFiles)
+            {
+
+                if (kvpImageFile.Key != "000" & kvpImageFile.Key != "tbn")
+                {
+                    // Ignore the primary image and the thumbnail but process everything else
+
+                    System.Windows.Controls.Image promotionImageCtl = new System.Windows.Controls.Image();
+                    promotionImageCtl.Height = splPromotionImages.Height;
+                    splPromotionImages.Children.Add(promotionImageCtl);
+
+                    Content.ImageResource promotionImage = new Content.ImageResource(kvpImageFile.Value);
+                    if (promotionImage.ImageSource != null)
+                    {
+                        promotionImageCtl.Source = promotionImage.ImageSource;
+                    }
+
+                }
+            }
+
+            svPromotionImages.InvalidateScrollInfo();
+
+        }
+
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             if (ArtContentManager.Static.DatabaseAgents.dbaProduct.UpdateProduct(_displayProduct))
             {
-                lblStatusMessage.Content = "Updated product details saved to database and image resources moved and renamed as required.";
+                lblStatusMessage.Content = "Updated product details saved to database.";
+                if (_displayProduct.Name != _displayProduct.NameSavedToDatabase)
+                {
+                    // The name has been changed. Copy images using the correct name and folder structure
+                    ArtContentManager.Static.ProductImageManager.RenameProductImages(_displayProduct.NameSavedToDatabase, _displayProduct.Name);
+                    _displayProduct.NameSavedToDatabase = _displayProduct.Name;
+                    ArtContentManager.Static.ProductImageManager.DeleteOldProductNameImages();
+                }
             }
             else
             {
@@ -112,6 +129,20 @@ namespace ArtContentManager.Forms
             System.Diagnostics.Process.Start((sender as Hyperlink).NavigateUri.AbsoluteUri);
         }
 
-
+        private void btnLink_Click(object sender, RoutedEventArgs e)
+        {
+            if (hyperLinkEditMode == false)
+            {
+                txbHyperlink.Visibility = Visibility.Hidden;
+                txtProductHyperlink.Visibility = Visibility.Visible;
+                hyperLinkEditMode = true;
+            }
+            else
+            {
+                txbHyperlink.Visibility = Visibility.Visible;
+                txtProductHyperlink.Visibility = Visibility.Hidden;
+                hyperLinkEditMode = false;
+            }
+        }
     }
 }

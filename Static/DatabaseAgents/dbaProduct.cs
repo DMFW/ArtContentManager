@@ -61,7 +61,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                     Product.NameSavedToDatabase = reader["ProductName"].ToString();
                     Product.IsPrimary = (bool)reader["IsPrimary"];
                     Product.DatePurchased = reader["DatePurchased"] as DateTime?;
-                    Product.MarketPlaceID = reader["MarketPlaceID"] as int? ?? default(int);
+                    Product.MarketPlaceID = reader["MarketPlaceID"] as int?;
                     Product.ProductURI = reader["ProductURI"].ToString();
                 }
                 reader.Close();
@@ -419,14 +419,14 @@ namespace ArtContentManager.Static.DatabaseAgents
 
                 if (_cmdUpdateProduct == null)
                 {
-                    string updateProductFileSQL = "UPDATE Product SET ProductName = @ProductName, IsPrimary = @IsPrimary, DatePurchased = @DatePurchased," + 
+                    string updateProductFileSQL = "UPDATE Products SET ProductName = @ProductName, IsPrimary = @IsPrimary, DatePurchased = @DatePurchased," + 
                                                   "MarketPlaceID = @MarketPlaceID, ProductURI = @ProductURI WHERE ProductID = @ProductID;";
                     _cmdUpdateProduct = new SqlCommand(updateProductFileSQL, DB);
 
                     _cmdUpdateProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
                     _cmdUpdateProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar, 255);
                     _cmdUpdateProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Bit);
-                    _cmdUpdateProduct.Parameters.Add("@DatePurchased", System.Data.SqlDbType.DateTime2);
+                    _cmdUpdateProduct.Parameters.Add("@DatePurchased", System.Data.SqlDbType.DateTime);
                     _cmdUpdateProduct.Parameters.Add("@MarketPlaceID", System.Data.SqlDbType.Int);
                     _cmdUpdateProduct.Parameters.Add("@ProductURI", System.Data.SqlDbType.NVarChar, 255);
 
@@ -439,17 +439,15 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdUpdateProduct.Parameters["@ProductID"].Value = product.ID;
                 _cmdUpdateProduct.Parameters["@ProductName"].Value = product.Name;
                 _cmdUpdateProduct.Parameters["@IsPrimary"].Value = product.IsPrimary;
-                _cmdUpdateProduct.Parameters["@DatePurchased"].Value = product.DatePurchased;
-                _cmdUpdateProduct.Parameters["@MarketPlaceID"].Value = product.MarketPlaceID;
-                _cmdUpdateProduct.Parameters["@ProductURI"].Value = product.ProductURI;
+                _cmdUpdateProduct.Parameters["@DatePurchased"].Value = (object)product.DatePurchased ?? DBNull.Value;
+                _cmdUpdateProduct.Parameters["@MarketPlaceID"].Value = (object)product.MarketPlaceID ?? DBNull.Value;
+                _cmdUpdateProduct.Parameters["@ProductURI"].Value = (object)product.ProductURI ?? DBNull.Value;
 
                 _cmdUpdateProduct.ExecuteScalar();
 
                 // Here we will post updates to child files
 
                 Static.Database.CommitTransaction(Database.TransactionType.Active);
-
-                product.MoveImageFiles();
 
                 return true;
             }

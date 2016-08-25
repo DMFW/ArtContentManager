@@ -30,11 +30,11 @@ namespace ArtContentManager.Forms
             foreach (Content.Product product in resolvedSelectedProducts.SelectedProducts)
             {
 
-                Dictionary<string, string> imageFiles = product.ImageFiles(product.NameSavedToDatabase);
+                Dictionary<string, string> imageFiles = product.ImageFiles(true);
 
-                if (imageFiles.ContainsKey("TBN"))
+                if (imageFiles.ContainsKey("tbn"))
                 {
-                    Content.ImageResource thumbNailImage = new Content.ImageResource(imageFiles["TBN"]);
+                    Content.ImageResource thumbNailImage = new Content.ImageResource(imageFiles["tbn"]);
                     if (thumbNailImage.ImageSource != null)
                     {
                         AddProductThumb(product, thumbNailImage);
@@ -73,12 +73,29 @@ namespace ArtContentManager.Forms
             lblProduct.Margin = new Thickness(0, 21, 0, 0);
             lblProduct.Foreground = new SolidColorBrush(Colors.White);
             lblProduct.Background = new SolidColorBrush(Colors.Black);
+            lblProduct.HorizontalAlignment = HorizontalAlignment.Center;
+            lblProduct.VerticalAlignment = VerticalAlignment.Center;
+            lblProduct.FontSize = 18;
+            lblProduct.Tag = product;
             ugProducts.Children.Add(lblProduct);
+            lblProduct.MouseLeftButtonUp += new System.Windows.Input.MouseButtonEventHandler(this.LabelSelected);
         }
         private void ThumbnailSelected(object sender, MouseButtonEventArgs e)
         {
             Image imgThumbnail = (Image)sender;
             Content.Product selectedProduct = (Content.Product)imgThumbnail.Tag;
+            ShowProductDetails(selectedProduct);
+        }
+
+        private void LabelSelected(object sender, MouseButtonEventArgs e)
+        {
+            Label lblProduct = (Label)sender;
+            Content.Product selectedProduct = (Content.Product)lblProduct.Tag;
+            ShowProductDetails(selectedProduct);
+        }
+
+        private void ShowProductDetails(Content.Product selectedProduct)
+        {
 
             dbaProduct.ProductLoadOptions loadOptions = new dbaProduct.ProductLoadOptions();
 

@@ -10,6 +10,16 @@
         Background="{DynamicResource stdFormBackground}">
     <Grid Margin="10,0,0,0">
         <TabControl x:Name="tabControl" HorizontalAlignment="Left" Margin="23,31,0,49" Width="422">
+            <TabItem x:Name="tabMarketPlaces" Header="Market Places">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid x:Name="dgMarketPlaces" HorizontalAlignment="Left" Height="303" Margin="10,19,0,0" VerticalAlignment="Top" Width="383"/>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="tabVendors" Header="Vendors">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid x:Name="dgVendors" HorizontalAlignment="Left" Height="303" Margin="10,19,0,0" VerticalAlignment="Top" Width="383"/>
+                </Grid>
+            </TabItem>
             <TabItem x:Name="tabContentTypes" Header="Content Types">
                 <Grid Background="#FFE5E5E5">
                     <DataGrid x:Name="dgContentTypes" HorizontalAlignment="Left" Height="303" Margin="10,19,0,0" VerticalAlignment="Top" Width="383"/>

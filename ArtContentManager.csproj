@@ -100,6 +100,7 @@
     <Compile Include="Static\DatabaseAgents\dbaSettings.cs" />
     <Compile Include="Static\FileSystemScan.cs" />
     <Compile Include="Static\Log.cs" />
+    <Compile Include="Static\ProductIImageManager.cs" />
     <Compile Include="Static\ScanProgress.cs" />
     <Page Include="Forms\frmFileMaintenance.xaml">
       <SubType>Designer</SubType>

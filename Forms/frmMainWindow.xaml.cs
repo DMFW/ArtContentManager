@@ -109,9 +109,13 @@ namespace ArtContentManager.Forms
 
         private void frmMainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-           lblStatus.Content = "Closing database...";
-           Properties.Settings.Default.Save();
-           Static.Database.Close();
+            frmProductReview = null;
+            lblStatus.Content = "Removing old product name images...";
+            ArtContentManager.Static.ProductImageManager.DeleteOldProductNameImages();
+           
+            lblStatus.Content = "Closing database...";
+            Properties.Settings.Default.Save();
+            Static.Database.Close();
         }
 
         

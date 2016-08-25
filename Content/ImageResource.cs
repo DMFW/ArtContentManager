@@ -35,19 +35,19 @@ namespace ArtContentManager.Content
                 {
                     case ".jpg":
                     case ".jpeg":
-                        decoder = new JpegBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        decoder = new JpegBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
                         bitmapSource = decoder.Frames[0];
                         break;
                     case ".bmp":
-                        decoder = new BmpBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        decoder = new BmpBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
                         bitmapSource = decoder.Frames[0];
                         break;
                     case ".png":
-                        decoder = new PngBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        decoder = new PngBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
                         bitmapSource = decoder.Frames[0];
                         break;
                     case ".tiff":
-                        decoder = new TiffBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        decoder = new TiffBitmapDecoder(myUri, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
                         bitmapSource = decoder.Frames[0];
                         break;
                     default:
