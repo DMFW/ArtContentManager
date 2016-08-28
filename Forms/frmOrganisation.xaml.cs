@@ -23,5 +23,10 @@ namespace ArtContentManager.Forms
         {
             InitializeComponent();
         }
+
+        private void SkinableWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

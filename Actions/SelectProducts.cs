@@ -18,7 +18,7 @@ namespace ArtContentManager.Actions
             dbaProduct.ProductLoadOptions simpleLoad = new dbaProduct.ProductLoadOptions();
             simpleLoad.basic = true;
 
-            int[] testIDs = new int[9] { 122, 221, 247, 249, 120, 166, 121, 107, 151 };
+            int[] testIDs = new int[42] {111, 231, 183, 157, 156, 126, 114, 268, 466, 115, 150, 301, 77, 9, 110, 109, 453, 290, 125, 237, 76, 154, 369, 309, 69, 61, 67, 2, 230, 228, 235, 124, 122, 123, 221, 247, 249, 120, 166, 121, 107, 151 };
 
             foreach (int ID in testIDs)
             {

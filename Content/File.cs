@@ -246,6 +246,11 @@ namespace ArtContentManager.Content
                 ZipFile.ExtractToDirectory(_ActivePathAndName, _WorkingExtractDirectory);
                 WalkDirectoryTree(new DirectoryInfo(_WorkingExtractDirectory));
             }
+            catch(System.IO.InvalidDataException)
+            {
+                _ExtractUnreadable = true;
+                Update();
+            }
             catch(System.IO.IOException e)
             {
                 _ExtractUnreadable = true;

@@ -27,17 +27,29 @@ namespace ArtContentManager.Forms
         public frmProductDetails(Content.Product displayProduct)
         {
 
-           _displayProduct = displayProduct;
-           DataContext = _displayProduct;
+            _displayProduct = displayProduct;
+            DataContext = _displayProduct;
 
-           InitializeComponent();
+            InitializeComponent();
 
-           LoadImages();
+            ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.LoadMarketPlaces(false);
+            cboMarketPlace.ItemsSource = ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.tblMarketPlaces.DefaultView;
 
-           tabCtrlProductTextFiles.Items.Clear();
+            if (displayProduct.MarketPlaceID == null)
+            {
+                cboMarketPlace.SelectedValue = 0;
+            }
+            else
+            {
+                cboMarketPlace.SelectedValue= (int)_displayProduct.MarketPlaceID;
+            }
 
-           for (int i=0; i < displayProduct.TextFiles.Count; i++)
-           {
+            LoadImages();
+           
+            tabCtrlProductTextFiles.Items.Clear();
+
+            for (int i=0; i < displayProduct.TextFiles.Count; i++)
+            {
                 TabItem tabText = new TabItem();
                 tabCtrlProductTextFiles.Items.Add(tabText);
                 tabText.Header = _displayProduct.TextFiles[i].Name;
@@ -49,7 +61,6 @@ namespace ArtContentManager.Forms
                 tbText.Text = _displayProduct.TextFiles[i].Text;
 
             }
-
         }
 
         private void LoadImages()
@@ -108,22 +119,47 @@ namespace ArtContentManager.Forms
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            if (ArtContentManager.Static.DatabaseAgents.dbaProduct.UpdateProduct(_displayProduct))
+            try
             {
-                lblStatusMessage.Content = "Updated product details saved to database.";
-                if (_displayProduct.Name != _displayProduct.NameSavedToDatabase)
+
+                BindComboBoxOutput();
+
+                if (ArtContentManager.Static.DatabaseAgents.dbaProduct.UpdateProduct(_displayProduct))
                 {
-                    // The name has been changed. Copy images using the correct name and folder structure
-                    ArtContentManager.Static.ProductImageManager.RenameProductImages(_displayProduct.NameSavedToDatabase, _displayProduct.Name);
-                    _displayProduct.NameSavedToDatabase = _displayProduct.Name;
-                    ArtContentManager.Static.ProductImageManager.DeleteOldProductNameImages();
+                    lblStatusMessage.Content = "Updated product details saved to database.";
+                    if (_displayProduct.Name != _displayProduct.NameSavedToDatabase)
+                    {
+                        // The name has been changed. Copy images using the correct name and folder structure
+                        ArtContentManager.Static.ProductImageManager.RenameProductImages(_displayProduct.NameSavedToDatabase, _displayProduct.Name);
+                        _displayProduct.NameSavedToDatabase = _displayProduct.Name;
+                        ArtContentManager.Static.ProductImageManager.DeleteOldProductNameImages();
+                    }
+                    MessageBox.Show("Save successful");
+                }
+                else
+                {
+                    lblStatusMessage.Content = "Update to product details has failed.";
+                    MessageBox.Show("Save failed");
                 }
             }
-            else
+            catch(Exception error)
             {
-                lblStatusMessage.Content = "Update to product details has failed.";
+                MessageBox.Show("Save failed :-"+ Environment.NewLine + error.Message);
             }
         }
+
+        private void BindComboBoxOutput()
+        {
+
+            // The combo box controls which we have to bind manually to the product
+            // unless I find there is a better more automated way to do it.
+
+            int marketPlaceID;
+            Int32.TryParse(cboMarketPlace.SelectedValue.ToString(), out marketPlaceID);
+            _displayProduct.MarketPlaceID = marketPlaceID;
+
+        }
+
         private void Hyperlink_RequestNavigate(object sender, RoutedEventArgs e)
         {
             System.Diagnostics.Process.Start((sender as Hyperlink).NavigateUri.AbsoluteUri);
@@ -135,12 +171,14 @@ namespace ArtContentManager.Forms
             {
                 txbHyperlink.Visibility = Visibility.Hidden;
                 txtProductHyperlink.Visibility = Visibility.Visible;
+                btnLink.Content = "Show Hyperlink";
                 hyperLinkEditMode = true;
             }
             else
             {
                 txbHyperlink.Visibility = Visibility.Visible;
                 txtProductHyperlink.Visibility = Visibility.Hidden;
+                btnLink.Content = "Edit Hyperlink";
                 hyperLinkEditMode = false;
             }
         }

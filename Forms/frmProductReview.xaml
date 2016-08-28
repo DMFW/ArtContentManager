@@ -8,8 +8,8 @@
         mc:Ignorable="d"
         Title="ProductReview" Height="847.08" Width="1165.225"
         Background="{DynamicResource stdFormBackground}">
-    <ScrollViewer CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
-        <UniformGrid x:Name="ugProducts" Columns="5" Rows="4" Height="823">
+    <ScrollViewer CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <UniformGrid x:Name="ugProducts" Columns="4" Height="823">
         </UniformGrid>
     </ScrollViewer>
 </src:SkinableWindow>

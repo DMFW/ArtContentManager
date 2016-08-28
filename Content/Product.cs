@@ -53,9 +53,19 @@ namespace ArtContentManager.Content
             get { return _Name; }
             set
             {
-                if (value != _Name)
+                // Names with spaces in the first three characters are not permitted.
+                // Modify them here to use underscores.
+
+                string newName = value;
+                string nameHeader = newName.Substring(0, ArtContentManager.Static.ProductImageManager.SUBFOLDER_NAME_LENGTH);
+                string NameTrailer = newName.Substring(ArtContentManager.Static.ProductImageManager.SUBFOLDER_NAME_LENGTH);
+
+                nameHeader = nameHeader.Replace(" ", "_");
+                newName = nameHeader + NameTrailer;
+
+                if (newName != _Name)
                 {
-                    _Name = value;
+                    _Name = newName;
                     NotifyPropertyChanged();
                 }
             }

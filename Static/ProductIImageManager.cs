@@ -17,9 +17,9 @@ namespace ArtContentManager.Static
         // when a product was renamed, ensuring that the images with the old names are deleted when
         // the program shuts down. Deleting them earlier is difficult due to locks in image controls.
 
-        private const short SUBFOLDER_NAME_LENGTH = 3;
-        private const short IMAGE_SUFFIX_KEY_LENGTH = 3;
-        private const short PRODUCT_NAME_KEY_LENGTH = 10;
+        public const short SUBFOLDER_NAME_LENGTH = 3;
+        public const short IMAGE_SUFFIX_KEY_LENGTH = 3;
+        public const short PRODUCT_NAME_KEY_LENGTH = 10;
 
         private static List<Tuple<string, string>> _lstRenamedProducts = new List<Tuple<string,string>>();
 
@@ -117,12 +117,21 @@ namespace ArtContentManager.Static
                     }
                     else
                     {
+                        string newImageFileName = dctNewImages[oldImageFileKey];
                         do
                         {
                             try
                             {
-                                System.IO.File.Delete(oldImageFileName);
-                                deleteOK = true;
+                                if (oldImageFileName.ToLowerInvariant() == newImageFileName.ToLowerInvariant())
+                                {
+                                    Trace.WriteLine("The new and old image names are the same except for case differences. Deleting of old image + " + oldImageFileName + " bypassed.");
+                                    deleteOK = true; // Because logically this is OK and equivalent to a successful delete
+                                }
+                                else
+                                {
+                                    System.IO.File.Delete(oldImageFileName);
+                                    deleteOK = true;
+                                }
                             }
                             catch (Exception e)
                             {
