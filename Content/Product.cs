@@ -20,7 +20,8 @@ namespace ArtContentManager.Content
         private DateTime? _DatePurchased;
         private int? _MarketPlaceID;
         private string _ProductURI;
-              
+        private string _OrderURI;
+
         // Just the parent files
         private List<File> _lstInstallationFiles = new List<File>();
         private List<File> _lstContentFiles = new List<File>();
@@ -85,6 +86,19 @@ namespace ArtContentManager.Content
                 if (value != _ProductURI)
                 {
                     _ProductURI = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string OrderURI
+        {
+            get { return _OrderURI; }
+            set
+            {
+                if (value != _OrderURI)
+                {
+                    _OrderURI = value;
                     NotifyPropertyChanged();
                 }
             }

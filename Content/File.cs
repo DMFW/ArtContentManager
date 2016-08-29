@@ -31,10 +31,11 @@ namespace ArtContentManager.Content
         private string _RelativeInstallationPath;
         private string _WorkingExtractDirectory;
         private bool _ExtractUnreadable;
+        private bool _reAnalyseZipFiles;
 
         private string _Text; 
 
-        public File(DateTime scanDateTime, File parentFile, FileInfo fi)
+        public File(DateTime scanDateTime, File parentFile, FileInfo fi, bool reAnalyseZipFiles)
         {
 
             // The constructor, both for a primary file found directly in a scan and a secondary file embedded in a zip or manifest
@@ -67,10 +68,12 @@ namespace ArtContentManager.Content
             bool wasAlreadyRecorded;
             Save(scanDateTime, out wasAlreadyRecorded);
 
-            // The first time we encounter a zip file we need to analyse it "deeply", but thereafter we only care about noting its current location,
+            // The first time we encounter a zip file we need to analyse it "deeply".
+            // We must also analyse it deeply if instructed to do so by the user. 
+            // Otherwise we only care about noting its current location,
             // which the above save will have done even when wasAlreadyRecorded is true.
 
-            if (!wasAlreadyRecorded)
+            if ((!wasAlreadyRecorded) | (reAnalyseZipFiles))
             {
                 if (_Extension == ".zip")
                 {
@@ -305,7 +308,7 @@ namespace ArtContentManager.Content
                     // want to open, delete or modify the file, then
                     // a try-catch block is required here to handle the case
                     // where the file has been deleted since the call to TraverseTree().
-                    File subFile = new File(_ScanDateTime, this, fi);
+                    File subFile = new File(_ScanDateTime, this, fi, true);
                     Trace.WriteLine(fi.FullName);
                 }
 
@@ -323,11 +326,7 @@ namespace ArtContentManager.Content
         private void Save(DateTime scanDateTime, out bool wasAlreadyRecorded)
         {
 
-            string[] documentFolder = new string[] { "Documentation" , "Readme", "ReadMe" };
-
-            bool readMeNotesRecorded = false;
-
-            // Adds new files and also inserts or updates their location instance(s)
+            // Adds new files and also inserts or updates their location instance(s) and imports text data
             // After calling this method we will have an ID for the file (either an existing known one or a new one)
 
             ArtContentManager.Static.Database.BeginTransaction(Static.Database.TransactionType.Active);
@@ -344,18 +343,9 @@ namespace ArtContentManager.Content
 
             ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileLocation(this, scanDateTime);
 
-            if (this._ParentID != 0) 
+            if ((_ParentID != 0) & (_Extension == ".txt"))
             {
-                foreach (string folderName in documentFolder)
-                {
-                    if ((!readMeNotesRecorded) & (this.Location.Contains(folderName)))
-                    {
-                        // We are a child file (i.e. within a zip or some such) and we are in a document location
-                        // Attempt to pull the document into the database.
-                        ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileTextNotes(this);
-                        readMeNotesRecorded = true;
-                    }
-                }
+               ArtContentManager.Static.DatabaseAgents.dbaFile.RecordFileTextNotes(this);   
             }
 
             ArtContentManager.Static.Database.CommitTransaction(Static.Database.TransactionType.Active);

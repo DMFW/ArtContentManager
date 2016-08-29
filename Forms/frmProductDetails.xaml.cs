@@ -22,7 +22,8 @@ namespace ArtContentManager.Forms
     {
 
         Content.Product _displayProduct;
-        bool hyperLinkEditMode = false;
+        bool hyperLinkProductEditMode = false;
+        bool hyperLinkOrderEditMode = false;
 
         public frmProductDetails(Content.Product displayProduct)
         {
@@ -165,22 +166,41 @@ namespace ArtContentManager.Forms
             System.Diagnostics.Process.Start((sender as Hyperlink).NavigateUri.AbsoluteUri);
         }
 
-        private void btnLink_Click(object sender, RoutedEventArgs e)
+        private void btnProductLink_Click(object sender, RoutedEventArgs e)
         {
-            if (hyperLinkEditMode == false)
+            if (hyperLinkProductEditMode == false)
             {
-                txbHyperlink.Visibility = Visibility.Hidden;
+                txbHyperlinkProduct.Visibility = Visibility.Hidden;
                 txtProductHyperlink.Visibility = Visibility.Visible;
-                btnLink.Content = "Show Hyperlink";
-                hyperLinkEditMode = true;
+                btnProductLink.Content = "Show Product Hyperlink";
+                hyperLinkProductEditMode = true;
             }
             else
             {
-                txbHyperlink.Visibility = Visibility.Visible;
+                txbHyperlinkProduct.Visibility = Visibility.Visible;
                 txtProductHyperlink.Visibility = Visibility.Hidden;
-                btnLink.Content = "Edit Hyperlink";
-                hyperLinkEditMode = false;
+                btnProductLink.Content = "Edit Product Hyperlink";
+                hyperLinkProductEditMode = false;
             }
         }
+
+        private void btnOrderLink_Click(object sender, RoutedEventArgs e)
+        {
+            if (hyperLinkOrderEditMode == false)
+            {
+                txbHyperlinkOrder.Visibility = Visibility.Hidden;
+                txtOrderHyperlink.Visibility = Visibility.Visible;
+                btnOrderLink.Content = "Show Order Hyperlink";
+                hyperLinkOrderEditMode = true;
+            }
+            else
+            {
+                txbHyperlinkOrder.Visibility = Visibility.Visible;
+                txtOrderHyperlink.Visibility = Visibility.Hidden;
+                btnOrderLink.Content = "Edit Order Hyperlink";
+                hyperLinkOrderEditMode = false;
+            }
+        }
+
     }
 }

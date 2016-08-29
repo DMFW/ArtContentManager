@@ -27,7 +27,9 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         static SqlCommand _cmdReadFileTextNotesWithinParent;
         static SqlCommand _cmdReadFileTextNotes;
+        static SqlCommand _cmdCheckFileTextNotesExist;
         static SqlCommand _cmdInsertFileTextNotes;
+        static SqlCommand _cmdUpdateFileTextNotes;
 
         public static void Load(ArtContentManager.Content.File File)
         {
@@ -67,9 +69,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
 
             reader.Close();
-
         }
-
 
 
         public static bool IsFileRecorded(ArtContentManager.Content.File File)
@@ -268,22 +268,53 @@ namespace ArtContentManager.Static.DatabaseAgents
        public static void RecordFileTextNotes(ArtContentManager.Content.File File)
        {
 
+            SqlConnection DBReadOnly = ArtContentManager.Static.Database.DBReadOnly;
+            SqlConnection DBActive = ArtContentManager.Static.Database.DBActive;
+
+            bool fileTextNotesExist = false;
+
             if (File.Extension != ".txt")
             {
-                Trace.Write("Bypassing non-text file in document folder for text file save");
+                Trace.Write("Bypassing invalid file type for importing text.");
                 return;
             }
 
-            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
             string textNotes;
+
+            if (_cmdCheckFileTextNotesExist == null)
+            {
+                string checkFileTextNotesExistSQL = "SELECT FileID FROM FileTextNotes WHERE FileID = @FileID";
+                _cmdCheckFileTextNotesExist = new SqlCommand(checkFileTextNotesExistSQL, DBReadOnly);
+                _cmdCheckFileTextNotesExist.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+            }
+
+            ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.ReadOnly);
+            _cmdCheckFileTextNotesExist.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            _cmdCheckFileTextNotesExist.Parameters["@FileID"].Value = File.ID;
+           
+            SqlDataReader reader = _cmdCheckFileTextNotesExist.ExecuteReader();
+
+            while (reader.Read())
+            {
+                fileTextNotesExist = true;
+            }
+            reader.Close();
+            ArtContentManager.Static.Database.CommitTransaction(Database.TransactionType.ReadOnly);
 
             if (_cmdInsertFileTextNotes == null)
             {
                 string insertFileTextNotesSQL = "INSERT INTO FileTextNotes (FileID, Text) VALUES (@FileID, @Text);";
-                _cmdInsertFileTextNotes = new SqlCommand(insertFileTextNotesSQL, DB);
+                _cmdInsertFileTextNotes = new SqlCommand(insertFileTextNotesSQL, DBActive);
                 _cmdInsertFileTextNotes.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
-                _cmdInsertFileTextNotes.Parameters.Add("@Text", System.Data.SqlDbType.NVarChar);
-               
+                _cmdInsertFileTextNotes.Parameters.Add("@Text", System.Data.SqlDbType.NVarChar);   
+            }
+
+            if (_cmdUpdateFileTextNotes == null)
+            {
+                string updateFileTextNotesSQL = "UPDATE FileTextNotes Set Text = @Text WHERE File = @File;";
+                _cmdUpdateFileTextNotes = new SqlCommand(updateFileTextNotesSQL, DBActive);
+                _cmdUpdateFileTextNotes.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+                _cmdUpdateFileTextNotes.Parameters.Add("@Text", System.Data.SqlDbType.NVarChar);
             }
 
             using (var streamReader = new StreamReader(File.ActivePathAndName, Encoding.UTF8))
@@ -291,20 +322,30 @@ namespace ArtContentManager.Static.DatabaseAgents
                 textNotes = streamReader.ReadToEnd();
             }
 
-            _cmdInsertFileTextNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-            _cmdInsertFileTextNotes.Parameters["@FileID"].Value = File.ID;
-            _cmdInsertFileTextNotes.Parameters["@Text"].Value = textNotes;
-
             try
             {
-                _cmdInsertFileTextNotes.ExecuteScalar();
+                if (fileTextNotesExist)
+                {
+                    _cmdUpdateFileTextNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                    _cmdUpdateFileTextNotes.Parameters["@FileID"].Value = File.ID;
+                    _cmdUpdateFileTextNotes.Parameters["@Text"].Value = textNotes;
+                    _cmdUpdateFileTextNotes.ExecuteScalar();
+                }
+                else
+                {
+                    _cmdInsertFileTextNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                    _cmdInsertFileTextNotes.Parameters["@FileID"].Value = File.ID;
+                    _cmdInsertFileTextNotes.Parameters["@Text"].Value = textNotes;
+                    _cmdInsertFileTextNotes.ExecuteScalar();
+                }
             }
             catch(SqlException ex)
             {
                 if (ex.Number == 2627)
                 {
                     // Ignore duplicate inserts
-                    // This can happen if exactly the same licence or read me file is stored in multiple zip files.
+                    // This could once happen if exactly the same licence or read me file is stored in multiple zip files.
+                    // Should no longer happen now the routine has been enhanced to support updates as well as inserts.
                 }
             }
         }

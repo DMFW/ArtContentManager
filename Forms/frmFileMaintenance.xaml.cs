@@ -107,16 +107,22 @@ namespace ArtContentManager.Forms
             ArtContentManager.Static.DatabaseAgents.dbaScanHistory.RecordStartScan(_currentRootScan);
             ArtContentManager.Static.DatabaseAgents.dbaScanHistory.SetLastCompletedScanTime(_currentRootScan);
 
-            _scanWorker.RunWorkerAsync(qScanMode);
+            bool rescanExistingImports = chkRescanExistingImports.IsChecked.Value;
+            var scanParameters = Tuple.Create<bool, Queue<Static.FileSystemScan.ScanMode>> (rescanExistingImports, qScanMode);
+            _scanWorker.RunWorkerAsync(scanParameters);
 
         }
 
         private void scanWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            Tuple<bool, Queue<Static.FileSystemScan.ScanMode>> parameters = e.Argument as Tuple<bool, Queue<Static.FileSystemScan.ScanMode>>;
 
-            Queue<Static.FileSystemScan.ScanMode> qScanMode = (Queue <Static.FileSystemScan.ScanMode>) e.Argument;
+            bool rescanExistingImports = parameters.Item1;
+
+            Queue<Static.FileSystemScan.ScanMode> qScanMode = (Queue<Static.FileSystemScan.ScanMode>)parameters.Item2;
             Static.FileSystemScan.ScanMode scanMode = qScanMode.Dequeue();
-            Static.FileSystemScan.Scan(scanMode, _currentRootScan, _scanWorker);
+
+            Static.FileSystemScan.Scan(scanMode, rescanExistingImports, _currentRootScan, _scanWorker);
 
             // Return the current scan and the queue of remaining scan types in a tuple.
             Tuple<Static.FileSystemScan.ScanMode, Queue<Static.FileSystemScan.ScanMode>> tplScanDirectives = new Tuple<Static.FileSystemScan.ScanMode, Queue<Static.FileSystemScan.ScanMode>>(scanMode, qScanMode);
@@ -151,7 +157,9 @@ namespace ArtContentManager.Forms
                 if (qScanMode.Count > 0)
                 {
                     // Dive back in and do another scan
-                    _scanWorker.RunWorkerAsync(qScanMode);
+                    bool rescanExistingImports = chkRescanExistingImports.IsChecked.Value;
+                    var scanParameters = Tuple.Create<bool, Queue<Static.FileSystemScan.ScanMode>>(rescanExistingImports, qScanMode);
+                    _scanWorker.RunWorkerAsync(scanParameters);
                 }
                 else
                 {

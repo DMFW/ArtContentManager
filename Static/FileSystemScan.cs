@@ -23,7 +23,7 @@ namespace ArtContentManager.Static
         private static int _internalZipInstance;
         private static Dictionary<string, Actions.Scan> _folderScan;
 
-        public static void Scan(ScanMode scanMode, Actions.Scan rootScan, BackgroundWorker bw)
+        public static void Scan(ScanMode scanMode, bool rescanExistingImports, Actions.Scan rootScan, BackgroundWorker bw)
         {
 
             Actions.Scan subScan;
@@ -227,7 +227,16 @@ namespace ArtContentManager.Static
 
                 if (scanMode != ScanMode.smContentTypeImport)
                 {
-                    newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
+
+                    if (rescanExistingImports)
+                    {
+                        newFiles = dirInfo.GetFiles().ToArray();
+                    }
+                    else
+                    {
+                        newFiles = dirInfo.GetFiles().Where(p => p.CreationTime > activeScan.PreviousCompletedScanTime).ToArray();
+                    }
+
                     switch (scanMode)
                     {
                         case ScanMode.smFullImportCount:
@@ -293,7 +302,7 @@ namespace ArtContentManager.Static
                                         Trace.WriteLine(String.Format("{0}: {1}, {2}", file.Name, file.Length, file.CreationTime));
                                         ScanProgress.Message = "Importing " + file.Name;
                                         // The creation of the file object, also saves it. Everything is encapsulated in the constructor
-                                        ArtContentManager.Content.File currentFile = new Content.File(activeScan.StartScanTime, null, file);
+                                        ArtContentManager.Content.File currentFile = new Content.File(activeScan.StartScanTime, null, file, rescanExistingImports);
                                         Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
                                     }
                                     bw.ReportProgress(ScanProgress.CompletionPct);
