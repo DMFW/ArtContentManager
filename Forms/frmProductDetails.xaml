@@ -13,30 +13,32 @@
                     <Image x:Name="imgThumbnail" HorizontalAlignment="Left" Height="349" Margin="24,10,0,0" VerticalAlignment="Top" Width="366"/>
                     <Image x:Name="imgPrimaryImage" HorizontalAlignment="Left" Height="720" Margin="458,10,0,0" VerticalAlignment="Top" Width="516">
                     </Image>
-                    <TextBox x:Name="txtProductName" Text="{Binding Name}" HorizontalAlignment="Left" Height="26" Margin="10,380,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430"/>
-                    <Button x:Name="btnProductLink" Content="Edit Product Hyperlink" HorizontalAlignment="Left" Height="26" Margin="10,441,0,0" VerticalAlignment="Top" Width="136" Click="btnProductLink_Click"/>
-                    <TextBox x:Name="txtProductHyperlink" Text="{Binding ProductURI}" HorizontalAlignment="Left" Height="39" Margin="10,472,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430" Visibility="Hidden"/>
-                    <TextBlock x:Name="txbHyperlinkProduct" Margin="10,472,544,238" TextWrapping="Wrap">           
+                    <TextBox x:Name="txtProductName" Text="{Binding Name}" HorizontalAlignment="Left" Height="26" Margin="10,364,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430"/>
+                    <Label x:Name="lblMarketPlace" Content="Market Place :" HorizontalAlignment="Left" Height="25" Margin="10,395,0,0" VerticalAlignment="Top" Width="85"/>
+                    <ComboBox x:Name="cboMarketPlace" HorizontalAlignment="Left" Height="25" Margin="123,395,0,0" VerticalAlignment="Top" Width="317" DisplayMemberPath="MarketPlaceName" SelectedValuePath="MarketPlaceID"/>
+                    <Button x:Name="btnProductLink" Content="Edit Product Hyperlink" HorizontalAlignment="Left" Height="26" Margin="10,425,0,0" VerticalAlignment="Top" Width="136" Click="btnProductLink_Click"/>
+                    <TextBox x:Name="txtProductHyperlink" Text="{Binding ProductURI}" HorizontalAlignment="Left" Height="30" Margin="10,451,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430" Visibility="Hidden"/>
+                    <TextBlock x:Name="txbHyperlinkProduct" Margin="10,456,544,254" TextWrapping="Wrap">           
                         <Hyperlink x:Name="hlProduct" NavigateUri="{Binding ProductURI}" RequestNavigate="Hyperlink_RequestNavigate">
                             <TextBlock Text="{Binding Path=ProductURI}"/>
                         </Hyperlink>
                     </TextBlock>
-                    <Label x:Name="lblDatePurchased" Content="Date Purchased :" HorizontalAlignment="Left" Height="26" Margin="10,516,0,0" VerticalAlignment="Top" Width="96"/>
-                    <TextBox x:Name="txtDatePurchased" Text="{Binding DatePurchased, ConverterCulture=en-GB, StringFormat=d}" HorizontalAlignment="Left" Height="26" Margin="250,516,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190"/>
-                    <ComboBox x:Name="cboMarketPlace" HorizontalAlignment="Left" Height="25" Margin="123,411,0,0" VerticalAlignment="Top" Width="317" DisplayMemberPath="MarketPlaceName" SelectedValuePath="MarketPlaceID"/>
-                    <Label x:Name="lblMarketPlace" Content="Market Place :" HorizontalAlignment="Left" Height="25" Margin="10,411,0,0" VerticalAlignment="Top" Width="85"/>
-                    <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Height="33" Margin="10,663,0,0" VerticalAlignment="Top" Width="66" Click="btnSave_Click"/>
+                    <Label x:Name="lblDatePurchased" Content="Date Purchased :" HorizontalAlignment="Left" Height="26" Margin="10,486,0,0" VerticalAlignment="Top" Width="96"/>
+                    <TextBox x:Name="txtDatePurchased" Text="{Binding DatePurchased, ConverterCulture=en-GB, StringFormat=d}" HorizontalAlignment="Left" Height="26" Margin="250,486,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190"/>
+                    <Button x:Name="btnOrderLink" Content="Edit Order Hyperlink" HorizontalAlignment="Left" Height="26" Margin="10,517,0,0" VerticalAlignment="Top" Width="136" Click="btnOrderLink_Click"/>
+                    <TextBox x:Name="txtOrderHyperlink" Text="{Binding OrderURI}" HorizontalAlignment="Left" Height="25" Margin="10,548,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430" Visibility="Hidden" RenderTransformOrigin="0.497,0.292"/>
+                    <TextBlock x:Name="txbHyperlinkOrder" Margin="10,548,544,162" TextWrapping="Wrap"><InlineUIContainer>
+                    	</InlineUIContainer><Hyperlink x:Name="hlOrder" NavigateUri="{Binding OrderURI}" RequestNavigate="Hyperlink_RequestNavigate"><InlineUIContainer>
+                    			<TextBlock Text="{Binding OrderURI}"/>
+                    	</InlineUIContainer></Hyperlink></TextBlock>
+                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,578,0,0" VerticalAlignment="Top" Height="98" Width="430" ItemsSource="{Binding Creators}">
+                    </DataGrid>
+                    <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Height="33" Margin="10,681,0,0" VerticalAlignment="Top" Width="66" Click="btnSave_Click"/>
                     <StatusBar x:Name ="stsProductDetail" HorizontalAlignment="Left" Height="11" Margin="0,719,0,0" VerticalAlignment="Top" Width="440">
                         <StatusBarItem>
                             <Label Name="lblStatusMessage" />
                         </StatusBarItem>
                     </StatusBar>
-                    <Button x:Name="btnOrderLink" Content="Edit Order Hyperlink" HorizontalAlignment="Left" Height="26" Margin="10,547,0,0" VerticalAlignment="Top" Width="136" Click="btnOrderLink_Click"/>
-                    <TextBox x:Name="txtOrderHyperlink" Text="{Binding OrderURI}" HorizontalAlignment="Left" Height="39" Margin="10,578,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430" Visibility="Hidden"/>
-                    <TextBlock x:Name="txbHyperlinkOrder" Margin="10,578,544,132" TextWrapping="Wrap"><InlineUIContainer>
-                    	</InlineUIContainer><Hyperlink x:Name="hlOrder" NavigateUri="{Binding OrderURI}" RequestNavigate="Hyperlink_RequestNavigate"><InlineUIContainer>
-                    			<TextBlock Text="{Binding OrderURI}"/>
-                    	</InlineUIContainer></Hyperlink></TextBlock>
                 </Grid>
             </TabItem>
             <TabItem Header="Promotional Images">
