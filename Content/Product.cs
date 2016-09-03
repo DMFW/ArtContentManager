@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -21,12 +22,14 @@ namespace ArtContentManager.Content
         private int? _MarketPlaceID;
         private string _ProductURI;
         private string _OrderURI;
+        private string _Currency;
+        private decimal _Price;
 
         // Just the parent files
         private List<File> _lstInstallationFiles = new List<File>();
         private List<File> _lstContentFiles = new List<File>();
         private List<File> _lstTextFiles = new List<File>();
-        private List<Creator> _lstCreators = new List<Creator>();
+        private ObservableCollection<Creator> _lstCreators = new ObservableCollection<Creator>();
 
         private Dictionary<string, string> _dctImageFiles = new Dictionary<string, string>();
 
@@ -104,6 +107,31 @@ namespace ArtContentManager.Content
             }
         }
 
+        public string Currency
+        {
+            get { return _Currency; }
+            set
+            {
+                if (value != _Currency)
+                {
+                    _Currency = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+        public decimal Price
+        {
+            get { return _Price; }
+            set
+            {
+                if (value != _Price)
+                {
+                    _Price = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public bool IsPrimary
         {
             get { return _IsPrimary; }
@@ -149,7 +177,7 @@ namespace ArtContentManager.Content
             set { _lstTextFiles = value; }
         }
 
-        public List<Creator> Creators
+        public ObservableCollection<Creator> Creators
         {
             get { return _lstCreators; }
             set { _lstCreators = value; }

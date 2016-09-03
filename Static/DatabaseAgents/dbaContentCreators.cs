@@ -6,14 +6,96 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Data;
 
 namespace ArtContentManager.Static.DatabaseAgents
 {
     static class dbaContentCreators
     {
+
+        // Used for population of DataTable for maintenance
+
+        static DataTable _tblContentCreators;
+        static bool _dataTableInitialised = false;
+        static bool _dataTableLoaded = false;
+
+        // Used for maintaining objects for use within a product
+
         static SqlCommand _cmdReadContentCreatorsByID;
         static SqlCommand _cmdReadContentCreatorsByName;
         static SqlCommand _cmdInsertContentCreator;
+
+        #region DirectDataTable
+        private static void InitialiseDataTable()
+        {
+            _tblContentCreators = new DataTable("ContentCreators");
+            _tblContentCreators.Columns.Add("CreatorID", typeof(int));
+            _tblContentCreators.Columns.Add("CreatorNameCode", typeof(string));
+            _tblContentCreators.Columns.Add("CreatorDirectoryName", typeof(string));
+            _tblContentCreators.Columns.Add("CreatorTrueName", typeof(string));
+            _tblContentCreators.Columns.Add("ContactEmail", typeof(string));
+            _tblContentCreators.Columns.Add("CreatorURI", typeof(string));
+            _tblContentCreators.Columns.Add("Notes", typeof(string));
+            _tblContentCreators.Columns.Add("IsSelected", typeof(string));
+            _dataTableInitialised = true;
+        }
+
+        public static void LoadContentCreators(bool forceLoad)
+        {
+
+            if (_dataTableInitialised == false)
+            {
+                InitialiseDataTable();
+            }
+
+            if ((!forceLoad) & (_dataTableLoaded))
+            {
+                return;
+            }
+
+            _tblContentCreators.Clear();
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+            string sqlContentCreators = "SELECT 'False' IsSelected, * FROM ContentCreators ORDER BY CreatorNameCode";
+            SqlCommand cmdSelectContentCreators = new SqlCommand(sqlContentCreators, DB);
+
+            using (SqlDataAdapter sadContentCreators = new SqlDataAdapter(cmdSelectContentCreators))
+            {
+                sadContentCreators.Fill(_tblContentCreators);
+            }
+            _dataTableLoaded = true;
+
+        }
+
+        public static DataTable tblContentCreators
+        {
+            get { return _tblContentCreators; }
+        }
+
+        static public List<Content.Creator> SelectedContentCreators()
+        {
+            DataTable tblContentCreators = Static.DatabaseAgents.dbaContentCreators.tblContentCreators;
+
+            var results = from DataRow selectedRow in tblContentCreators.Rows
+                          where (string)selectedRow["IsSelected"] == "True"
+                          select selectedRow;
+
+            List<DataRow> selectedRows = results.ToList<DataRow>();
+            List<Content.Creator> lstSelectedContentCreators = new List<Content.Creator>();
+
+            foreach (DataRow row in selectedRows)
+            {
+                Content.Creator Creator = new Content.Creator();
+                Creator.ID = row.Field<int>("CreatorID");
+                Load(Creator);
+                lstSelectedContentCreators.Add(Creator);
+            }
+            return lstSelectedContentCreators;
+        }
+
+        #endregion DirectDataTable
+
+        #region ObjectControl
 
         public static void Load(ArtContentManager.Content.Creator Creator)
         {
@@ -118,5 +200,6 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         }
 
+        #endregion ObjectControl
     }
 }

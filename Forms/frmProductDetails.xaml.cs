@@ -24,17 +24,21 @@ namespace ArtContentManager.Forms
         Content.Product _displayProduct;
         bool hyperLinkProductEditMode = false;
         bool hyperLinkOrderEditMode = false;
+        frmContentCreators frmContentCreators;
 
         public frmProductDetails(Content.Product displayProduct)
         {
 
             _displayProduct = displayProduct;
             DataContext = _displayProduct;
-
+            
             InitializeComponent();
 
             ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.LoadMarketPlaces(false);
             cboMarketPlace.ItemsSource = ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.tblMarketPlaces.DefaultView;
+
+            ArtContentManager.Static.DatabaseAgents.dbaCurrencies.LoadCurrencies(false);
+            cboCurrency.ItemsSource = ArtContentManager.Static.DatabaseAgents.dbaCurrencies.tblCurrencies.DefaultView;
 
             if (displayProduct.MarketPlaceID == null)
             {
@@ -42,7 +46,16 @@ namespace ArtContentManager.Forms
             }
             else
             {
-                cboMarketPlace.SelectedValue= (int)_displayProduct.MarketPlaceID;
+                cboMarketPlace.SelectedValue = (int)_displayProduct.MarketPlaceID;
+            }
+
+            if (displayProduct.Currency == null)
+            {
+                cboCurrency.SelectedValue = " ";
+            }
+            else
+            {
+                cboCurrency.SelectedValue = _displayProduct.Currency;
             }
 
             LoadImages();
@@ -103,6 +116,8 @@ namespace ArtContentManager.Forms
 
                     System.Windows.Controls.Image promotionImageCtl = new System.Windows.Controls.Image();
                     promotionImageCtl.Height = splPromotionImages.Height;
+                    promotionImageCtl.Stretch = Stretch.Uniform;
+                    promotionImageCtl.StretchDirection = StretchDirection.DownOnly;
                     splPromotionImages.Children.Add(promotionImageCtl);
 
                     Content.ImageResource promotionImage = new Content.ImageResource(kvpImageFile.Value);
@@ -156,8 +171,17 @@ namespace ArtContentManager.Forms
             // unless I find there is a better more automated way to do it.
 
             int marketPlaceID;
-            Int32.TryParse(cboMarketPlace.SelectedValue.ToString(), out marketPlaceID);
-            _displayProduct.MarketPlaceID = marketPlaceID;
+
+            if (cboMarketPlace.SelectedValue != null)
+            {
+                Int32.TryParse(cboMarketPlace.SelectedValue.ToString(), out marketPlaceID);
+                _displayProduct.MarketPlaceID = marketPlaceID;
+            }
+
+            if (cboCurrency.SelectedValue != null)
+            {
+                _displayProduct.Currency = cboCurrency.SelectedValue.ToString();
+            }
 
         }
 
@@ -202,5 +226,43 @@ namespace ArtContentManager.Forms
             }
         }
 
+        void btnViewCreator_Click(object sender, RoutedEventArgs e)
+        {
+            // Launch the detail view form directly here
+        }
+
+        private void btnSelectCreators_Click(object sender, RoutedEventArgs e)
+        {
+
+            Dictionary<int, Content.Creator> dctProductCreators = new Dictionary<int, Content.Creator>();
+
+            foreach (Content.Creator productCreator in _displayProduct.Creators)
+            {
+                dctProductCreators.Add(productCreator.ID, productCreator);
+            }
+
+            frmContentCreators frmContentCreators = new frmContentCreators(dctProductCreators);
+            frmContentCreators.ShowDialog();
+
+            _displayProduct.Creators.Clear();
+            foreach (Content.Creator selectedCreator in Static.DatabaseAgents.dbaContentCreators.SelectedContentCreators())
+            {
+                _displayProduct.Creators.Add(selectedCreator);
+            }
+
+        }
+
+        private void btnRemoveCreator_Click(object sender, RoutedEventArgs e)
+        {
+            if (dgCreators.SelectedIndex < 0)
+            {
+                MessageBox.Show("Select a row on the grid to remove before clicking this button");
+            }
+            else
+            {
+                _displayProduct.Creators.RemoveAt(dgCreators.SelectedIndex);
+            }
+
+        }
     }
 }

@@ -64,6 +64,8 @@ namespace ArtContentManager.Static.DatabaseAgents
                     Product.MarketPlaceID = reader["MarketPlaceID"] as int?;
                     Product.ProductURI = reader["ProductURI"].ToString();
                     Product.OrderURI = reader["OrderURI"].ToString();
+                    Product.Currency = reader["Currency"].ToString();
+                    Product.Price = reader["Price"] as decimal? ?? 0;
                 }
                 reader.Close();
             }
@@ -78,6 +80,8 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         private static void LoadProductInstallationFiles(ArtContentManager.Content.Product Product)
         {
+
+            Product.InstallationFiles.Clear();
 
             SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
@@ -106,7 +110,10 @@ namespace ArtContentManager.Static.DatabaseAgents
         private static void LoadProductContentFiles(ArtContentManager.Content.Product Product)
         {
 
-            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+           Product.ContentFiles.Clear();
+           Product.TextFiles.Clear();
+
+           SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
             if (_cmdReadProductContentFilesByID == null)
             {
@@ -150,6 +157,8 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         private static void LoadProductCreators(ArtContentManager.Content.Product Product)
         {
+
+            Product.Creators.Clear();
 
             SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
@@ -421,7 +430,8 @@ namespace ArtContentManager.Static.DatabaseAgents
                 if (_cmdUpdateProduct == null)
                 {
                     string updateProductFileSQL = "UPDATE Products SET ProductName = @ProductName, IsPrimary = @IsPrimary, DatePurchased = @DatePurchased," + 
-                                                  "MarketPlaceID = @MarketPlaceID, ProductURI = @ProductURI, OrderURI = @OrderURI WHERE ProductID = @ProductID;";
+                                                  "MarketPlaceID = @MarketPlaceID, ProductURI = @ProductURI, OrderURI = @OrderURI, " + 
+                                                  "Currency = @Currency, Price = @Price WHERE ProductID = @ProductID;";
                     _cmdUpdateProduct = new SqlCommand(updateProductFileSQL, DB);
 
                     _cmdUpdateProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
@@ -431,6 +441,8 @@ namespace ArtContentManager.Static.DatabaseAgents
                     _cmdUpdateProduct.Parameters.Add("@MarketPlaceID", System.Data.SqlDbType.Int);
                     _cmdUpdateProduct.Parameters.Add("@ProductURI", System.Data.SqlDbType.NVarChar, 255);
                     _cmdUpdateProduct.Parameters.Add("@OrderURI", System.Data.SqlDbType.NVarChar, 255);
+                    _cmdUpdateProduct.Parameters.Add("@Currency", System.Data.SqlDbType.Char, 3);
+                    _cmdUpdateProduct.Parameters.Add("@Price", System.Data.SqlDbType.SmallMoney);
 
                 }
 
@@ -445,6 +457,8 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdUpdateProduct.Parameters["@MarketPlaceID"].Value = (object)product.MarketPlaceID ?? DBNull.Value;
                 _cmdUpdateProduct.Parameters["@ProductURI"].Value = (object)product.ProductURI ?? DBNull.Value;
                 _cmdUpdateProduct.Parameters["@OrderURI"].Value = (object)product.OrderURI ?? DBNull.Value;
+                _cmdUpdateProduct.Parameters["@Currency"].Value = product.Currency;
+                _cmdUpdateProduct.Parameters["@Price"].Value = product.Price;
 
                 _cmdUpdateProduct.ExecuteScalar();
 

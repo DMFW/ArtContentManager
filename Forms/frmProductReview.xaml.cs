@@ -55,13 +55,14 @@ namespace ArtContentManager.Forms
 
         private void AddProductThumb(Content.Product product, Content.ImageResource thumbNailImage)
         {
-
             Image imgThumbnail = new System.Windows.Controls.Image();
             imgThumbnail.Tag = product;
-            ugProducts.Children.Add(imgThumbnail);
+            grdProducts.Children.Add(imgThumbnail);
             imgThumbnail.Source = thumbNailImage.ImageSource;
+            imgThumbnail.Stretch = Stretch.Uniform;
+            imgThumbnail.Height = 200;
+            imgThumbnail.Width = 200;
             imgThumbnail.MouseLeftButtonUp += new System.Windows.Input.MouseButtonEventHandler(this.ThumbnailSelected);
-
         }
 
         private void AddProductLabel(Content.Product product)
@@ -77,7 +78,7 @@ namespace ArtContentManager.Forms
             lblProduct.VerticalAlignment = VerticalAlignment.Center;
             lblProduct.FontSize = 18;
             lblProduct.Tag = product;
-            ugProducts.Children.Add(lblProduct);
+            grdProducts.Children.Add(lblProduct);
             lblProduct.MouseLeftButtonUp += new System.Windows.Input.MouseButtonEventHandler(this.LabelSelected);
         }
         private void ThumbnailSelected(object sender, MouseButtonEventArgs e)
@@ -99,9 +100,11 @@ namespace ArtContentManager.Forms
 
             dbaProduct.ProductLoadOptions loadOptions = new dbaProduct.ProductLoadOptions();
 
+            // Reload the basic data so that anything not saved is refreshed from the database
+            loadOptions.basic = true;
             loadOptions.contentFiles = true;
-            loadOptions.creators = true;
             loadOptions.installationFiles = true;
+            loadOptions.creators = true;
 
             dbaProduct.Load(selectedProduct, loadOptions);
 

@@ -1,0 +1,52 @@
+﻿<src:SkinableWindow x:Class="ArtContentManager.Forms.frmContentCreators"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:src="clr-namespace:ArtContentManager.Forms"
+        xmlns:win="clr-namespace:System.Drawing;assembly=System.Drawing"
+        mc:Ignorable="d"
+        Title="frmContentCreators" Height="568.829" Width="617.143">
+    <Grid Margin="0,0,0,-5" Background="{DynamicResource stdFormBackground}">
+        <DataGrid x:Name="dgContentCreators" HorizontalAlignment="Left" Height="472" Margin="23,10,0,0" VerticalAlignment="Top" Width="562" AutoGenerateColumns="False" CanUserDeleteRows="False" ItemsSource="{Binding}">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="Black" />
+                    </Style.Resources>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="False">
+                            <Setter Property="Background" Value="{DynamicResource stdRowUnselected}"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource stdRowSelected}"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="btnSelectCreator_Click" Content="Select"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Name Code" Binding="{Binding CreatorNameCode}"  Width="*" />
+                <DataGridTextColumn Header="True Name" Binding="{Binding CreatorTrueName}" Width="*" />
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="btnEditCreator_Click" Content="Edit"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button x:Name="btnAdd" Content="Add New Creator" HorizontalAlignment="Left" Height="28" Margin="23,487,0,0" VerticalAlignment="Top" Width="107"/>
+        <Button x:Name="btnClose" Content="Close List" HorizontalAlignment="Left" Height="28" Margin="506,487,0,0" VerticalAlignment="Top" Width="79" Click="btnClose_Click"/>
+    </Grid>
+</src:SkinableWindow>

@@ -71,6 +71,9 @@
     <Compile Include="Content\InstallationType.cs" />
     <Compile Include="Content\MarketPlace.cs" />
     <Compile Include="Content\Product.cs" />
+    <Compile Include="Forms\frmContentCreators.xaml.cs">
+      <DependentUpon>frmContentCreators.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Forms\frmProductDetails.xaml.cs">
       <DependentUpon>frmProductDetails.xaml</DependentUpon>
     </Compile>
@@ -83,6 +86,7 @@
     </Compile>
     <Compile Include="Static\DatabaseAgents\dbaContentLocations.cs" />
     <Compile Include="Static\DatabaseAgents\dbaContentCreators.cs" />
+    <Compile Include="Static\DatabaseAgents\dbaCurrencies.cs" />
     <Compile Include="Static\DatabaseAgents\dbaFile.cs" />
     <Compile Include="Static\DatabaseAgents\dbaInstallations.cs" />
     <Compile Include="Static\DatabaseAgents\dbaMarketPlaces.cs" />
@@ -102,6 +106,10 @@
     <Compile Include="Static\Log.cs" />
     <Compile Include="Static\ProductIImageManager.cs" />
     <Compile Include="Static\ScanProgress.cs" />
+    <Page Include="Forms\frmContentCreators.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Forms\frmFileMaintenance.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
