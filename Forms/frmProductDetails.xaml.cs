@@ -24,7 +24,7 @@ namespace ArtContentManager.Forms
         Content.Product _displayProduct;
         bool hyperLinkProductEditMode = false;
         bool hyperLinkOrderEditMode = false;
-        frmContentCreators frmContentCreators;
+        frmSelectContentCreators frmSelectContentCreators;
 
         public frmProductDetails(Content.Product displayProduct)
         {
@@ -229,6 +229,13 @@ namespace ArtContentManager.Forms
         void btnViewCreator_Click(object sender, RoutedEventArgs e)
         {
             // Launch the detail view form directly here
+            /* int ID;
+            dgCreators.SelectedIndex;
+
+            Content.Creator creatorToView = _displayProduct.Creators.Select<Content.Creator, Content.Creator>("CreatorID = " + ID);
+
+            frmContentCreatorDetail frmContentCreatorDetail = new frmContentCreatorDetail(creatorToView);
+            frmContentCreatorDetail.ShowDialog(); */
         }
 
         private void btnSelectCreators_Click(object sender, RoutedEventArgs e)
@@ -241,28 +248,14 @@ namespace ArtContentManager.Forms
                 dctProductCreators.Add(productCreator.ID, productCreator);
             }
 
-            frmContentCreators frmContentCreators = new frmContentCreators(dctProductCreators);
-            frmContentCreators.ShowDialog();
+            frmSelectContentCreators frmContentCreators = new frmSelectContentCreators(dctProductCreators);
+            frmSelectContentCreators.ShowDialog();
 
             _displayProduct.Creators.Clear();
             foreach (Content.Creator selectedCreator in Static.DatabaseAgents.dbaContentCreators.SelectedContentCreators())
             {
                 _displayProduct.Creators.Add(selectedCreator);
             }
-
-        }
-
-        private void btnRemoveCreator_Click(object sender, RoutedEventArgs e)
-        {
-            if (dgCreators.SelectedIndex < 0)
-            {
-                MessageBox.Show("Select a row on the grid to remove before clicking this button");
-            }
-            else
-            {
-                _displayProduct.Creators.RemoveAt(dgCreators.SelectedIndex);
-            }
-
         }
     }
 }

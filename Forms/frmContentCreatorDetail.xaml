@@ -1,0 +1,50 @@
+﻿<src:SkinableWindow x:Class="ArtContentManager.Forms.frmContentCreatorDetail"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:src="clr-namespace:ArtContentManager.Forms"
+        xmlns:local="clr-namespace:ArtContentManager.Forms"            
+        mc:Ignorable="d"
+        Title="frmContentCreatorDetail" Height="407.082" Width="476.771">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="42*"/>
+            <RowDefinition Height="34*"/>
+            <RowDefinition Height="36*"/>
+            <RowDefinition Height="41*"/>
+            <RowDefinition Height="42*"/>
+            <RowDefinition Height="45*"/>
+            <RowDefinition Height="96*"/>
+            <RowDefinition Height="40*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="178*"/>
+            <ColumnDefinition Width="291*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="lblIdentity" Content="Identity :" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="87" Height="26"/>
+        <TextBox x:Name="txtIdentity" HorizontalAlignment="Left" Height="23" Margin="17,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="91" Grid.Column="1"/>
+        <Label x:Name="lblNameCode" Content="Name Code :" HorizontalAlignment="Left" Margin="10,2,0,0" VerticalAlignment="Top" Height="26" Width="89" Grid.Row="1"/>
+        <TextBox x:Name="txtNameCode" Grid.Column="1" HorizontalAlignment="Left" Height="21" Margin="17,7,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="264" Grid.Row="1"/>
+        <Label x:Name="lblTrueName" Content="True Name :" HorizontalAlignment="Left" Height="27" Margin="10,2,0,0" Grid.Row="2" VerticalAlignment="Top" Width="73"/>
+        <TextBox x:Name="txtTrueName" Grid.Column="1" HorizontalAlignment="Left" Height="19" Margin="17,10,0,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Width="264"/>
+        <Label x:Name="lblEmailAddress" Content="Email Address :" HorizontalAlignment="Left" Height="29" Margin="10,11,0,0" Grid.Row="3" VerticalAlignment="Top" Width="89"/>
+        <TextBox x:Name="txtEmailAddress" Grid.Column="1" HorizontalAlignment="Left" Height="20" Margin="17,11,0,0" Grid.Row="3" TextWrapping="Wrap" VerticalAlignment="Top" Width="264"/>
+        <Button x:Name="btnEditHyperlink" Content="Edit Hyperlink" HorizontalAlignment="Left" Margin="10,13,0,0" Grid.Row="4" VerticalAlignment="Top" Width="87" Height="20"/>
+        <TextBlock x:Name="txbHyperlink" Grid.Column="1" HorizontalAlignment="Left" Height="20" Margin="17,13,0,0" Grid.Row="4" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Width="264">
+            <Hyperlink x:Name="hlContentCreator" NavigateUri="{Binding CreatorURI}" RequestNavigate="Hyperlink_RequestNavigate">
+                <InlineUIContainer>
+					<TextBlock Text="{Binding CreatorURI}"/>
+				</InlineUIContainer>
+            </Hyperlink>
+        </TextBlock>
+        <TextBox x:Name="txtHyperlink" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="16,13,0,0" Grid.Row="4" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="265" Visibility="Hidden"/>
+        <Label x:Name="lblDirectoryName" Content="Directory Name Preference :" HorizontalAlignment="Left" Height="24" Margin="10,10,0,0" Grid.Row="5" VerticalAlignment="Top" Width="158"/>
+        <TextBox x:Name="txtDirectoryName" Grid.Column="1" HorizontalAlignment="Left" Height="24" Margin="16,10,0,0" Grid.Row="5" TextWrapping="Wrap" VerticalAlignment="Top" Width="265"/>
+        <Label x:Name="lblNotes" Content="Notes :" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="6" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBox" Grid.Column="1" HorizontalAlignment="Left" Height="76" Margin="17,10,0,0" Grid.Row="6" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="264"/>
+        <Button x:Name="btnCancel" Content="Cancel" Grid.Column="1" HorizontalAlignment="Left" Height="20" Margin="225,10,0,0" Grid.Row="7" VerticalAlignment="Top" Width="56"/>
+        <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Height="20" Margin="10,10,0,0" Grid.Row="7" VerticalAlignment="Top" Width="55"/>
+
+    </Grid>
+</src:SkinableWindow>

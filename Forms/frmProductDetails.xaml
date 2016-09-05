@@ -20,10 +20,11 @@
                         <Hyperlink x:Name="hlProduct" NavigateUri="{Binding ProductURI}" RequestNavigate="Hyperlink_RequestNavigate">
                             <InlineUIContainer>
 								<TextBlock Text="{Binding ProductURI}"/>
-							</InlineUIContainer></Hyperlink>
+							</InlineUIContainer>
+                        </Hyperlink>
                     </TextBlock>
                     <Label x:Name="lblCreators" Content="Product Creators:-" HorizontalAlignment="Left" Height="35" Margin="10,473,0,0" VerticalAlignment="Top" Width="105"/>
-                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,513,0,0" VerticalAlignment="Top" Height="121" Width="366" ItemsSource="{Binding Path=Creators}" AutoGenerateColumns="False" CanUserAddRows="False">
+                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,513,0,0" VerticalAlignment="Top" Height="148" Width="366" ItemsSource="{Binding Path=Creators}" AutoGenerateColumns="False" CanUserAddRows="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name Code" Binding="{Binding CreatorNameCode}"  Width="*" />
                             <DataGridTextColumn Header="True Name" Binding="{Binding CreatorTrueName}" Width="*" />
@@ -42,8 +43,7 @@
                             <Label x:Name="lblStatusMessage" />
                         </StatusBarItem>
                     </StatusBar>
-                    <Button x:Name="btnRemoveCreator" Content="Remove Creator" HorizontalAlignment="Left" Height="20" Margin="278,641,0,0" VerticalAlignment="Top" Width="98" Click="btnRemoveCreator_Click"/>
-                    <Button x:Name="btnSelectCreators" Content="Select Creator(s)" HorizontalAlignment="Left" Height="20" Margin="17,641,0,0" VerticalAlignment="Top" Width="98" Click="btnSelectCreators_Click"/>
+                    <Button x:Name="btnSelectCreators" Content="Select Creator(s)" HorizontalAlignment="Left" Height="20" Margin="278,476,0,0" VerticalAlignment="Top" Width="98" Click="btnSelectCreators_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Promotional Images">

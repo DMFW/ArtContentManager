@@ -71,8 +71,11 @@
     <Compile Include="Content\InstallationType.cs" />
     <Compile Include="Content\MarketPlace.cs" />
     <Compile Include="Content\Product.cs" />
-    <Compile Include="Forms\frmContentCreators.xaml.cs">
-      <DependentUpon>frmContentCreators.xaml</DependentUpon>
+    <Compile Include="Forms\frmContentCreatorDetail.xaml.cs">
+      <DependentUpon>frmContentCreatorDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmSelectContentCreators.xaml.cs">
+      <DependentUpon>frmSelectContentCreators.xaml</DependentUpon>
     </Compile>
     <Compile Include="Forms\frmProductDetails.xaml.cs">
       <DependentUpon>frmProductDetails.xaml</DependentUpon>
@@ -106,7 +109,11 @@
     <Compile Include="Static\Log.cs" />
     <Compile Include="Static\ProductIImageManager.cs" />
     <Compile Include="Static\ScanProgress.cs" />
-    <Page Include="Forms\frmContentCreators.xaml">
+    <Page Include="Forms\frmContentCreatorDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Forms\frmSelectContentCreators.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
