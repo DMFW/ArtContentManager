@@ -108,8 +108,8 @@ namespace ArtContentManager.Forms
 
             dbaProduct.Load(selectedProduct, loadOptions);
 
-            frmProductDetails frmProductDetails = new frmProductDetails(selectedProduct);
-            frmProductDetails.ShowDialog();
+            frmProductDetail frmProductDetail = new frmProductDetail(selectedProduct);
+            frmProductDetail.ShowDialog();
 
         }
 

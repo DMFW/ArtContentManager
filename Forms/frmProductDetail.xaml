@@ -4,9 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ArtContentManager.Forms"
-        xmlns:Content="clr-namespace:ArtContentManager.Content" x:Class="ArtContentManager.Forms.frmProductDetails"
+        xmlns:Content="clr-namespace:ArtContentManager.Content" x:Class="ArtContentManager.Forms.frmProductDetail"
         mc:Ignorable="d"
-        Title="frmProductDetails" Height="855.218" Width="1061.605">
+        Title="frmProductDetail" Height="855.218" Width="1061.605">
     <Viewbox>
         <TabControl x:Name="tabCtrlProduct" HorizontalAlignment="Left" Height="763" Margin="10,10,0,0" VerticalAlignment="Top" Width="990">
             <TabItem Header="Product Name" Height="22" VerticalAlignment="Bottom">
@@ -24,7 +24,7 @@
                         </Hyperlink>
                     </TextBlock>
                     <Label x:Name="lblCreators" Content="Product Creators:-" HorizontalAlignment="Left" Height="35" Margin="10,473,0,0" VerticalAlignment="Top" Width="105"/>
-                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,513,0,0" VerticalAlignment="Top" Height="148" Width="366" ItemsSource="{Binding Path=Creators}" AutoGenerateColumns="False" CanUserAddRows="False">
+                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,513,0,0" VerticalAlignment="Top" Height="148" Width="366" ItemsSource="{Binding Path=Creators}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name Code" Binding="{Binding CreatorNameCode}"  Width="*" />
                             <DataGridTextColumn Header="True Name" Binding="{Binding CreatorTrueName}" Width="*" />

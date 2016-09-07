@@ -18,11 +18,11 @@ namespace ArtContentManager.Forms
     /// <summary>
     /// Interaction logic for frmContentProviders.xaml
     /// </summary>
-    public partial class frmSelectContentCreators : SkinableWindow
+    public partial class frmContentCreatorsSelect : SkinableWindow
     {
         Dictionary<int, Content.Creator> _dctExistingProductCreators;
 
-        public frmSelectContentCreators(Dictionary<int, Content.Creator> dctExistingProductCreators)
+        public frmContentCreatorsSelect(Dictionary<int, Content.Creator> dctExistingProductCreators)
         {
  
             InitializeComponent();

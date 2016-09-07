@@ -20,11 +20,71 @@ namespace ArtContentManager.Forms
     public partial class frmContentCreatorDetail : SkinableWindow
     {
         Content.Creator _creator;
-        public frmContentCreatorDetail(Content.Creator creator)
+        bool hyperLinkCreatorEditMode;
+        public frmContentCreatorDetail()
         {
-            _creator = creator;
+            // Add mode; create a new creator with a zero ID
+            _creator = new ArtContentManager.Content.Creator();
+            DataContext = _creator;
 
             InitializeComponent();
+        }
+        public frmContentCreatorDetail(Content.Creator creator)
+        {
+            // Update mode; update the supplied creator
+            _creator = creator;
+            DataContext = _creator;
+
+            InitializeComponent();
+        }
+        private void Hyperlink_RequestNavigate(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start((sender as Hyperlink).NavigateUri.AbsoluteUri);
+        }
+
+        private void btnCreatorHyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            if (hyperLinkCreatorEditMode == false)
+            {
+                txbCreatorHyperlink.Visibility = Visibility.Hidden;
+                txtCreatorHyperlink.Visibility = Visibility.Visible;
+                btnCreatorHyperlink.Content = "Show Creator Hyperlink";
+                hyperLinkCreatorEditMode = true;
+            }
+            else
+            {
+                txbCreatorHyperlink.Visibility = Visibility.Visible;
+                txtCreatorHyperlink.Visibility = Visibility.Hidden;
+                btnCreatorHyperlink.Content = "Edit Creator Hyperlink";
+                hyperLinkCreatorEditMode = false;
+            }
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+
+            Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+
+            if (_creator.ID == 0)
+            {
+                // Insert a new content creator record
+                Static.DatabaseAgents.dbaContentCreators.RecordContentCreator(_creator);
+            }
+            else
+            {
+                // Update an existing content creator record
+                Static.DatabaseAgents.dbaContentCreators.UpdateContentCreator(_creator);
+            }
+
+            Static.Database.CommitTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+
+            MessageBox.Show("Creator saved to database");
+
         }
     }
 }

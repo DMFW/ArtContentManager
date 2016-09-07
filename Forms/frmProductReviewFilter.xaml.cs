@@ -17,7 +17,7 @@ namespace ArtContentManager.Forms
     /// <summary>
     /// Interaction logic for frmProductReviewSelection.xaml
     /// </summary>
-    public partial class frmProductReviewSelection : SkinableWindow
+    public partial class frmProductReviewFilter : SkinableWindow
     {
 
         // The job of this form is to prepare and use _selectedProducts
@@ -27,7 +27,7 @@ namespace ArtContentManager.Forms
         Actions.SelectProducts _selectedProducts;
         frmProductReview frmProductReview;
 
-        public frmProductReviewSelection()
+        public frmProductReviewFilter()
         {
             _selectedProducts = new Actions.SelectProducts();
             InitializeComponent();

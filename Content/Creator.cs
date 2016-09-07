@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace ArtContentManager.Content
 {
@@ -16,6 +18,18 @@ namespace ArtContentManager.Content
         private string _ContactEmail;
         private string _Notes;
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        // This method is called by the Set accessor of each property.
+        // The CallerMemberName attribute that is applied to the optional propertyName
+        // parameter causes the property name of the caller to be substituted as an argument.
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
         public int ID
         {
             get { return _ID; }
@@ -25,36 +39,75 @@ namespace ArtContentManager.Content
         public string CreatorNameCode
         {
             get { return "" + _CreatorNameCode; }
-            set { _CreatorNameCode = value; }
+            set {
+                    if (value != _CreatorNameCode)
+                    {
+                        _CreatorNameCode = value;
+                        NotifyPropertyChanged();
+                    }
+                }
         }
 
         public string CreatorTrueName
         {
             get { return "" + _CreatorTrueName; }
-            set { _CreatorTrueName = value; }
+            set
+            {
+                if (value != _CreatorNameCode)
+                {
+                    _CreatorTrueName = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
 
         public string CreatorDirectoryName
         {
             get { return "" + _CreatorDirectoryName; }
-            set { _CreatorDirectoryName = value; }
+            set {
+                    if (value != _CreatorDirectoryName)
+                    {
+                        _CreatorDirectoryName = value;
+                        NotifyPropertyChanged();
+                    }
+                }        
         }
 
         public string ContactEmail
         {
             get { return "" + _ContactEmail; }
-            set { _ContactEmail = value; }
+            set {
+                    if (value != _ContactEmail)
+                    {
+                        _ContactEmail = value;
+                        NotifyPropertyChanged();
+                    }
+                }
         }
 
         public string CreatorURI
         {
             get { return "" + _CreatorURI; }
-            set { _CreatorURI = value; }
+            set
+            {
+                if (value != _CreatorURI)
+                {
+                    _CreatorURI = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
         public string Notes
         {
             get { return "" + _Notes; }
-            set { _Notes = value; }
+            set
+            {
+                if (value != _Notes)
+                {
+                    _Notes = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
 
     }

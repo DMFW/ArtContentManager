@@ -24,9 +24,9 @@ namespace ArtContentManager.Forms
         frmFileMaintenance frmFileMaintenance;
         frmSettings frmSettings;
         frmOrganisation frmOrganisation;
-        frmProductReviewSelection frmProductReviewSelection;
+        frmProductReviewFilter frmProductReviewFilter;
         frmProductReview frmProductReview;
-        frmProductDetails frmProductDetails;
+        frmProductDetail frmProductDetails;
         
         public frmMainWindow()
         {
@@ -93,8 +93,8 @@ namespace ArtContentManager.Forms
             
             ArtContentManager.Static.DatabaseAgents.dbaProduct.Load(testProduct, loadOptions);
 
-            frmProductDetails = new frmProductDetails(testProduct);
-            frmProductDetails.ShowDialog();
+            frmProductDetail frmProductDetail = new frmProductDetail(testProduct);
+            frmProductDetail.ShowDialog();
         }
 
         private void TestProductSelectDisplay()

@@ -18,15 +18,15 @@ namespace ArtContentManager.Forms
     /// <summary>
     /// Interaction logic for frmProductDetails.xaml
     /// </summary>
-    public partial class frmProductDetails : Window
+    public partial class frmProductDetail : Window
     {
 
         Content.Product _displayProduct;
         bool hyperLinkProductEditMode = false;
         bool hyperLinkOrderEditMode = false;
-        frmSelectContentCreators frmSelectContentCreators;
+        frmContentCreatorsSelect frmSelectContentCreators;
 
-        public frmProductDetails(Content.Product displayProduct)
+        public frmProductDetail(Content.Product displayProduct)
         {
 
             _displayProduct = displayProduct;
@@ -229,13 +229,11 @@ namespace ArtContentManager.Forms
         void btnViewCreator_Click(object sender, RoutedEventArgs e)
         {
             // Launch the detail view form directly here
-            /* int ID;
-            dgCreators.SelectedIndex;
 
-            Content.Creator creatorToView = _displayProduct.Creators.Select<Content.Creator, Content.Creator>("CreatorID = " + ID);
+            Content.Creator creatorToView = _displayProduct.Creators[dgCreators.SelectedIndex];
 
             frmContentCreatorDetail frmContentCreatorDetail = new frmContentCreatorDetail(creatorToView);
-            frmContentCreatorDetail.ShowDialog(); */
+            frmContentCreatorDetail.ShowDialog();
         }
 
         private void btnSelectCreators_Click(object sender, RoutedEventArgs e)
@@ -248,8 +246,8 @@ namespace ArtContentManager.Forms
                 dctProductCreators.Add(productCreator.ID, productCreator);
             }
 
-            frmSelectContentCreators frmContentCreators = new frmSelectContentCreators(dctProductCreators);
-            frmSelectContentCreators.ShowDialog();
+            frmContentCreatorsSelect frmContentCreators = new frmContentCreatorsSelect(dctProductCreators);
+            frmContentCreators.ShowDialog();
 
             _displayProduct.Creators.Clear();
             foreach (Content.Creator selectedCreator in Static.DatabaseAgents.dbaContentCreators.SelectedContentCreators())

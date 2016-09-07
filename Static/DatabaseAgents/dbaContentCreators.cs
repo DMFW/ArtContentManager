@@ -24,6 +24,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdReadContentCreatorsByID;
         static SqlCommand _cmdReadContentCreatorsByName;
         static SqlCommand _cmdInsertContentCreator;
+        static SqlCommand _cmdUpdateContentCreator;
 
         #region DirectDataTable
         private static void InitialiseDataTable()
@@ -199,6 +200,47 @@ namespace ArtContentManager.Static.DatabaseAgents
             Creator.ID = (int)_cmdInsertContentCreator.Parameters["@CreatorID"].Value;
 
         }
+
+        public static void UpdateContentCreator(ArtContentManager.Content.Creator Creator)
+        {
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+            try
+            {
+
+                if (_cmdUpdateContentCreator == null)
+                {
+                    string updateFileSQL = "UPDATE ContentCreators Set CreatorNameCode = @CreatorNameCode, CreatorDirectoryName = @CreatorDirectoryName, CreatorTrueName = @CreatorTrueName, ContactEmail = @ContactEmail, CreatorURI = @CreatorURI, Notes = @Notes WHERE CreatorID = @CreatorID;";
+                    _cmdUpdateContentCreator = new SqlCommand(updateFileSQL, DB);
+
+                    _cmdUpdateContentCreator.Parameters.Add("@CreatorNameCode", System.Data.SqlDbType.NVarChar, 50);
+                    _cmdUpdateContentCreator.Parameters.Add("@CreatorDirectoryName", System.Data.SqlDbType.NVarChar, 50);
+                    _cmdUpdateContentCreator.Parameters.Add("@CreatorTrueName", System.Data.SqlDbType.NVarChar, 255);
+                    _cmdUpdateContentCreator.Parameters.Add("@ContactEmail", System.Data.SqlDbType.NVarChar, 255);
+                    _cmdUpdateContentCreator.Parameters.Add("@CreatorURI", System.Data.SqlDbType.NVarChar, 255);
+                    _cmdUpdateContentCreator.Parameters.Add("@Notes", System.Data.SqlDbType.NVarChar, 255);
+                    _cmdUpdateContentCreator.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
+
+                }
+
+                _cmdUpdateContentCreator.Parameters["@CreatorID"].Value = Creator.ID;
+                _cmdUpdateContentCreator.Parameters["@CreatorNameCode"].Value = Creator.CreatorNameCode;
+                _cmdUpdateContentCreator.Parameters["@CreatorDirectoryName"].Value = Creator.CreatorDirectoryName;
+                _cmdUpdateContentCreator.Parameters["@CreatorTrueName"].Value = Creator.CreatorTrueName;
+                _cmdUpdateContentCreator.Parameters["@ContactEmail"].Value = Creator.ContactEmail;
+                _cmdUpdateContentCreator.Parameters["@CreatorURI"].Value = Creator.CreatorURI;
+                _cmdUpdateContentCreator.Parameters["@Notes"].Value = Creator.Notes;
+
+                _cmdUpdateContentCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                _cmdUpdateContentCreator.ExecuteScalar();
+            }
+            catch (Exception e)
+            {
+                
+            }
+
+        }
+
 
         #endregion ObjectControl
     }
