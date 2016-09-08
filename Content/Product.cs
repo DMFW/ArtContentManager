@@ -196,5 +196,36 @@ namespace ArtContentManager.Content
           
         }
 
+        public void Save()
+        {
+            try
+            {
+
+                Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+
+                if (_ID != 0)
+                {
+                    // It is an update
+                    ArtContentManager.Static.DatabaseAgents.dbaProduct.UpdateProduct(this);
+                    {
+                        if (this.Name != this.NameSavedToDatabase)
+                        {
+                            // The name has been changed. Copy images using the correct name and folder structure
+                            ArtContentManager.Static.ProductImageManager.RenameProductImages(_NameSavedToDatabase, _Name);
+                            this.NameSavedToDatabase = this.Name;
+                            ArtContentManager.Static.ProductImageManager.DeleteOldProductNameImages();
+                        }
+                    }
+                    ArtContentManager.Static.DatabaseAgents.dbaProduct.ReplaceProductCreators(this);
+                }
+
+                Static.Database.CommitTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+
+            }
+            catch(Exception e)
+            {
+                throw;
+            }
+        }
     }
 }

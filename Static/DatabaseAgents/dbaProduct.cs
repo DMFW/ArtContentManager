@@ -31,6 +31,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdAddProduct;
         static SqlCommand _cmdAddProductFile;
         static SqlCommand _cmdAddProductCreator;
+        static SqlCommand _cmdDeleteProductCreators;
         static SqlCommand _cmdUpdateProduct;
 
         public static void Load(ArtContentManager.Content.Product Product, ProductLoadOptions loadOptions)
@@ -110,10 +111,10 @@ namespace ArtContentManager.Static.DatabaseAgents
         private static void LoadProductContentFiles(ArtContentManager.Content.Product Product)
         {
 
-           Product.ContentFiles.Clear();
-           Product.TextFiles.Clear();
+            Product.ContentFiles.Clear();
+            Product.TextFiles.Clear();
 
-           SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
 
             if (_cmdReadProductContentFilesByID == null)
             {
@@ -152,7 +153,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
                 }
                 reader.Close();
-            } 
+            }
         }
 
         private static void LoadProductCreators(ArtContentManager.Content.Product Product)
@@ -223,7 +224,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
 
             ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.ReadOnly);
-           _cmdSelectUnassignedParentFiles.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
+            _cmdSelectUnassignedParentFiles.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
 
             SqlDataReader reader = _cmdSelectUnassignedParentFiles.ExecuteReader();
 
@@ -323,7 +324,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                         }
 
                     }
-                    
+
                     RecordProduct(product);
                     AddProductFile(product, fileID, thisFileName);
                 }
@@ -341,27 +342,36 @@ namespace ArtContentManager.Static.DatabaseAgents
         }
 
 
-        public static void RecordProduct(ArtContentManager.Content.Product Product)
+        public static void RecordProduct(ArtContentManager.Content.Product product)
         {
+
             SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdAddProduct == null)
             {
                 string insertProductSQL = "INSERT INTO Products (ProductName, IsPrimary) VALUES (@ProductName, @IsPrimary) SET @ProductID = SCOPE_IDENTITY();";
                 _cmdAddProduct = new SqlCommand(insertProductSQL, DB);
-                _cmdAddProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar,255);
+                _cmdAddProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar, 255);
                 _cmdAddProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Bit);
                 _cmdAddProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
             }
 
 
             _cmdAddProduct.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-            _cmdAddProduct.Parameters["@ProductName"].Value = Product.Name;
-            _cmdAddProduct.Parameters["@IsPrimary"].Value = Product.IsPrimary;
+            _cmdAddProduct.Parameters["@ProductName"].Value = product.Name;
+            _cmdAddProduct.Parameters["@IsPrimary"].Value = product.IsPrimary;
 
             _cmdAddProduct.ExecuteScalar();
 
-            Product.ID = (int)_cmdAddProduct.Parameters["@ProductID"].Value;
+            product.ID = (int)_cmdAddProduct.Parameters["@ProductID"].Value;
+            RecordProductCreators(product);
+
+        }
+
+        private static void RecordProductCreators(ArtContentManager.Content.Product product)
+        {
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             if (_cmdAddProductCreator == null)
             {
@@ -372,17 +382,16 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
 
             _cmdAddProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-            _cmdAddProductCreator.Parameters["@ProductID"].Value = Product.ID;
+            _cmdAddProductCreator.Parameters["@ProductID"].Value = product.ID;
 
-            foreach (Content.Creator creator in Product.Creators)
+            foreach (Content.Creator creator in product.Creators)
             {
                 _cmdAddProductCreator.Parameters["@CreatorID"].Value = creator.ID;
                 _cmdAddProductCreator.ExecuteScalar();
             }
-
         }
 
-        public static void AddProductFile(ArtContentManager.Content.Product Product, int fileID, string fileName)
+        public static void AddProductFile(ArtContentManager.Content.Product product, int fileID, string fileName)
         {
 
             int installerSeq;
@@ -412,7 +421,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
 
             _cmdAddProductFile.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-            _cmdAddProductFile.Parameters["@ProductID"].Value = Product.ID;
+            _cmdAddProductFile.Parameters["@ProductID"].Value = product.ID;
             _cmdAddProductFile.Parameters["@InstallerSequence"].Value = installerSeq;
             _cmdAddProductFile.Parameters["@FileID"].Value = fileID;
 
@@ -420,60 +429,64 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         }
 
-        static public bool UpdateProduct(Content.Product product)
+        static public void UpdateProduct(Content.Product product)
+        {
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+            if (_cmdUpdateProduct == null)
+            {
+                string updateProductFileSQL = "UPDATE Products SET ProductName = @ProductName, IsPrimary = @IsPrimary, DatePurchased = @DatePurchased," +
+                                                "MarketPlaceID = @MarketPlaceID, ProductURI = @ProductURI, OrderURI = @OrderURI, " +
+                                                "Currency = @Currency, Price = @Price WHERE ProductID = @ProductID;";
+                _cmdUpdateProduct = new SqlCommand(updateProductFileSQL, DB);
+
+                _cmdUpdateProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+                _cmdUpdateProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar, 255);
+                _cmdUpdateProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Bit);
+                _cmdUpdateProduct.Parameters.Add("@DatePurchased", System.Data.SqlDbType.DateTime);
+                _cmdUpdateProduct.Parameters.Add("@MarketPlaceID", System.Data.SqlDbType.Int);
+                _cmdUpdateProduct.Parameters.Add("@ProductURI", System.Data.SqlDbType.NVarChar, 255);
+                _cmdUpdateProduct.Parameters.Add("@OrderURI", System.Data.SqlDbType.NVarChar, 255);
+                _cmdUpdateProduct.Parameters.Add("@Currency", System.Data.SqlDbType.Char, 3);
+                _cmdUpdateProduct.Parameters.Add("@Price", System.Data.SqlDbType.SmallMoney);
+
+            }
+
+            _cmdUpdateProduct.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+
+            _cmdUpdateProduct.Parameters["@ProductID"].Value = product.ID;
+            _cmdUpdateProduct.Parameters["@ProductName"].Value = product.Name;
+            _cmdUpdateProduct.Parameters["@IsPrimary"].Value = product.IsPrimary;
+            _cmdUpdateProduct.Parameters["@DatePurchased"].Value = (object)product.DatePurchased ?? DBNull.Value;
+            _cmdUpdateProduct.Parameters["@MarketPlaceID"].Value = (object)product.MarketPlaceID ?? DBNull.Value;
+            _cmdUpdateProduct.Parameters["@ProductURI"].Value = (object)product.ProductURI ?? DBNull.Value;
+            _cmdUpdateProduct.Parameters["@OrderURI"].Value = (object)product.OrderURI ?? DBNull.Value;
+            _cmdUpdateProduct.Parameters["@Currency"].Value = product.Currency;
+            _cmdUpdateProduct.Parameters["@Price"].Value = product.Price;
+
+            _cmdUpdateProduct.ExecuteScalar();
+        }
+
+        public static void ReplaceProductCreators(Content.Product product)
         {
 
-            try
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+            if (_cmdDeleteProductCreators == null)
             {
-                SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+                string deleteProductCreatorsSQL = "DELETE FROM ProductCreators WHERE ProductID = @ProductID;";
+                _cmdDeleteProductCreators = new SqlCommand(deleteProductCreatorsSQL, DB);
 
-                if (_cmdUpdateProduct == null)
-                {
-                    string updateProductFileSQL = "UPDATE Products SET ProductName = @ProductName, IsPrimary = @IsPrimary, DatePurchased = @DatePurchased," + 
-                                                  "MarketPlaceID = @MarketPlaceID, ProductURI = @ProductURI, OrderURI = @OrderURI, " + 
-                                                  "Currency = @Currency, Price = @Price WHERE ProductID = @ProductID;";
-                    _cmdUpdateProduct = new SqlCommand(updateProductFileSQL, DB);
-
-                    _cmdUpdateProduct.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
-                    _cmdUpdateProduct.Parameters.Add("@ProductName", System.Data.SqlDbType.NVarChar, 255);
-                    _cmdUpdateProduct.Parameters.Add("@IsPrimary", System.Data.SqlDbType.Bit);
-                    _cmdUpdateProduct.Parameters.Add("@DatePurchased", System.Data.SqlDbType.DateTime);
-                    _cmdUpdateProduct.Parameters.Add("@MarketPlaceID", System.Data.SqlDbType.Int);
-                    _cmdUpdateProduct.Parameters.Add("@ProductURI", System.Data.SqlDbType.NVarChar, 255);
-                    _cmdUpdateProduct.Parameters.Add("@OrderURI", System.Data.SqlDbType.NVarChar, 255);
-                    _cmdUpdateProduct.Parameters.Add("@Currency", System.Data.SqlDbType.Char, 3);
-                    _cmdUpdateProduct.Parameters.Add("@Price", System.Data.SqlDbType.SmallMoney);
-
-                }
-
-                Static.Database.BeginTransaction(Database.TransactionType.Active);
-
-                _cmdUpdateProduct.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-
-                _cmdUpdateProduct.Parameters["@ProductID"].Value = product.ID;
-                _cmdUpdateProduct.Parameters["@ProductName"].Value = product.Name;
-                _cmdUpdateProduct.Parameters["@IsPrimary"].Value = product.IsPrimary;
-                _cmdUpdateProduct.Parameters["@DatePurchased"].Value = (object)product.DatePurchased ?? DBNull.Value;
-                _cmdUpdateProduct.Parameters["@MarketPlaceID"].Value = (object)product.MarketPlaceID ?? DBNull.Value;
-                _cmdUpdateProduct.Parameters["@ProductURI"].Value = (object)product.ProductURI ?? DBNull.Value;
-                _cmdUpdateProduct.Parameters["@OrderURI"].Value = (object)product.OrderURI ?? DBNull.Value;
-                _cmdUpdateProduct.Parameters["@Currency"].Value = product.Currency;
-                _cmdUpdateProduct.Parameters["@Price"].Value = product.Price;
-
-                _cmdUpdateProduct.ExecuteScalar();
-
-                // Here we will post updates to child files
-
-                Static.Database.CommitTransaction(Database.TransactionType.Active);
-
-                return true;
-            }
-            catch(Exception e)
-            {
-                MessageBox.Show(e.Message);
-                return false;
+                _cmdDeleteProductCreators.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
             }
 
+            _cmdDeleteProductCreators.Parameters["@ProductID"].Value = product.ID;
+
+            _cmdDeleteProductCreators.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+            _cmdDeleteProductCreators.ExecuteScalar();
+
+            RecordProductCreators(product);
         }
+
     }
 }

@@ -110,5 +110,23 @@ namespace ArtContentManager.Content
             }
         }
 
+        public void Save()
+        {
+            Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+
+            if (this.ID == 0)
+            {
+                // Insert a new content creator record
+                Static.DatabaseAgents.dbaContentCreators.RecordContentCreator(this);
+            }
+            else
+            {
+                // Update an existing content creator record
+                Static.DatabaseAgents.dbaContentCreators.UpdateContentCreator(this);
+            }
+
+            Static.Database.CommitTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+        }
+
     }
 }

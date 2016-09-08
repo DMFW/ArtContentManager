@@ -135,28 +135,13 @@ namespace ArtContentManager.Forms
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
+
+            BindComboBoxOutput();
+
             try
             {
-
-                BindComboBoxOutput();
-
-                if (ArtContentManager.Static.DatabaseAgents.dbaProduct.UpdateProduct(_displayProduct))
-                {
-                    lblStatusMessage.Content = "Updated product details saved to database.";
-                    if (_displayProduct.Name != _displayProduct.NameSavedToDatabase)
-                    {
-                        // The name has been changed. Copy images using the correct name and folder structure
-                        ArtContentManager.Static.ProductImageManager.RenameProductImages(_displayProduct.NameSavedToDatabase, _displayProduct.Name);
-                        _displayProduct.NameSavedToDatabase = _displayProduct.Name;
-                        ArtContentManager.Static.ProductImageManager.DeleteOldProductNameImages();
-                    }
-                    MessageBox.Show("Save successful");
-                }
-                else
-                {
-                    lblStatusMessage.Content = "Update to product details has failed.";
-                    MessageBox.Show("Save failed");
-                }
+                _displayProduct.Save();
+                MessageBox.Show("Product saved to database");
             }
             catch(Exception error)
             {

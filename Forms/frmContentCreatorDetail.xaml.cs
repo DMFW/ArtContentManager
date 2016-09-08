@@ -67,23 +67,15 @@ namespace ArtContentManager.Forms
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-
-            Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
-
-            if (_creator.ID == 0)
+            try
             {
-                // Insert a new content creator record
-                Static.DatabaseAgents.dbaContentCreators.RecordContentCreator(_creator);
+                _creator.Save();
+                MessageBox.Show("Creator saved to database");
             }
-            else
+            catch(Exception error)
             {
-                // Update an existing content creator record
-                Static.DatabaseAgents.dbaContentCreators.UpdateContentCreator(_creator);
-            }
-
-            Static.Database.CommitTransaction(ArtContentManager.Static.Database.TransactionType.Active);
-
-            MessageBox.Show("Creator saved to database");
+                MessageBox.Show("Save failed :-" + Environment.NewLine + error.Message);
+            }  
 
         }
     }
