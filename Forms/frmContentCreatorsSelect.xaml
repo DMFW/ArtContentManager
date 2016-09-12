@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="frmContentCreators" Height="568.829" Width="617.143">
     <Grid Margin="0,0,0,-5" Background="{DynamicResource stdFormBackground}">
-        <DataGrid x:Name="dgContentCreators" HorizontalAlignment="Left" Height="472" Margin="23,10,0,0" VerticalAlignment="Top" Width="562" AutoGenerateColumns="False" CanUserDeleteRows="False" ItemsSource="{Binding}">
+        <DataGrid x:Name="dgContentCreators" HorizontalAlignment="Left" Height="472" Margin="23,10,0,0" VerticalAlignment="Top" Width="562" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding}">
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Style.Resources>
@@ -40,13 +40,13 @@
                 <DataGridTemplateColumn>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Click="btnEditCreator_Click" Content="Edit"/>
+                            <Button Click="btnViewCreator_Click" Content="View"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <Button x:Name="btnAdd" Content="Add New Creator" HorizontalAlignment="Left" Height="28" Margin="23,487,0,0" VerticalAlignment="Top" Width="107"/>
+        <Button x:Name="btnAddCreator" Content="Add New Creator" HorizontalAlignment="Left" Height="28" Margin="23,487,0,0" VerticalAlignment="Top" Width="107" Click="btnAddCreator_Click"/>
         <Button x:Name="btnClose" Content="Close List" HorizontalAlignment="Left" Height="28" Margin="506,487,0,0" VerticalAlignment="Top" Width="79" Click="btnClose_Click"/>
     </Grid>
 </src:SkinableWindow>

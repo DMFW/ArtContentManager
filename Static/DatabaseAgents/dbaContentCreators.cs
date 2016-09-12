@@ -16,7 +16,6 @@ namespace ArtContentManager.Static.DatabaseAgents
         // Used for population of DataTable for maintenance
 
         static DataTable _tblContentCreators;
-        static bool _dataTableInitialised = false;
         static bool _dataTableLoaded = false;
 
         // Used for maintaining objects for use within a product
@@ -27,48 +26,38 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdUpdateContentCreator;
 
         #region DirectDataTable
-        private static void InitialiseDataTable()
+        
+        static public void LoadContentCreators(bool forceLoad)
         {
-            _tblContentCreators = new DataTable("ContentCreators");
-            _tblContentCreators.Columns.Add("CreatorID", typeof(int));
-            _tblContentCreators.Columns.Add("CreatorNameCode", typeof(string));
-            _tblContentCreators.Columns.Add("CreatorDirectoryName", typeof(string));
-            _tblContentCreators.Columns.Add("CreatorTrueName", typeof(string));
-            _tblContentCreators.Columns.Add("ContactEmail", typeof(string));
-            _tblContentCreators.Columns.Add("CreatorURI", typeof(string));
-            _tblContentCreators.Columns.Add("Notes", typeof(string));
-            _tblContentCreators.Columns.Add("IsSelected", typeof(string));
-            _dataTableInitialised = true;
-        }
-
-        public static void LoadContentCreators(bool forceLoad)
-        {
-
-            if (_dataTableInitialised == false)
-            {
-                InitialiseDataTable();
-            }
 
             if ((!forceLoad) & (_dataTableLoaded))
             {
                 return;
             }
-
-            _tblContentCreators.Clear();
-
+         
             SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
             string sqlContentCreators = "SELECT 'False' IsSelected, * FROM ContentCreators ORDER BY CreatorNameCode";
             SqlCommand cmdSelectContentCreators = new SqlCommand(sqlContentCreators, DB);
+
+            if (_tblContentCreators == null)
+            {
+                _tblContentCreators = new DataTable("ContentCreators");
+            }
+            else
+            {
+                _tblContentCreators.Clear();
+            }
 
             using (SqlDataAdapter sadContentCreators = new SqlDataAdapter(cmdSelectContentCreators))
             {
                 sadContentCreators.Fill(_tblContentCreators);
             }
+
             _dataTableLoaded = true;
 
         }
 
-        public static DataTable tblContentCreators
+        static public DataTable tblContentCreators
         {
             get { return _tblContentCreators; }
         }
@@ -87,11 +76,20 @@ namespace ArtContentManager.Static.DatabaseAgents
             foreach (DataRow row in selectedRows)
             {
                 Content.Creator Creator = new Content.Creator();
-                Creator.ID = row.Field<int>("CreatorID");
+                Creator.CreatorID = row.Field<int>("CreatorID");
                 Load(Creator);
                 lstSelectedContentCreators.Add(Creator);
             }
             return lstSelectedContentCreators;
+        }
+
+        static public void AddObjectToDataTable(Content.Creator newContentCreator)
+        {
+      
+            if (_tblContentCreators == null) { return; }
+
+            DataRow newRow = ArtContentManager.Static.DataObjectUtilities.LoadDataRowWithObject(newContentCreator, ref _tblContentCreators);
+            newRow.SetField("IsSelected", "True"); // So it is flagged on the grid.
         }
 
         #endregion DirectDataTable
@@ -110,14 +108,14 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdReadContentCreatorsByName.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
             }
 
-            _cmdReadContentCreatorsByName.Parameters["@CreatorID"].Value = Creator.ID;
+            _cmdReadContentCreatorsByName.Parameters["@CreatorID"].Value = Creator.CreatorID;
 
             _cmdReadContentCreatorsByName.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Static.Database.TransactionType.ReadOnly);
             SqlDataReader reader = _cmdReadContentCreatorsByName.ExecuteReader();
 
             while (reader.Read())
             {
-                Creator.ID = (int)reader["CreatorID"];
+                Creator.CreatorID = (int)reader["CreatorID"];
                 Creator.CreatorNameCode = reader["CreatorNameCode"].ToString();
                 Creator.CreatorTrueName = reader["CreatorTrueName"].ToString();
                 Creator.CreatorDirectoryName = reader["CreatorDirectoryName"].ToString();
@@ -155,7 +153,7 @@ namespace ArtContentManager.Static.DatabaseAgents
                 {
                     Trace.WriteLine("Creator name found");
                 }
-                Creator.ID = (int)reader["CreatorID"];
+                Creator.CreatorID = (int)reader["CreatorID"];
                 Creator.CreatorTrueName = reader["CreatorTrueName"].ToString();
                 Creator.CreatorDirectoryName = reader["CreatorDirectoryName"].ToString();
                 Creator.ContactEmail = reader["ContactEmail"].ToString();
@@ -197,7 +195,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdInsertContentCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertContentCreator.ExecuteScalar();
 
-            Creator.ID = (int)_cmdInsertContentCreator.Parameters["@CreatorID"].Value;
+            Creator.CreatorID = (int)_cmdInsertContentCreator.Parameters["@CreatorID"].Value;
 
         }
 
@@ -220,7 +218,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             }
 
-            _cmdUpdateContentCreator.Parameters["@CreatorID"].Value = Creator.ID;
+            _cmdUpdateContentCreator.Parameters["@CreatorID"].Value = Creator.CreatorID;
             _cmdUpdateContentCreator.Parameters["@CreatorNameCode"].Value = Creator.CreatorNameCode;
             _cmdUpdateContentCreator.Parameters["@CreatorDirectoryName"].Value = Creator.CreatorDirectoryName;
             _cmdUpdateContentCreator.Parameters["@CreatorTrueName"].Value = Creator.CreatorTrueName;

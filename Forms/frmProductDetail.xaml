@@ -12,15 +12,15 @@
             <TabItem Header="Product Name" Height="22" VerticalAlignment="Bottom">
                 <Grid Background="#FFE5E5E5" Margin="0,0,0,-1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="385*"/>
-                        <ColumnDefinition Width="599*"/>
+                        <ColumnDefinition Width="409*"/>
+                        <ColumnDefinition Width="575*"/>
                     </Grid.ColumnDefinitions>
                     <Image x:Name="imgThumbnail" HorizontalAlignment="Left" Height="328" Margin="10,10,0,0" VerticalAlignment="Top" Width="366"/>
-                    <Image x:Name="imgPrimaryImage" HorizontalAlignment="Left" Height="720" Margin="10,10,0,0" VerticalAlignment="Top" Width="586" Grid.Column="1"/>
-                    <TextBox x:Name="txtProductName" Text="{Binding Name}" HorizontalAlignment="Left" Height="31" Margin="10,359,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="366"/>
+                    <Image x:Name="imgPrimaryImage" HorizontalAlignment="Left" Height="720" Margin="10,10,0,0" VerticalAlignment="Top" Width="555" Grid.Column="1"/>
+                    <TextBox x:Name="txtProductName" Text="{Binding Name}" HorizontalAlignment="Left" Height="31" Margin="10,359,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="389"/>
                     <Button x:Name="btnProductLink" Content="Edit Product Hyperlink" HorizontalAlignment="Left" Height="26" Margin="10,395,0,0" VerticalAlignment="Top" Width="136" Click="btnProductLink_Click"/>
-                    <TextBox x:Name="txtProductHyperlink" Text="{Binding ProductURI}" HorizontalAlignment="Left" Height="30" Margin="10,428,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="366" Visibility="Hidden"/>
-                    <TextBlock x:Name="txbHyperlinkProduct" Margin="10,428,2,282" TextWrapping="Wrap">
+                    <TextBox x:Name="txtProductHyperlink" Text="{Binding ProductURI}" HorizontalAlignment="Left" Height="40" Margin="10,428,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="389" Visibility="Visible"/>
+                    <TextBlock x:Name="txbHyperlinkProduct" Margin="10,428,10,266" TextWrapping="Wrap">
                         <Hyperlink x:Name="hlProduct" NavigateUri="{Binding ProductURI}" RequestNavigate="Hyperlink_RequestNavigate">
                             <InlineUIContainer>
 								<TextBlock Text="{Binding ProductURI}"/>
@@ -28,7 +28,7 @@
                         </Hyperlink>
                     </TextBlock>
                     <Label x:Name="lblCreators" Content="Product Creators:-" HorizontalAlignment="Left" Height="35" Margin="10,473,0,0" VerticalAlignment="Top" Width="105"/>
-                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,513,0,0" VerticalAlignment="Top" Height="148" Width="366" ItemsSource="{Binding Path=Creators}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+                    <DataGrid x:Name="dgCreators" HorizontalAlignment="Left" Margin="10,513,0,0" VerticalAlignment="Top" Height="148" Width="379" ItemsSource="{Binding Path=Creators}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name Code" Binding="{Binding CreatorNameCode}"  Width="*" />
                             <DataGridTextColumn Header="True Name" Binding="{Binding CreatorTrueName}" Width="*" />
@@ -41,13 +41,13 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Height="28" Margin="17,681,0,0" VerticalAlignment="Top" Width="98" Click="btnSave_Click"/>
+                    <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Height="28" Margin="10,681,0,0" VerticalAlignment="Top" Width="98" Click="btnSave_Click"/>
                     <StatusBar x:Name ="stsProductDetail" HorizontalAlignment="Left" Height="16" Margin="0,714,0,0" VerticalAlignment="Top" Width="376">
                         <StatusBarItem Margin="0,10,0,0" Width="380">
                             <Label x:Name="lblStatusMessage" />
                         </StatusBarItem>
                     </StatusBar>
-                    <Button x:Name="btnSelectCreators" Content="Select Creator(s)" HorizontalAlignment="Left" Height="20" Margin="278,476,0,0" VerticalAlignment="Top" Width="98" Click="btnSelectCreators_Click"/>
+                    <Button x:Name="btnSelectCreators" Content="Select Creator(s)" HorizontalAlignment="Left" Height="20" Margin="291,476,0,0" VerticalAlignment="Top" Width="98" Click="btnSelectCreators_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Promotional Images">

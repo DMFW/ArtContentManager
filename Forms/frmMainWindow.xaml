@@ -27,22 +27,28 @@
                     <Image Source="..\Images/Files.jpg" Height="66" />
                 </StackPanel>
             </Button>
-            <Label x:Name="lblOrganisation" Content="Organisation" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32" />
-            <Button x:Name="btnOrganisation" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Height="95" Width="120" Background="{x:Null}" Click="btnOrganisation_Click">
+            <Label x:Name="lblOrganisation" Content="Organisation" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32" Margin="25,0" />
+            <Button x:Name="btnOrganisation" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Height="95" Width="120" Background="{x:Null}" Click="btnOrganisation_Click" Margin="26,53,26,52">
                 <StackPanel Height="68" Width="100" AllowDrop="True">
                     <Image Source="/ArtContentManager;component/Images/Organisation.jpg" Height="66" />
                 </StackPanel>
             </Button>
-            <Label x:Name="lblProducts" Content="Products" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32"/>
-            <Button x:Name="btnProducts" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Height="95" Width="120" Background="{x:Null}" Click="btnProducts_Click">
+            <Label x:Name="lblProducts" Content="Products" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32" Margin="43,0,38,0" Width="91"/>
+            <Button x:Name="btnProducts" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Height="95" Width="120" Background="{x:Null}" Click="btnProducts_Click" Margin="26,53,26,52">
                 <StackPanel Height="67" Width="77">
                     <Image Source="/ArtContentManager;component/Images/Products.jpg" />
                 </StackPanel>
             </Button>
-            <Label x:Name="lblArt" Content="Art" Grid.Row="1" Grid.Column="1"  HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32" />
-            <Button x:Name="btnArt" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"  Height="95" Width="120" Background="{x:Null}">
+            <Label x:Name="lblArt" Content="Art" Grid.Row="1" Grid.Column="2"  HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32" Margin="70,0,67,0" />
+            <Button x:Name="btnArt" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"  Height="96" Width="120" Background="{x:Null}" Margin="26,52,27,52">
                 <StackPanel Height="67" Width="77">
                     <Image Source="..\Images/Palette.jpg" />
+                </StackPanel>
+            </Button>
+            <Label x:Name="lblTools" Content="Tools" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" HorizontalContentAlignment="Center" Foreground="#FFF3F1F1" FontFamily="Century Gothic" FontSize="18" Height="32" Margin="60,0,53,0" Width="60" />
+            <Button x:Name="btnTools"  Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Height="96" Width="120" Background="{x:Null}" Click="btnTools_Click" Margin="26,52,27,52">
+                <StackPanel Height="68" Width="100" AllowDrop="True">
+                    <Image Source="/ArtContentManager;component/Images/tools-icon.jpg" Height="66" />
                 </StackPanel>
             </Button>
         </Grid>

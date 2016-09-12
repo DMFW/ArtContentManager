@@ -21,11 +21,13 @@ namespace ArtContentManager.Forms
     public partial class frmContentCreatorsSelect : SkinableWindow
     {
         Dictionary<int, Content.Creator> _dctExistingProductCreators;
+        private bool _singleSelect = false; // Set this to true through the property to enforce single selection
 
         public frmContentCreatorsSelect(Dictionary<int, Content.Creator> dctExistingProductCreators)
         {
  
             InitializeComponent();
+            this.Title = "Select Multiple Creators"; // Default is to allow this 
 
             // Load all content creators
             Static.DatabaseAgents.dbaContentCreators.LoadContentCreators(true);
@@ -35,7 +37,7 @@ namespace ArtContentManager.Forms
             foreach (Content.Creator productCreator in dctExistingProductCreators.Values)
             {
                 DataRow IDRow = Static.DatabaseAgents.dbaContentCreators.tblContentCreators.AsEnumerable()
-                    .SingleOrDefault(r => r.Field<int>("CreatorID") == productCreator.ID);
+                    .SingleOrDefault(r => r.Field<int>("CreatorID") == productCreator.CreatorID);
 
                 if (IDRow != null)
                 {
@@ -48,11 +50,47 @@ namespace ArtContentManager.Forms
                 }
                 
             }
+
             dgContentCreators.DataContext = Static.DatabaseAgents.dbaContentCreators.tblContentCreators.DefaultView;
         }
 
-        private void btnEditCreator_Click(object sender, RoutedEventArgs e)
+        public bool SingleSelect
         {
+            get { return _singleSelect; }
+            set {    _singleSelect = value;
+                    if (_singleSelect == true)
+                    {
+                        this.Title = "Select Single Creator";
+                    }
+                        else
+                    {
+                        this.Title = "Select Multiple Creators";
+                    }
+            }
+        }
+
+        private void btnAddCreator_Click(object sender, RoutedEventArgs e)
+        {
+            Content.Creator creatorToAdd = new Content.Creator();
+            frmContentCreatorDetail frmContentCreatorDetail = new frmContentCreatorDetail(creatorToAdd);
+            frmContentCreatorDetail.ShowDialog();
+
+            Static.DatabaseAgents.dbaContentCreators.AddObjectToDataTable(creatorToAdd);
+            dgContentCreators.Items.Refresh();
+        }
+
+        private void btnViewCreator_Click(object sender, RoutedEventArgs e)
+        {
+            // Launch the detail view form directly here
+
+            Content.Creator creatorToView = new Content.Creator();
+            creatorToView.CreatorID = (int)Static.DatabaseAgents.dbaContentCreators.tblContentCreators.Rows[dgContentCreators.SelectedIndex]["CreatorID"];
+
+            Static.DatabaseAgents.dbaContentCreators.Load(creatorToView);
+            frmContentCreatorDetail frmContentCreatorDetail = new frmContentCreatorDetail(creatorToView);
+            frmContentCreatorDetail.ShowDialog();
+
+            dgContentCreators.Items.Refresh();
         }
         private void btnSelectCreator_Click(object sender, RoutedEventArgs e)
         {
@@ -62,6 +100,20 @@ namespace ArtContentManager.Forms
             }
             else
             {
+                if (_singleSelect == true)
+                {
+                    // Automatically deselect any prior selections
+
+                    var selectedRows = from selectedRow in Static.DatabaseAgents.dbaContentCreators.tblContentCreators.AsEnumerable()
+                    where(selectedRow.Field<string>("IsSelected") == "True")
+                    select(selectedRow);
+
+                    foreach (var selectedRow in selectedRows)
+                    {
+                        selectedRow.SetField<string>("IsSelected", "False");
+                    }
+
+                }
                 Static.DatabaseAgents.dbaContentCreators.tblContentCreators.Rows[dgContentCreators.SelectedIndex]["IsSelected"] = "True";
             }
         }
@@ -70,5 +122,6 @@ namespace ArtContentManager.Forms
         {
             this.Close();
         }
+
     }
 }

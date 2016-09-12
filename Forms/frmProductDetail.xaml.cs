@@ -34,6 +34,11 @@ namespace ArtContentManager.Forms
             
             InitializeComponent();
 
+            txbHyperlinkProduct.Visibility = Visibility.Visible;
+            txtProductHyperlink.Visibility = Visibility.Hidden;
+            txbHyperlinkOrder.Visibility = Visibility.Visible;
+            txtOrderHyperlink.Visibility = Visibility.Hidden;
+
             ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.LoadMarketPlaces(false);
             cboMarketPlace.ItemsSource = ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.tblMarketPlaces.DefaultView;
 
@@ -228,7 +233,7 @@ namespace ArtContentManager.Forms
 
             foreach (Content.Creator productCreator in _displayProduct.Creators)
             {
-                dctProductCreators.Add(productCreator.ID, productCreator);
+                dctProductCreators.Add(productCreator.CreatorID, productCreator);
             }
 
             frmContentCreatorsSelect frmContentCreators = new frmContentCreatorsSelect(dctProductCreators);

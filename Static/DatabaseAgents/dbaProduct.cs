@@ -178,7 +178,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             while (reader.Read())
             {
                 Content.Creator creator = new Content.Creator();
-                creator.ID = (int)reader["CreatorID"];
+                creator.CreatorID = (int)reader["CreatorID"];
                 dbaContentCreators.Load(creator);
                 Product.Creators.Add(creator);
             }
@@ -386,7 +386,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             foreach (Content.Creator creator in product.Creators)
             {
-                _cmdAddProductCreator.Parameters["@CreatorID"].Value = creator.ID;
+                _cmdAddProductCreator.Parameters["@CreatorID"].Value = creator.CreatorID;
                 _cmdAddProductCreator.ExecuteScalar();
             }
         }

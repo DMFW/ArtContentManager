@@ -1,0 +1,47 @@
+﻿<src:SkinableWindow x:Class="ArtContentManager.Forms.frmTools"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:src="clr-namespace:ArtContentManager.Forms"
+        mc:Ignorable="d"
+        Title="Tools" Height="441.853" Width="644.09">
+    <Grid Background="{DynamicResource stdFormBackground}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <TabControl x:Name="tabTools" HorizontalAlignment="Left" Height="382" Margin="10,10,0,0" VerticalAlignment="Top" Width="616">
+            <TabItem x:Name="tiConsolidateContentProviders" Header="Consolidate Content Providers">
+                <Grid Background="#FFE5E5E5">
+                    <Button x:Name="btnSelectOriginalContentCreator" Content="Select Original Creator" HorizontalAlignment="Left" Height="26" Margin="10,100,0,0" VerticalAlignment="Top" Width="153" RenderTransformOrigin="-1.542,0.709" Click="btnSelectOriginalContentCreator_Click"/>
+                    <Button x:Name="btnSelectMapCreators" Content="Select Mapped Creator(s)" HorizontalAlignment="Left" Height="26" Margin="249,100,0,0" VerticalAlignment="Top" Width="147" RenderTransformOrigin="-1.542,0.709" Click="btnSelectMapCreators_Click"/>
+                    <TextBlock x:Name="tblCreatorMappingDescription" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="This tool allows duplicated or composite creators which may have been generated in the import routines to be tidied up by reassigning them to other existing creator(s). All product creator information will be moved to the new mapped creator(s) and the original creator renamed with a dummy name. That ID can be manually renamed and reused in product maintenance if desired. " VerticalAlignment="Top"/>
+                    <DataGrid x:Name="dgTargetCreators" HorizontalAlignment="Left" Margin="249,131,0,0" VerticalAlignment="Top" Height="148" Width="356" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" ItemsSource="{Binding Path=TargetCreators}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding CreatorID}"  Width="*" />
+                            <DataGridTextColumn Header="Name Code" Binding="{Binding CreatorNameCode}"  Width="*" />
+                            <DataGridTextColumn Header="True Name" Binding="{Binding CreatorTrueName}" Width="*" />
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Click="btnViewCreator_Click" Content="View"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Label x:Name="lblOriginalID" Content="ID" HorizontalAlignment="Left" Height="25" Margin="10,143,0,0" VerticalAlignment="Top" Width="28"/>
+                    <TextBox x:Name="txtID" HorizontalAlignment="Left" Height="23" Margin="99,147,0,0" TextWrapping="Wrap" Text="ID" VerticalAlignment="Top" Width="64"/>
+                    <Label x:Name="lblNameCode" Content="Name Code" HorizontalAlignment="Left" Margin="10,175,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.478,0.003"/>
+                    <Button x:Name="btnMap" Content="Map" HorizontalAlignment="Left" Margin="249,324,0,0" VerticalAlignment="Top" Width="75"/>
+                    <Button x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Left" Height="20" Margin="539,324,0,0" VerticalAlignment="Top" Width="71"/>
+                    <TextBox x:Name="txtNameCode" HorizontalAlignment="Left" Height="21" Margin="99,180,0,0" TextWrapping="Wrap" Text="Name Code" VerticalAlignment="Top" Width="115"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="TabItem">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</src:SkinableWindow>

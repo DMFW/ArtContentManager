@@ -21,8 +21,10 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmMainWindow : SkinableWindow
     {
+
         frmFileMaintenance frmFileMaintenance;
         frmSettings frmSettings;
+        frmTools frmTools;
         frmOrganisation frmOrganisation;
         frmProductReviewFilter frmProductReviewFilter;
         frmProductReview frmProductReview;
@@ -56,6 +58,12 @@ namespace ArtContentManager.Forms
         {
             frmFileMaintenance = new frmFileMaintenance();
             frmFileMaintenance.ShowDialog();
+        }
+
+        private void btnTools_Click(object sender, RoutedEventArgs e)
+        {
+            frmTools = new frmTools();
+            frmTools.ShowDialog();
         }
 
         private void btnOrganisation_Click(object sender, RoutedEventArgs e)
@@ -118,6 +126,5 @@ namespace ArtContentManager.Forms
             Static.Database.Close();
         }
 
-        
     }
 }

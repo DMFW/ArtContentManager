@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Data;
 
 namespace ArtContentManager.Content
 {
     public class Creator
     {
-        private int _ID;
+        private int _CreatorID;
         private string _CreatorNameCode;
         private string _CreatorTrueName;
         private string _CreatorDirectoryName; // Because their name code or true name may not be a valid directory name
@@ -30,12 +31,21 @@ namespace ArtContentManager.Content
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-        public int ID
+
+        [DataRowField]
+        public int CreatorID
         {
-            get { return _ID; }
-            set { _ID = value; }
+            get { return _CreatorID; }
+            set {
+                    if (value != _CreatorID)
+                    {
+                        _CreatorID = value;
+                        NotifyPropertyChanged();
+                    }
+                }
         }
 
+        [DataRowField]
         public string CreatorNameCode
         {
             get { return "" + _CreatorNameCode; }
@@ -48,6 +58,7 @@ namespace ArtContentManager.Content
                 }
         }
 
+        [DataRowField]
         public string CreatorTrueName
         {
             get { return "" + _CreatorTrueName; }
@@ -61,6 +72,7 @@ namespace ArtContentManager.Content
             }
         }
 
+        [DataRowField]
         public string CreatorDirectoryName
         {
             get { return "" + _CreatorDirectoryName; }
@@ -73,6 +85,7 @@ namespace ArtContentManager.Content
                 }        
         }
 
+        [DataRowField]
         public string ContactEmail
         {
             get { return "" + _ContactEmail; }
@@ -85,6 +98,7 @@ namespace ArtContentManager.Content
                 }
         }
 
+        [DataRowField]
         public string CreatorURI
         {
             get { return "" + _CreatorURI; }
@@ -97,6 +111,8 @@ namespace ArtContentManager.Content
                 }
             }
         }
+
+        [DataRowField]
         public string Notes
         {
             get { return "" + _Notes; }
@@ -114,7 +130,7 @@ namespace ArtContentManager.Content
         {
             Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
 
-            if (this.ID == 0)
+            if (this.CreatorID == 0)
             {
                 // Insert a new content creator record
                 Static.DatabaseAgents.dbaContentCreators.RecordContentCreator(this);
