@@ -40,6 +40,11 @@ namespace ArtContentManager.Static
 
         public static void LoadDataRowWithObject(Object p_obj, ref DataTable p_dt, ref DataRow p_dr)
         {
+
+            bool addRow;
+
+            addRow = (p_dr == null);
+
             // We need the type to figure out the properties
 
             Type t = p_obj.GetType();
@@ -85,9 +90,8 @@ namespace ArtContentManager.Static
                 }
             }
 
-            // Add a row to the table if we are requesting a new one
-
-            if (p_dr == null) { p_dr = p_dt.NewRow(); }
+            // Add a row to the table if we are requesting a new one. First make one...
+            if (addRow) { p_dr = p_dt.NewRow(); }
 
             // And add all the mapped fields
 
@@ -95,6 +99,9 @@ namespace ArtContentManager.Static
             {
                 p_dr[kvpPropertyToApply.Key] = kvpPropertyToApply.Value;
             }
+
+            // Now add as a new row if we want a new row.
+            if (addRow) p_dt.Rows.Add(p_dr);
 
         }
 

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.IO;
+using WPFExtension;
 
 namespace ArtContentManager.Forms
 {
@@ -75,14 +76,19 @@ namespace ArtContentManager.Forms
 
                 ScrollViewer svwText = new ScrollViewer();
                 tabText.Content = svwText;
-                TextBlock tbText = new TextBlock();
-                svwText.Content = tbText;
-                tbText.Text = _displayProduct.TextFiles[i].Text;
 
+                TextBlockSelect tbsText = new TextBlockSelect();
+                svwText.Content = tbsText;
+                tbsText.Text = _displayProduct.TextFiles[i].Text;
+                tbsText.TextSelected += tbsText_TextSelected;
             }
-        }
+    }
+    private void tbsText_TextSelected(string SelectedText)
+    {
+        Clipboard.SetText(SelectedText);
+    }
 
-        private void LoadImages()
+    private void LoadImages()
         {
 
             TabItem imageTab = (TabItem)tabCtrlProduct.Items[0];
