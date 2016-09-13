@@ -53,6 +53,10 @@ namespace ArtContentManager.Static.DatabaseAgents
                 sadContentCreators.Fill(_tblContentCreators);
             }
 
+            DataColumn[] primaryKeyColumns = new DataColumn[1];
+            primaryKeyColumns[0] = _tblContentCreators.Columns["CreatorID"];
+            _tblContentCreators.PrimaryKey = primaryKeyColumns;
+
             _dataTableLoaded = true;
 
         }
@@ -88,8 +92,20 @@ namespace ArtContentManager.Static.DatabaseAgents
       
             if (_tblContentCreators == null) { return; }
 
-            DataRow newRow = ArtContentManager.Static.DataObjectUtilities.LoadDataRowWithObject(newContentCreator, ref _tblContentCreators);
+            DataRow newRow = null; // A new row will be returned from the load data row with object method if we pass null in to it 
+
+            ArtContentManager.Static.DataObjectUtilities.LoadDataRowWithObject(newContentCreator, ref _tblContentCreators, ref newRow);
             newRow.SetField("IsSelected", "True"); // So it is flagged on the grid.
+        }
+
+        static public void UpdateObjectOnDataTable(Content.Creator updatedContentCreator)
+        {
+
+            if (_tblContentCreators == null) { return; }
+
+            DataRow rowToUpdate = _tblContentCreators.Rows.Find(updatedContentCreator.CreatorID);
+            ArtContentManager.Static.DataObjectUtilities.LoadDataRowWithObject(updatedContentCreator, ref _tblContentCreators, ref rowToUpdate);
+
         }
 
         #endregion DirectDataTable

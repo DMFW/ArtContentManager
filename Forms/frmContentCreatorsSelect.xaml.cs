@@ -90,6 +90,7 @@ namespace ArtContentManager.Forms
             frmContentCreatorDetail frmContentCreatorDetail = new frmContentCreatorDetail(creatorToView);
             frmContentCreatorDetail.ShowDialog();
 
+            Static.DatabaseAgents.dbaContentCreators.UpdateObjectOnDataTable(creatorToView);
             dgContentCreators.Items.Refresh();
         }
         private void btnSelectCreator_Click(object sender, RoutedEventArgs e)

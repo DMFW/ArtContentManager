@@ -38,7 +38,7 @@ namespace ArtContentManager.Static
             }
         }
 
-        public static DataRow LoadDataRowWithObject(Object p_obj, ref DataTable p_dt)
+        public static void LoadDataRowWithObject(Object p_obj, ref DataTable p_dt, ref DataRow p_dr)
         {
             // We need the type to figure out the properties
 
@@ -85,18 +85,16 @@ namespace ArtContentManager.Static
                 }
             }
 
-            // Add a row to the table
+            // Add a row to the table if we are requesting a new one
 
-            DataRow newRow = p_dt.NewRow();
+            if (p_dr == null) { p_dr = p_dt.NewRow(); }
 
             // And add all the mapped fields
 
             foreach (KeyValuePair<string, object> kvpPropertyToApply in dctPropertiesToApply)
             {
-                newRow[kvpPropertyToApply.Key] = kvpPropertyToApply.Value;
+                p_dr[kvpPropertyToApply.Key] = kvpPropertyToApply.Value;
             }
-
-            return newRow;
 
         }
 
