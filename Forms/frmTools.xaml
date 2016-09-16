@@ -31,11 +31,11 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <Label x:Name="lblOriginalID" Content="ID" HorizontalAlignment="Left" Height="25" Margin="10,143,0,0" VerticalAlignment="Top" Width="28"/>
-                    <TextBox x:Name="txtID" HorizontalAlignment="Left" Height="23" Margin="99,147,0,0" TextWrapping="Wrap" Text="ID" VerticalAlignment="Top" Width="64"/>
+                    <TextBox x:Name="txtID" HorizontalAlignment="Left" Height="23" Margin="99,147,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="64" Text="{Binding CreatorID}" IsReadOnly="True" />
                     <Label x:Name="lblNameCode" Content="Name Code" HorizontalAlignment="Left" Margin="10,175,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.478,0.003"/>
-                    <Button x:Name="btnMap" Content="Map" HorizontalAlignment="Left" Margin="249,324,0,0" VerticalAlignment="Top" Width="75"/>
-                    <Button x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Left" Height="20" Margin="539,324,0,0" VerticalAlignment="Top" Width="71"/>
-                    <TextBox x:Name="txtNameCode" HorizontalAlignment="Left" Height="21" Margin="99,180,0,0" TextWrapping="Wrap" Text="Name Code" VerticalAlignment="Top" Width="115"/>
+                    <Button x:Name="btnMap" Content="Map" HorizontalAlignment="Left" Margin="249,324,0,0" VerticalAlignment="Top" Width="75" Click="btnMap_Click"/>
+                    <Button x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Left" Height="20" Margin="539,324,0,0" VerticalAlignment="Top" Width="71" Click="btnCancel_Click"/>
+                    <TextBox x:Name="txtNameCode" HorizontalAlignment="Left" Height="21" Margin="99,180,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="115" Text="{Binding CreatorNameCode}" IsReadOnly="True" />
                 </Grid>
             </TabItem>
             <TabItem Header="TabItem">

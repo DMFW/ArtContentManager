@@ -195,6 +195,24 @@ namespace ArtContentManager.Content
             return _dctImageFiles;
           
         }
+        public string Thumbnail
+        {
+            get
+            {
+                // If we have images loaded then use them. Otherwise try fast direct access to the Thumbnail.
+                if (_dctImageFiles != null)
+                {
+                    if (_dctImageFiles.Count != 0)
+                    {
+                        if (_dctImageFiles.ContainsKey("tbn"))
+                            return _dctImageFiles["tbn"];
+                        else
+                            return "";
+                    }
+                }
+                return ArtContentManager.Static.ProductImageManager.Thumbnail(_Name);
+            }
+        }
 
         public void Save()
         {

@@ -180,6 +180,32 @@ namespace ArtContentManager.Static
 
         }
 
+        public static string Thumbnail(string productName)
+        {
+
+            string folderName = ImageFolder(productName);
+            string thumbNailSearch = productName + "tbn.*";
+
+            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(folderName);
+
+            if (dir.Exists)
+            {
+                IEnumerable<System.IO.FileInfo> fileList = dir.GetFiles(thumbNailSearch, System.IO.SearchOption.AllDirectories);
+
+                foreach (System.IO.FileInfo fileInfo in fileList)
+                {
+                    // There should only be one of these but if there are more, just return the first one
+                    return fileInfo.FullName;
+                }
+            }
+            else
+            {
+                return "";
+            }
+
+            return "";
+        }
+
         private static string ImageFolder(string productName)
         {
             string subFolderName;

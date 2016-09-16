@@ -20,41 +20,23 @@ namespace ArtContentManager.Forms
     public partial class frmTools : SkinableWindow
     {
 
-        private Actions.CreatorRemap _creatorRemap = new Actions.CreatorRemap(); 
+        private Actions.CreatorRemap _creatorRemap; 
 
         public frmTools()
         {
-            dgTargetCreators.DataContext = _creatorRemap;
+            _creatorRemap = new Actions.CreatorRemap();
             InitializeComponent();
-
-
-
-        }
-
-        private void btnSelectMapCreators_Click(object sender, RoutedEventArgs e)
-        {
-            Dictionary<int, Content.Creator> dctProductCreators = new Dictionary<int, Content.Creator>();
-
-            foreach (Content.Creator productCreator in _creatorRemap.TargetCreators.Values)
-            {
-                dctProductCreators.Add(productCreator.CreatorID, productCreator);
-            }
-
-            frmContentCreatorsSelect frmContentCreators = new frmContentCreatorsSelect(dctProductCreators);
-            frmContentCreators.ShowDialog();
-
-            _creatorRemap.TargetCreators.Clear();
-            foreach (Content.Creator selectedCreator in Static.DatabaseAgents.dbaContentCreators.SelectedContentCreators())
-            {
-                _creatorRemap.TargetCreators.Add(selectedCreator.CreatorID, selectedCreator);
-            }
         }
 
         private void btnSelectOriginalContentCreator_Click(object sender, RoutedEventArgs e)
         {
             Dictionary<int, Content.Creator> dctProductCreators = new Dictionary<int, Content.Creator>();
 
-            dctProductCreators.Add(_creatorRemap.SourceCreator.CreatorID,_creatorRemap.SourceCreator);
+            if (_creatorRemap.SourceCreator != null)
+            {
+                dctProductCreators.Add(_creatorRemap.SourceCreator.CreatorID, _creatorRemap.SourceCreator);
+            }
+
             frmContentCreatorsSelect frmContentCreators = new frmContentCreatorsSelect(dctProductCreators);
             frmContentCreators.SingleSelect = true;
 
@@ -69,6 +51,29 @@ namespace ArtContentManager.Forms
             {
                 _creatorRemap.SourceCreator = selectedCreator;
             }
+
+            this.DataContext = _creatorRemap.SourceCreator;
+        }
+
+        private void btnSelectMapCreators_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<int, Content.Creator> dctProductCreators = new Dictionary<int, Content.Creator>();
+
+            foreach (Content.Creator productCreator in _creatorRemap.TargetCreators)
+            {
+                dctProductCreators.Add(productCreator.CreatorID, productCreator);
+            }
+
+            frmContentCreatorsSelect frmContentCreators = new frmContentCreatorsSelect(dctProductCreators);
+            frmContentCreators.ShowDialog();
+
+            _creatorRemap.TargetCreators.Clear();
+            foreach (Content.Creator selectedCreator in Static.DatabaseAgents.dbaContentCreators.SelectedContentCreators())
+            {
+                _creatorRemap.TargetCreators.Add(selectedCreator);
+            }
+
+            this.dgTargetCreators.DataContext = _creatorRemap;
         }
 
         void btnViewCreator_Click(object sender, RoutedEventArgs e)
@@ -81,5 +86,26 @@ namespace ArtContentManager.Forms
             frmContentCreatorDetail.ShowDialog();
         }
 
+        private void btnMap_Click(object sender, RoutedEventArgs e)
+        {
+
+            if ((_creatorRemap.SourceCreator == null) || (_creatorRemap.TargetCreators == null))
+            {
+                MessageBox.Show("Please select a source creator and one or more target creators to remap", "Creator remap", MessageBoxButton.OK);
+                return;
+            }
+
+            MessageBoxResult msgBoxResult = MessageBox.Show("Please confirm remapping from selected source creator to target creators", "Creator remap", MessageBoxButton.OKCancel);
+
+            if (msgBoxResult == MessageBoxResult.OK)
+            {
+                _creatorRemap.Remap();
+            }
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,9 @@ namespace ArtContentManager.Content
         private string _CreatorURI;
         private string _ContactEmail;
         private string _Notes;
+        private ObservableCollection<Product> _obcProductCredits;
+
+        private int _productCount; // Virtual result obtained dynamically
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -37,12 +41,12 @@ namespace ArtContentManager.Content
         {
             get { return _CreatorID; }
             set {
-                    if (value != _CreatorID)
-                    {
-                        _CreatorID = value;
-                        NotifyPropertyChanged();
-                    }
+                if (value != _CreatorID)
+                {
+                    _CreatorID = value;
+                    NotifyPropertyChanged();
                 }
+            }
         }
 
         [DataRowField]
@@ -50,12 +54,12 @@ namespace ArtContentManager.Content
         {
             get { return "" + _CreatorNameCode; }
             set {
-                    if (value != _CreatorNameCode)
-                    {
-                        _CreatorNameCode = value;
-                        NotifyPropertyChanged();
-                    }
+                if (value != _CreatorNameCode)
+                {
+                    _CreatorNameCode = value;
+                    NotifyPropertyChanged();
                 }
+            }
         }
 
         [DataRowField]
@@ -77,12 +81,12 @@ namespace ArtContentManager.Content
         {
             get { return "" + _CreatorDirectoryName; }
             set {
-                    if (value != _CreatorDirectoryName)
-                    {
-                        _CreatorDirectoryName = value;
-                        NotifyPropertyChanged();
-                    }
-                }        
+                if (value != _CreatorDirectoryName)
+                {
+                    _CreatorDirectoryName = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
 
         [DataRowField]
@@ -90,12 +94,12 @@ namespace ArtContentManager.Content
         {
             get { return "" + _ContactEmail; }
             set {
-                    if (value != _ContactEmail)
-                    {
-                        _ContactEmail = value;
-                        NotifyPropertyChanged();
-                    }
+                if (value != _ContactEmail)
+                {
+                    _ContactEmail = value;
+                    NotifyPropertyChanged();
                 }
+            }
         }
 
         [DataRowField]
@@ -124,6 +128,38 @@ namespace ArtContentManager.Content
                     NotifyPropertyChanged();
                 }
             }
+        }
+        public int ProductCount
+        {
+            get { return _productCount; }
+        }
+
+        public ObservableCollection<Product> ProductCredits 
+        {
+            get { return _obcProductCredits; }
+        }   
+
+        public void ResetToUnused()
+        {
+            this.CreatorNameCode = "[ID " + CreatorID + "] Unused";
+            this.CreatorTrueName = "";
+            this.ContactEmail = "";
+            this.CreatorDirectoryName = "";
+            this.CreatorURI = "";
+            this.Notes = "Creator was remapped at " + DateTime.Now + " and the ID can be edited and reused";
+        }
+
+        public void LoadProductCount()
+        {
+            // We only do this on request as it is "expensive". It initialises a property used in detail display
+
+            _productCount = Static.DatabaseAgents.dbaContentCreators.ProductCount(this);
+
+        }
+
+        public void LoadProductCreditsList()
+        {
+            _obcProductCredits = Static.DatabaseAgents.dbaContentCreators.LoadProductCreditsList(this);
         }
 
         public void Save()

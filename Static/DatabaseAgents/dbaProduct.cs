@@ -488,5 +488,61 @@ namespace ArtContentManager.Static.DatabaseAgents
             RecordProductCreators(product);
         }
 
+        public static void MapProductCreator(int sourceCreatorID, int targetCreatorID)
+        {
+
+            // Maps the source into the target across all products as a duplicate
+            // The original is NOT deleted because we may be splitting the source across multiple creators
+            // The delete operation needs to happen only when this is completed.
+            // Note the SQL index on product creators has IGNORE_DUP_KEY set ON for the benefit of this routine.
+            // We must not have duplicate keys but at the same time we don't care of we attempt to insert one that 
+            // is a duplicate, we just want processing to continue and the INSERT to be ignored without 
+            // rolling back the transaction. 
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+            try
+            {
+                string mapSQL = string.Format("INSERT INTO ProductCreators FROM (SELECT ProductID, {0} FROM ProductCreators WHERE CreatorID = {1})", targetCreatorID, sourceCreatorID);
+
+                SqlCommand cmdMapProductCreator = new SqlCommand(mapSQL, DB);
+                cmdMapProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+
+                cmdMapProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                cmdMapProductCreator.ExecuteScalar();
+                
+            }
+            catch(Exception e)
+            {
+                
+            }
+
+        }
+
+        public static void RemoveCreatorFromAllProducts(int sourceCreatorID)
+        {
+
+            // Remove all product creator records for a specified creator
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+            try
+            {
+                string deleteSQL = string.Format("DELETE FROM ProductCreators WHERE CreatorID = {1})", sourceCreatorID);
+
+                SqlCommand cmdRemoveCreatorFromAllProducts = new SqlCommand(deleteSQL, DB);
+                cmdRemoveCreatorFromAllProducts.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+
+                cmdRemoveCreatorFromAllProducts.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                cmdRemoveCreatorFromAllProducts.ExecuteScalar();
+
+            }
+            catch (Exception e)
+            {
+
+            }
+
+        }
+
     }
 }

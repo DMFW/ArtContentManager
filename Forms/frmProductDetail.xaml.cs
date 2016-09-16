@@ -23,8 +23,9 @@ namespace ArtContentManager.Forms
     {
 
         Content.Product _displayProduct;
-        bool hyperLinkProductEditMode = false;
-        bool hyperLinkOrderEditMode = false;
+        bool _hyperLinkProductEditMode = false;
+        bool _hyperLinkOrderEditMode = false;
+        bool _promotionImagesLoaded = false;
         frmContentCreatorsSelect frmSelectContentCreators;
 
         public frmProductDetail(Content.Product displayProduct)
@@ -32,7 +33,7 @@ namespace ArtContentManager.Forms
 
             _displayProduct = displayProduct;
             DataContext = _displayProduct;
-            
+
             InitializeComponent();
 
             txbHyperlinkProduct.Visibility = Visibility.Visible;
@@ -64,11 +65,12 @@ namespace ArtContentManager.Forms
                 cboCurrency.SelectedValue = _displayProduct.Currency;
             }
 
-            LoadImages();
-           
+            LoadPrimaryImages();
+            LoadPromotionImages();
+
             tabCtrlProductTextFiles.Items.Clear();
 
-            for (int i=0; i < displayProduct.TextFiles.Count; i++)
+            for (int i = 0; i < displayProduct.TextFiles.Count; i++)
             {
                 TabItem tabText = new TabItem();
                 tabCtrlProductTextFiles.Items.Add(tabText);
@@ -82,13 +84,13 @@ namespace ArtContentManager.Forms
                 tbsText.Text = _displayProduct.TextFiles[i].Text;
                 tbsText.TextSelected += tbsText_TextSelected;
             }
-    }
-    private void tbsText_TextSelected(string SelectedText)
-    {
-        Clipboard.SetText(SelectedText);
-    }
+        }
+        private void tbsText_TextSelected(string SelectedText)
+        {
+            Clipboard.SetText(SelectedText);
+        }
 
-    private void LoadImages()
+        private void LoadPrimaryImages()
         {
 
             TabItem imageTab = (TabItem)tabCtrlProduct.Items[0];
@@ -115,6 +117,12 @@ namespace ArtContentManager.Forms
                     imgPrimaryImage.InvalidateVisual();
                 }
             }
+        }
+
+        private void LoadPromotionImages()
+        {
+
+            Dictionary<string, string> imageFiles = _displayProduct.ImageFiles(false);
 
             splPromotionImages.Children.Clear();
 
@@ -136,13 +144,13 @@ namespace ArtContentManager.Forms
                     {
                         promotionImageCtl.Source = promotionImage.ImageSource;
                     }
-
                 }
             }
 
             svPromotionImages.InvalidateScrollInfo();
 
-        }
+            _promotionImagesLoaded = true;
+        }    
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
@@ -154,9 +162,9 @@ namespace ArtContentManager.Forms
                 _displayProduct.Save();
                 MessageBox.Show("Product saved to database");
             }
-            catch(Exception error)
+            catch (Exception error)
             {
-                MessageBox.Show("Save failed :-"+ Environment.NewLine + error.Message);
+                MessageBox.Show("Save failed :-" + Environment.NewLine + error.Message);
             }
         }
 
@@ -188,37 +196,37 @@ namespace ArtContentManager.Forms
 
         private void btnProductLink_Click(object sender, RoutedEventArgs e)
         {
-            if (hyperLinkProductEditMode == false)
+            if (_hyperLinkProductEditMode == false)
             {
                 txbHyperlinkProduct.Visibility = Visibility.Hidden;
                 txtProductHyperlink.Visibility = Visibility.Visible;
                 btnProductLink.Content = "Show Product Hyperlink";
-                hyperLinkProductEditMode = true;
+                _hyperLinkProductEditMode = true;
             }
             else
             {
                 txbHyperlinkProduct.Visibility = Visibility.Visible;
                 txtProductHyperlink.Visibility = Visibility.Hidden;
                 btnProductLink.Content = "Edit Product Hyperlink";
-                hyperLinkProductEditMode = false;
+                _hyperLinkProductEditMode = false;
             }
         }
 
         private void btnOrderLink_Click(object sender, RoutedEventArgs e)
         {
-            if (hyperLinkOrderEditMode == false)
+            if (_hyperLinkOrderEditMode == false)
             {
                 txbHyperlinkOrder.Visibility = Visibility.Hidden;
                 txtOrderHyperlink.Visibility = Visibility.Visible;
                 btnOrderLink.Content = "Show Order Hyperlink";
-                hyperLinkOrderEditMode = true;
+                _hyperLinkOrderEditMode = true;
             }
             else
             {
                 txbHyperlinkOrder.Visibility = Visibility.Visible;
                 txtOrderHyperlink.Visibility = Visibility.Hidden;
                 btnOrderLink.Content = "Edit Order Hyperlink";
-                hyperLinkOrderEditMode = false;
+                _hyperLinkOrderEditMode = false;
             }
         }
 

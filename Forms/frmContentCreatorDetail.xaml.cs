@@ -33,13 +33,22 @@ namespace ArtContentManager.Forms
         {
             // Update mode; update the supplied creator
             _creator = creator;
+            _creator.LoadProductCount();
+
             DataContext = _creator;
 
             InitializeComponent();
+
         }
         private void Hyperlink_RequestNavigate(object sender, RoutedEventArgs e)
         {
             System.Diagnostics.Process.Start((sender as Hyperlink).NavigateUri.AbsoluteUri);
+        }
+
+        private void dgProductCredits_Hyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            Hyperlink link = (Hyperlink)e.OriginalSource;
+            System.Diagnostics.Process.Start(link.NavigateUri.AbsoluteUri);
         }
 
         private void btnCreatorHyperlink_Click(object sender, RoutedEventArgs e)
@@ -77,6 +86,13 @@ namespace ArtContentManager.Forms
                 MessageBox.Show("Save failed :-" + Environment.NewLine + error.Message);
             }  
 
+        }
+
+        private void btnShowProducts_Click(object sender, RoutedEventArgs e)
+        {
+            _creator.LoadProductCreditsList();
+            dgProductCredits.DataContext = _creator;
+            dgProductCredits.ItemsSource = _creator.ProductCredits;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,9 +25,11 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdReadContentCreatorsByName;
         static SqlCommand _cmdInsertContentCreator;
         static SqlCommand _cmdUpdateContentCreator;
+        static SqlCommand _cmdCountProducts;
+        static SqlCommand _cmdReadProductCredits;
 
         #region DirectDataTable
-        
+
         static public void LoadContentCreators(bool forceLoad)
         {
 
@@ -34,7 +37,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             {
                 return;
             }
-         
+
             SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
             string sqlContentCreators = "SELECT 'False' IsSelected, * FROM ContentCreators ORDER BY CreatorNameCode";
             SqlCommand cmdSelectContentCreators = new SqlCommand(sqlContentCreators, DB);
@@ -89,7 +92,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         static public void AddObjectToDataTable(Content.Creator newContentCreator)
         {
-      
+
             if (_tblContentCreators == null) { return; }
 
             DataRow newRow = null; // A new row will be returned from the load data row with object method if we pass null in to it 
@@ -244,9 +247,77 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             _cmdUpdateContentCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdUpdateContentCreator.ExecuteScalar();
-            
+
         }
 
+        public static int ProductCount(ArtContentManager.Content.Creator Creator)
+        {
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+            int productCount = 0;
+
+            if (_cmdCountProducts == null)
+            {
+                string countSQL = "SELECT Count(*) FROM ProductCreators WHERE CreatorID = @CreatorID";
+                _cmdCountProducts = new SqlCommand(countSQL, DB);
+                _cmdCountProducts.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdCountProducts.Parameters["@CreatorID"].Value = Creator.CreatorID;
+
+            SqlDataReader reader = _cmdCountProducts.ExecuteReader();
+
+            while (reader.Read())
+            {
+                productCount = (int)reader[0];
+            }
+            reader.Close();
+
+            return productCount;
+
+        }
+
+        public static ObservableCollection<Content.Product> LoadProductCreditsList(ArtContentManager.Content.Creator Creator)
+        {
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBReadOnly;
+
+            ObservableCollection<Content.Product> obcProductCredits = new ObservableCollection<Content.Product>();
+
+            if (_cmdReadProductCredits == null)
+            {
+                string readSQL = "SELECT ProductID FROM ProductCreators WHERE CreatorID = @CreatorID";
+                _cmdReadProductCredits = new SqlCommand(readSQL, DB);
+                _cmdReadProductCredits.Parameters.Add("@CreatorID", System.Data.SqlDbType.Int);
+            }
+
+            _cmdReadProductCredits.Parameters["@CreatorID"].Value = Creator.CreatorID;
+
+            SqlDataReader reader = _cmdReadProductCredits.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Content.Product creditedProduct = new Content.Product();
+
+                creditedProduct.ID = (int)reader["ProductID"];
+
+                dbaProduct.ProductLoadOptions loadOptions = new dbaProduct.ProductLoadOptions
+                {
+                    basic = true,
+                    installationFiles = false,
+                    contentFiles = false,
+                    creators = false
+                };
+
+                dbaProduct.Load(creditedProduct, loadOptions);
+                obcProductCredits.Add(creditedProduct);
+
+            }
+            reader.Close();
+
+            return obcProductCredits;
+
+        }
 
         #endregion ObjectControl
     }
