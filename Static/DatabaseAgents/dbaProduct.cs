@@ -499,48 +499,33 @@ namespace ArtContentManager.Static.DatabaseAgents
             // is a duplicate, we just want processing to continue and the INSERT to be ignored without 
             // rolling back the transaction. 
 
+            // Don't use a try catch here. We want to handle errors at the level above, not consume them here.
+
             SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
-            try
-            {
-                string mapSQL = string.Format("INSERT INTO ProductCreators FROM (SELECT ProductID, {0} FROM ProductCreators WHERE CreatorID = {1})", targetCreatorID, sourceCreatorID);
+            string mapSQL = string.Format("INSERT INTO ProductCreators SELECT ProductID, {0} FROM ProductCreators WHERE CreatorID = {1}", targetCreatorID, sourceCreatorID);
 
-                SqlCommand cmdMapProductCreator = new SqlCommand(mapSQL, DB);
-                cmdMapProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+            SqlCommand cmdMapProductCreator = new SqlCommand(mapSQL, DB);
+            cmdMapProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
 
-                cmdMapProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-                cmdMapProductCreator.ExecuteScalar();
+            cmdMapProductCreator.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+            cmdMapProductCreator.ExecuteScalar();
                 
-            }
-            catch(Exception e)
-            {
-                
-            }
-
         }
 
         public static void RemoveCreatorFromAllProducts(int sourceCreatorID)
         {
 
             // Remove all product creator records for a specified creator
+            // Don't put a try catch here. We handle errors at the level above.
 
-            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;  
 
-            try
-            {
-                string deleteSQL = string.Format("DELETE FROM ProductCreators WHERE CreatorID = {1})", sourceCreatorID);
+            string deleteSQL = string.Format("DELETE FROM ProductCreators WHERE CreatorID = {0}", sourceCreatorID);
 
-                SqlCommand cmdRemoveCreatorFromAllProducts = new SqlCommand(deleteSQL, DB);
-                cmdRemoveCreatorFromAllProducts.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-
-                cmdRemoveCreatorFromAllProducts.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-                cmdRemoveCreatorFromAllProducts.ExecuteScalar();
-
-            }
-            catch (Exception e)
-            {
-
-            }
+            SqlCommand cmdRemoveCreatorFromAllProducts = new SqlCommand(deleteSQL, DB);
+            cmdRemoveCreatorFromAllProducts.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+            cmdRemoveCreatorFromAllProducts.ExecuteScalar();
 
         }
 

@@ -164,7 +164,7 @@ namespace ArtContentManager.Static
 
             if (dir.Exists)
             {
-                IEnumerable<System.IO.FileInfo> fileList = dir.GetFiles("*.*", System.IO.SearchOption.AllDirectories);
+                IEnumerable<System.IO.FileInfo> fileList = dir.GetFiles(productName + "*.*", System.IO.SearchOption.AllDirectories);
 
                 var queryMatchingFiles =
                 from file in fileList

@@ -164,7 +164,14 @@ namespace ArtContentManager.Content
 
         public void Save()
         {
-            Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+
+            bool localTransaction = false;
+
+            if (Static.Database.CurrentTransaction(Static.Database.TransactionType.Active) == null)
+            {
+                Static.Database.BeginTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+                localTransaction = true;
+            }
 
             if (this.CreatorID == 0)
             {
@@ -177,7 +184,10 @@ namespace ArtContentManager.Content
                 Static.DatabaseAgents.dbaContentCreators.UpdateContentCreator(this);
             }
 
-            Static.Database.CommitTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+            if (localTransaction)
+            {
+                Static.Database.CommitTransaction(ArtContentManager.Static.Database.TransactionType.Active);
+            }
         }
 
     }
