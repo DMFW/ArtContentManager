@@ -96,8 +96,6 @@ namespace ArtContentManager.Forms
                     ArtContentManager.Static.Database.Reset(Static.Database.ResetLevel.ProductData);
                 }
             }
-
-
         }
 
         private void btnBrowseWorkFolder_Click(object sender, RoutedEventArgs e)
@@ -109,7 +107,6 @@ namespace ArtContentManager.Forms
             {
                 txtWorkFolder.Text = dialog.SelectedPath;
             }
-
         }
 
         private void btnBrowseImageFolder_Click(object sender, RoutedEventArgs e)
@@ -121,7 +118,17 @@ namespace ArtContentManager.Forms
             {
                 txtImageFolder.Text = dialog.SelectedPath;
             }
+        }
 
+        private void btnBrowseInstallationSourceFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                txtInstallationSourceFolder.Text = dialog.SelectedPath;
+            }
         }
 
         private void txtWorkFolder_TextChanged(object sender, TextChangedEventArgs e)
@@ -146,6 +153,17 @@ namespace ArtContentManager.Forms
             }
         }
 
+        private void txtInstallationSourceFolder_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!showingInitialSettings)
+            {
+                if (Static.FileSystemScan.IsWritableDirectory(txtImageFolder.Text))
+                {
+                    Static.DatabaseAgents.dbaSettings.SaveSetting("InstallationSourceFolder", new Tuple<string, int>(txtInstallationSourceFolder.Text, 0));
+                }
+            }
+        }
+
         private void txtProductPatternMatchLength_TextChanged(object sender, TextChangedEventArgs e)
         {
             int productPatternMatchLength;
@@ -159,5 +177,7 @@ namespace ArtContentManager.Forms
             }
 
         }
+
+
     }
 }

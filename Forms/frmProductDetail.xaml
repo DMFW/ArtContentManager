@@ -52,7 +52,7 @@
             </TabItem>
             <TabItem x:Name="tiPromotionImages" Header="Promotional Images">
                 <Grid Background="#FFE5E5E5">
-                    <ScrollViewer x:Name="svPromotionImages" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Hidden" HorizontalContentAlignment="Center" IsTabStop="False" CanContentScroll="True">
+                    <ScrollViewer x:Name="svPromotionImages" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Auto" IsTabStop="False" CanContentScroll="True">
                         <StackPanel x:Name="splPromotionImages" HorizontalAlignment="Left" Height="733" VerticalAlignment="Top" Width="974" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Orientation="Horizontal"/>
                     </ScrollViewer>
                 </Grid>
@@ -68,16 +68,19 @@
                     <Label x:Name="lblMarketPlace" Content="Market Place :" HorizontalAlignment="Left" Height="25" Margin="10,10,0,0" VerticalAlignment="Top" Width="85" Grid.ColumnSpan="2"/>
                     <ComboBox x:Name="cboMarketPlace" HorizontalAlignment="Left" Height="25" Margin="96,10,0,0" VerticalAlignment="Top" Width="294" DisplayMemberPath="MarketPlaceName" SelectedValuePath="MarketPlaceID" Grid.Column="1"/>
                     <Label x:Name="lblDatePurchased" Content="Date Purchased :" HorizontalAlignment="Left" Height="26" Margin="59.806,9,0,0" VerticalAlignment="Top" Width="103" Grid.Column="2"/>
-                    <TextBox x:Name="txtDatePurchased" Text="{Binding DatePurchased, ConverterCulture=en-GB, StringFormat=d}" HorizontalAlignment="Left" Height="26" Margin="251.806,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190" Grid.Column="2"/>
+                    <TextBox x:Name="txtDatePurchased" Text="{Binding DatePurchased, ConverterCulture=en-GB, StringFormat=d}" HorizontalAlignment="Left" Height="26" Margin="273,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190" Grid.Column="2"/>
                     <Button x:Name="btnOrderLink" Content="Edit Order Hyperlink" HorizontalAlignment="Left" Height="26" Margin="10,55,0,0" VerticalAlignment="Top" Width="136" Click="btnOrderLink_Click" Grid.ColumnSpan="2"/>
                     <TextBox x:Name="txtOrderHyperlink" Text="{Binding OrderURI}" HorizontalAlignment="Left" Height="25" Margin="10,86,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="430" Visibility="Hidden" RenderTransformOrigin="0.497,0.292" Grid.ColumnSpan="2"/>
                     <TextBlock x:Name="txbHyperlinkOrder" Margin="10,86,71.194,624" TextWrapping="Wrap" Grid.ColumnSpan="2"><InlineUIContainer/><Hyperlink x:Name="hlOrder" NavigateUri="{Binding OrderURI}" RequestNavigate="Hyperlink_RequestNavigate"><InlineUIContainer>
 								<TextBlock Text="{Binding OrderURI}"/>
 							</InlineUIContainer></Hyperlink></TextBlock>
-                    <Label x:Name="lblCurrency" Content="Currency :" HorizontalAlignment="Left" Height="23" Margin="59.806,86,0,0" VerticalAlignment="Top" Width="90" Grid.Column="2"/>
-                    <ComboBox x:Name="cboCurrency" HorizontalAlignment="Left" Height="28" Margin="251.806,81,0,0" VerticalAlignment="Top" Width="190" DisplayMemberPath="Currency" SelectedValuePath="Currency" Grid.Column="2"/>
-                    <TextBox x:Name="txtPrice" HorizontalAlignment="Left" Height="27" Margin="251.806,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190" Text="{Binding Price, StringFormat='#.00'}"  Grid.Column="2"/>
+                    <Label x:Name="lblCurrency" Content="Currency :" HorizontalAlignment="Left" Height="25" Margin="60,86,0,0" VerticalAlignment="Top" Width="90" Grid.Column="2"/>
+                    <ComboBox x:Name="cboCurrency" HorizontalAlignment="Left" Height="28" Margin="273,81,0,0" VerticalAlignment="Top" Width="190" DisplayMemberPath="Currency" SelectedValuePath="Currency" Grid.Column="2"/>
+                    <TextBox x:Name="txtPrice" HorizontalAlignment="Left" Height="27" Margin="273,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190" Text="{Binding Price, StringFormat='#.00'}"  Grid.Column="2"/>
                     <Label x:Name="lblPrice" Content="Price :" HorizontalAlignment="Left" Height="27" Margin="59.806,133,0,0" VerticalAlignment="Top" Width="63" Grid.Column="2"/>
+                    <TextBox x:Name="txtProductNotes" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="148" Margin="10,575,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="964"/>
+                    <DataGrid x:Name="dgInstallationFiles" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="160" Margin="10,255,0,0" VerticalAlignment="Top" Width="964"/>
+                    <Button x:Name="btnBrowse" Content="Add Installation File" HorizontalAlignment="Left" Height="25" Margin="10,212,0,0" VerticalAlignment="Top" Width="136" Grid.ColumnSpan="2"/>
 
 
                 </Grid>

@@ -208,6 +208,7 @@ namespace ArtContentManager.Static
 
         private static string ImageFolder(string productName)
         {
+            bool isReservedFolderName;
             string subFolderName;
 
             if (productName.Length >= SUBFOLDER_NAME_LENGTH)
@@ -217,6 +218,25 @@ namespace ArtContentManager.Static
             else
             {
                 subFolderName = "___";
+            }
+
+            // The following folder names are not permitted by the operating system so append an _ to them.
+        
+            if (SUBFOLDER_NAME_LENGTH == 3)
+            {
+                isReservedFolderName = new[] { "CON", "PRN", "AUX", "NUL" }.Contains(subFolderName);
+            }
+
+            if (SUBFOLDER_NAME_LENGTH == 4)
+            {
+                // This code is unreachable unless the name length constant is changed, then it may be needed.
+                isReservedFolderName = new[] { "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9" }.Contains(subFolderName);
+                isReservedFolderName = new[] { "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" }.Contains(subFolderName);
+            }
+
+            if (isReservedFolderName)
+            {
+                subFolderName = subFolderName + "_";
             }
 
             return Static.DatabaseAgents.dbaSettings.Setting("ImageStoreFolder").Item1 + @"\" + subFolderName;
