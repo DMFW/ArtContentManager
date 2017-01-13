@@ -7,25 +7,29 @@
         xmlns:local="clr-namespace:ArtContentManager.Forms"
         xmlns:ArtContentManager="clr-namespace:ArtContentManager" x:Class="ArtContentManager.Forms.frmOrganisation"
         mc:Ignorable="d"
-        Title="Organisation" Height="498.096" Width="583.714"
+        Title="Organisation" Height="896.096" Width="999.714"
         Background="{DynamicResource stdFormBackground}" Loaded="SkinableWindow_Loaded">
     <local:SkinableWindow.Resources>
-        
+
     </local:SkinableWindow.Resources>
     <Grid Margin="10,0,0,0">
-        <TabControl x:Name="tabControl" HorizontalAlignment="Left" Margin="23,31,0,49" Width="520">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="159*"/>
+            <RowDefinition Height="14*"/>
+        </Grid.RowDefinitions>
+        <TabControl x:Name="tabControl" HorizontalAlignment="Left" Margin="23,31,0,15" Width="924">
             <TabItem x:Name="tabMarketPlaces" Header="Market Places">
-                <Grid Background="#FFE5E5E5">
-                    <DataGrid x:Name="dgMarketPlaces" HorizontalAlignment="Left" Height="303" Margin="10,19,0,0" VerticalAlignment="Top" Width="494" ItemsSource="{Binding}"/>
+                <Grid Background="#FFE5E5E5" Margin="0,0,-2,0">
+                    <DataGrid x:Name="dgMarketPlaces" AutoGenerateColumns="True" HorizontalAlignment="Left" Height="678" Margin="10,19,0,0" VerticalAlignment="Top" Width="900" ItemsSource="{Binding}"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="tabVendors" Header="Vendors">
+            <TabItem x:Name="tabContentCreators" Header="Content Creators">
                 <Grid Background="#FFE5E5E5">
-                    <DataGrid x:Name="dgVendors" HorizontalAlignment="Left" Height="303" Margin="10,19,0,0" VerticalAlignment="Top" Width="383"/>
+                    <DataGrid x:Name="dgContentCreators" AutoGenerateColumns="True" HorizontalAlignment="Left" Height="692" Margin="10,19,0,0" VerticalAlignment="Top" Width="898" ItemsSource="{Binding}"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tabContentTypes" Header="Content Types">
-                <Grid Background="#FFE5E5E5">
+                <Grid Background="#FFE5E5E5" Height="359" VerticalAlignment="Bottom">
                     <DataGrid x:Name="dgContentTypes" HorizontalAlignment="Left" Height="303" Margin="10,19,0,0" VerticalAlignment="Top" Width="383"/>
                 </Grid>
             </TabItem>
@@ -33,6 +37,8 @@
                 <Grid Background="#FFE5E5E5" Margin="0,0,-3,0"/>
             </TabItem>
         </TabControl>
+        <Button x:Name="btnApply" Content="Save Changes" HorizontalAlignment="Left" Height="50" Margin="23,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="127"/>
+        <Button x:Name="btnCancel" Content="Cancel Changes" HorizontalAlignment="Left" Height="50" Margin="802,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="145"/>
 
     </Grid>
 </local:SkinableWindow>

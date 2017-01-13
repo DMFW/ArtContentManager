@@ -52,8 +52,8 @@
             </TabItem>
             <TabItem x:Name="tiPromotionImages" Header="Promotional Images">
                 <Grid Background="#FFE5E5E5">
-                    <ScrollViewer x:Name="svPromotionImages" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Auto" IsTabStop="False" CanContentScroll="True">
-                        <StackPanel x:Name="splPromotionImages" HorizontalAlignment="Left" Height="733" VerticalAlignment="Top" Width="974" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Orientation="Horizontal"/>
+                    <ScrollViewer x:Name="svPromotionImages" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsTabStop="False" CanContentScroll="True">
+                        <StackPanel x:Name="splPromotionImages" HorizontalAlignment="Left" Height="733" VerticalAlignment="Top" Width="974" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Orientation="Vertical"/>
                     </ScrollViewer>
                 </Grid>
             </TabItem>

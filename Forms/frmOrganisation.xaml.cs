@@ -19,6 +19,7 @@ namespace ArtContentManager.Forms
     /// </summary>
     public partial class frmOrganisation : SkinableWindow
     {
+
         public frmOrganisation()
         {
             InitializeComponent();
@@ -26,7 +27,11 @@ namespace ArtContentManager.Forms
 
         private void SkinableWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.LoadMarketPlaces(true);
+            dgMarketPlaces.DataContext = ArtContentManager.Static.DatabaseAgents.dbaMarketPlaces.tblMarketPlaces;
 
+            ArtContentManager.Static.DatabaseAgents.dbaContentCreators.LoadContentCreators(true);
+            dgContentCreators.DataContext = ArtContentManager.Static.DatabaseAgents.dbaContentCreators.tblContentCreators;
         }
     }
 }

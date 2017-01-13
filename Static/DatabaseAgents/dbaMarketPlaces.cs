@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
+using System.Collections.ObjectModel;
 
 namespace ArtContentManager.Static.DatabaseAgents
 {
@@ -13,6 +14,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         static DataTable _tblMarketPlaces;
         static bool _dataTableInitialised = false;
         static bool _dataTableLoaded = false;
+        static ObservableCollection<ArtContentManager.Content.MarketPlace> _obcMarketPlaces;
         private static void InitialiseDataTable()
         {
             _tblMarketPlaces = new DataTable("MarketPlaces");

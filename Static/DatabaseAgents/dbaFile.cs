@@ -20,7 +20,7 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdInsertFile;
         static SqlCommand _cmdReadFileLocations;
         static SqlCommand _cmdInsertFileLocations;
-        static SqlCommand _cmdInsertDefaultRelativeLocations;
+        static SqlCommand _cmdInsertDefaultFileRelativeLocations;
         static SqlCommand _cmdUpdateFileLocationVerified;
         static SqlCommand _cmdUpdateFileLocationAntiVerified;
         static SqlCommand _cmdUpdateFile;
@@ -155,7 +155,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             if (File.ParentID != 0)
             {
-                RecordDefaultRelativeLocation(File);
+                RecordDefaultFileRelativeLocation(File);
             }
             else
             {
@@ -164,29 +164,29 @@ namespace ArtContentManager.Static.DatabaseAgents
 
         }
 
-        private static void RecordDefaultRelativeLocation(ArtContentManager.Content.File File)
+        private static void RecordDefaultFileRelativeLocation(ArtContentManager.Content.File File)
         {
 
             SqlConnection DB = ArtContentManager.Static.Database.DBActive;
 
             // Assume we need to record (or re-record) the relative location
 
-            if (_cmdInsertDefaultRelativeLocations == null)
+            if (_cmdInsertDefaultFileRelativeLocations == null)
             {
-                string insertDefaultRelativeLocationsSQL = "INSERT INTO DefaultRelativeLocations (FileID, RelativeLocation) VALUES (@FileID, @RelativeLocation);";
-                _cmdInsertDefaultRelativeLocations = new SqlCommand(insertDefaultRelativeLocationsSQL, DB);
+                string insertDefaultRelativeLocationsSQL = "INSERT INTO DefaultFileRelativeLocations (FileID, RelativeLocation) VALUES (@FileID, @RelativeLocation);";
+                _cmdInsertDefaultFileRelativeLocations = new SqlCommand(insertDefaultRelativeLocationsSQL, DB);
 
-                _cmdInsertDefaultRelativeLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
-                _cmdInsertDefaultRelativeLocations.Parameters.Add("@RelativeLocation", System.Data.SqlDbType.NVarChar, 255);              
+                _cmdInsertDefaultFileRelativeLocations.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
+                _cmdInsertDefaultFileRelativeLocations.Parameters.Add("@RelativeLocation", System.Data.SqlDbType.NVarChar, 255);              
             }
 
-            _cmdInsertDefaultRelativeLocations.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
-            _cmdInsertDefaultRelativeLocations.Parameters["@FileID"].Value = File.ID;
-            _cmdInsertDefaultRelativeLocations.Parameters["@RelativeLocation"].Value = File.RelativeInstallationPath;
+            _cmdInsertDefaultFileRelativeLocations.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+            _cmdInsertDefaultFileRelativeLocations.Parameters["@FileID"].Value = File.ID;
+            _cmdInsertDefaultFileRelativeLocations.Parameters["@RelativeLocation"].Value = File.RelativeInstallationPath;
 
             try
             {
-                _cmdInsertDefaultRelativeLocations.ExecuteScalar();
+                _cmdInsertDefaultFileRelativeLocations.ExecuteScalar();
             }
             catch(System.Data.SqlClient.SqlException e)
             {
