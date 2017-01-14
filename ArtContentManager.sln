@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtContentManager", "ArtContentManager.csproj", "{3852ACD7-49B5-4CCB-BE48-B96AF007D162}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFExtension", "..\..\WPFExtension\WPFExtension\WPFExtension.csproj", "{E2553AF2-1590-4B4A-80DD-5B2365910FF2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFExtension", "..\WPFExtension\WPFExtension.csproj", "{E2553AF2-1590-4B4A-80DD-5B2365910FF2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

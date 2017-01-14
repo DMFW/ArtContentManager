@@ -237,7 +237,7 @@
     <Resource Include="Images\tools-icon.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\WPFExtension\WPFExtension\WPFExtension.csproj">
+    <ProjectReference Include="..\WPFExtension\WPFExtension.csproj">
       <Project>{e2553af2-1590-4b4a-80dd-5b2365910ff2}</Project>
       <Name>WPFExtension</Name>
     </ProjectReference>
