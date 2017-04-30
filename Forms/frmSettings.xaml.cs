@@ -45,6 +45,11 @@ namespace ArtContentManager.Forms
                 txtImageFolder.Text = Static.DatabaseAgents.dbaSettings.Setting("ImageStoreFolder").Item1;
             }
 
+            if (Static.DatabaseAgents.dbaSettings.Setting("InstallationSourceFolder") != null)
+            {
+                txtInstallationSourceFolder.Text = Static.DatabaseAgents.dbaSettings.Setting("InstallationSourceFolder").Item1;
+            }
+
             if (Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength") != null)
             {
                 txtProductPatternMatchLength.Text = Static.DatabaseAgents.dbaSettings.Setting("ProductPatternMatchLength").Item2.ToString();

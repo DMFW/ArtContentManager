@@ -65,15 +65,17 @@ namespace ArtContentManager.Forms
                 cboCurrency.SelectedValue = _displayProduct.Currency;
             }
 
+            tabProduct_tiName.Header = _displayProduct.Name;
+
             LoadPrimaryImages();
             LoadPromotionImages();
 
-            tabCtrlProductTextFiles.Items.Clear();
+            tabProductTextFiles.Items.Clear();
 
             for (int i = 0; i < displayProduct.TextFiles.Count; i++)
             {
                 TabItem tabText = new TabItem();
-                tabCtrlProductTextFiles.Items.Add(tabText);
+                tabProductTextFiles.Items.Add(tabText);
                 tabText.Header = _displayProduct.TextFiles[i].Name;
 
                 ScrollViewer svwText = new ScrollViewer();
@@ -92,9 +94,6 @@ namespace ArtContentManager.Forms
 
         private void LoadPrimaryImages()
         {
-
-            TabItem imageTab = (TabItem)tabCtrlProduct.Items[0];
-            imageTab.Header = _displayProduct.Name;
 
             Dictionary<string, string> imageFiles = _displayProduct.ImageFiles(true);
 
@@ -259,5 +258,6 @@ namespace ArtContentManager.Forms
                 _displayProduct.Creators.Add(selectedCreator);
             }
         }
+
     }
 }

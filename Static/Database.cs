@@ -464,6 +464,10 @@ namespace ArtContentManager.Static
                 SqlCommand cmdProductGroups = new SqlCommand(sqlProductGroups, _DBActive);
                 cmdProductGroups.ExecuteNonQuery();
 
+                string sqlProductNotes = "TRUNCATE TABLE ProductNotes";
+                SqlCommand cmdProductNotes = new SqlCommand(sqlProductNotes, _DBActive);
+                cmdProductNotes.ExecuteNonQuery();
+
                 string sqlProducts = "DELETE FROM Products";
                 SqlCommand cmdProducts = new SqlCommand(sqlProducts, _DBActive);
                 cmdProducts.ExecuteNonQuery();

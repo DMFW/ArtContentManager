@@ -101,6 +101,7 @@ namespace ArtContentManager.Forms
             dbaProduct.ProductLoadOptions loadOptions = new dbaProduct.ProductLoadOptions();
 
             // Reload the basic data so that anything not saved is refreshed from the database
+
             loadOptions.basic = true;
             loadOptions.contentFiles = true;
             loadOptions.installationFiles = true;

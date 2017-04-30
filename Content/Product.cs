@@ -24,6 +24,7 @@ namespace ArtContentManager.Content
         private string _OrderURI;
         private string _Currency;
         private decimal _Price;
+        private string _Notes;
 
         // Just the parent files
         private List<File> _lstInstallationFiles = new List<File>();
@@ -127,6 +128,19 @@ namespace ArtContentManager.Content
                 if (value != _Price)
                 {
                     _Price = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Notes
+        {
+            get { return _Notes; }
+            set
+            {
+                if (value != _Notes)
+                {
+                    _Notes = value;
                     NotifyPropertyChanged();
                 }
             }

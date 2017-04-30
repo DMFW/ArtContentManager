@@ -33,6 +33,8 @@ namespace ArtContentManager.Static.DatabaseAgents
         static SqlCommand _cmdAddProductCreator;
         static SqlCommand _cmdDeleteProductCreators;
         static SqlCommand _cmdUpdateProduct;
+        static SqlCommand _cmdDeleteProductNotes;
+        static SqlCommand _cmdMergeProductNotes;
 
         public static void Load(ArtContentManager.Content.Product Product, ProductLoadOptions loadOptions)
         {
@@ -44,7 +46,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             if (_cmdReadProductByID == null)
             {
-                string readProductByID_SQL = "Select * from Products where ProductID = @ProductID";
+                string readProductByID_SQL = "SELECT * FROM Products LEFT JOIN ProductNotes ON Products.ProductID = ProductNotes.ProductID WHERE Products.ProductID = @ProductID";
                 _cmdReadProductByID = new SqlCommand(readProductByID_SQL, DB);
                 _cmdReadProductByID.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
             }
@@ -67,11 +69,12 @@ namespace ArtContentManager.Static.DatabaseAgents
                     Product.OrderURI = reader["OrderURI"].ToString();
                     Product.Currency = reader["Currency"].ToString();
                     Product.Price = reader["Price"] as decimal? ?? 0;
+                    Product.Notes = reader["Notes"].ToString();
                 }
                 reader.Close();
             }
 
-            if (loadOptions.installationFiles) { LoadProductInstallationFiles(Product); }
+            if (loadOptions.installationFiles | loadOptions.contentFiles) { LoadProductInstallationFiles(Product); } // If we load the content files we have to load the installation files.
             if (loadOptions.contentFiles) { LoadProductContentFiles(Product); }
             if (loadOptions.creators) { LoadProductCreators(Product); }
 
@@ -123,11 +126,6 @@ namespace ArtContentManager.Static.DatabaseAgents
                 _cmdReadProductContentFilesByID.Parameters.Add("@ParentFileID", System.Data.SqlDbType.Int);
             }
 
-            if (Product.InstallationFiles.Count == 0)
-            {
-                LoadProductInstallationFiles(Product);
-            }
-
             foreach (Content.File installationFile in Product.InstallationFiles)
             {
                 _cmdReadProductContentFilesByID.Parameters["@ParentFileID"].Value = installationFile.ID;
@@ -137,7 +135,10 @@ namespace ArtContentManager.Static.DatabaseAgents
 
                 while (reader.Read())
                 {
+
                     Content.File contentFile = new Content.File((int)reader["FileID"]);
+                    contentFile.ParentFile = installationFile;
+
                     dbaFile.Load(contentFile);
 
                     Product.ContentFiles.Add(contentFile);
@@ -465,6 +466,47 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdUpdateProduct.Parameters["@Price"].Value = product.Price;
 
             _cmdUpdateProduct.ExecuteScalar();
+
+            UpdateProductNotes(product);
+        }
+
+        static private void UpdateProductNotes(Content.Product product)
+        {
+
+            // Product notes do not exist at the time of product creation, so we only need to consider them 
+            // in the update process for the whole product when we will either add them, delete them or update them.
+
+            SqlConnection DB = ArtContentManager.Static.Database.DBActive;
+
+            if (product.Notes.Trim() == "")
+            {
+                if (_cmdDeleteProductNotes == null)
+                {
+                    string deleteProductNotesSQL = "DELETE ProductNotes WHERE ProductID = @ProductID;";
+                    _cmdDeleteProductNotes = new SqlCommand(deleteProductNotesSQL, DB);
+                }
+                _cmdDeleteProductNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                _cmdDeleteProductNotes.Parameters["@ProductID"].Value = product.ID;
+                _cmdDeleteProductNotes.ExecuteScalar();
+            }
+            else
+            {
+                if (_cmdMergeProductNotes == null)
+                {
+                    string mergeProductNotesSQL = "MERGE ProductNotes AS [Target] " +
+                                                  "USING (SELECT @ProductID as ProductID, @Notes as Notes) AS [Source] ON [Target].ProductID = [Source].ProductID " +
+                                                  "WHEN MATCHED THEN UPDATE SET Notes = @Notes " +
+                                                  "WHEN NOT MATCHED THEN INSERT (ProductID, Notes) VALUES (@ProductID, @Notes); ";
+                    _cmdMergeProductNotes = new SqlCommand(mergeProductNotesSQL, DB);
+
+                    _cmdMergeProductNotes.Parameters.Add("@ProductID", System.Data.SqlDbType.Int);
+                    _cmdMergeProductNotes.Parameters.Add("@Notes", System.Data.SqlDbType.NVarChar);
+                }
+                _cmdMergeProductNotes.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
+                _cmdMergeProductNotes.Parameters["@ProductID"].Value = product.ID;
+                _cmdMergeProductNotes.Parameters["@Notes"].Value = product.Notes;
+                _cmdMergeProductNotes.ExecuteScalar();
+            }
         }
 
         public static void ReplaceProductCreators(Content.Product product)

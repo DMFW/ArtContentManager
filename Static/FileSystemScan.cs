@@ -303,7 +303,7 @@ namespace ArtContentManager.Static
                                         ScanProgress.Message = "Importing " + file.Name;
                                         // The creation of the file object, also saves it. Everything is encapsulated in the constructor
                                         ArtContentManager.Content.File currentFile = new Content.File(activeScan.StartScanTime, null, file, rescanExistingImports);
-                                        Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.Checksum);
+                                        Trace.WriteLine(currentFile.ActivePathAndName + " " + currentFile.CalculatedChecksum);
                                     }
                                     bw.ReportProgress(ScanProgress.CompletionPct);
                                 }

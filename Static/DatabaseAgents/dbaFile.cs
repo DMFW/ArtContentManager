@@ -40,7 +40,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             if (_cmdReadFileByID == null)
             {
-                string readFilesByID_SQL = "SELECT * FROM Files LEFT JOIN FileTextNotes ON Files.FileID = FileTextNotes.FileID WHERE Files.FileID = @FileID ";
+                string readFilesByID_SQL = "SELECT * FROM Files LEFT JOIN FileTextNotes ON Files.FileID = FileTextNotes.FileID LEFT JOIN DefaultFileRelativeLocations ON Files.FileID = DefaultFileRelativeLocations.FileID WHERE Files.FileID = @FileID ";
                 _cmdReadFileByID = new SqlCommand(readFilesByID_SQL, DB);
                 _cmdReadFileByID.Parameters.Add("@FileID", System.Data.SqlDbType.Int);
             }
@@ -57,7 +57,9 @@ namespace ArtContentManager.Static.DatabaseAgents
                 File.Size = (int)reader["Size"];
                 File.RoleID = (Int16)reader["RoleID"];
                 File.ParentID = (int)reader["ParentID"];
+                File.StoredChecksum = reader["Checksum"].ToString();
                 File.ExtractUnreadable = (bool)reader["ExtractUnreadable"];
+                File.DefaultRelativeInstallationPath = reader["RelativeLocation"].ToString();
 
                 if (reader["Text"] != DBNull.Value)
                 {
@@ -88,7 +90,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             }
 
             _cmdReadFiles.Parameters["@FileName"].Value = File.Name;
-            _cmdReadFiles.Parameters["@Checksum"].Value = File.Checksum;
+            _cmdReadFiles.Parameters["@Checksum"].Value = File.CalculatedChecksum;
 
             ArtContentManager.Static.Database.BeginTransaction(Database.TransactionType.ReadOnly);
             _cmdReadFiles.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.ReadOnly);
@@ -132,7 +134,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdInsertFile.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertFile.Parameters["@FileName"].Value = File.Name; 
             _cmdInsertFile.Parameters["@Extension"].Value = File.Extension;
-            _cmdInsertFile.Parameters["@Checksum"].Value = File.Checksum;
+            _cmdInsertFile.Parameters["@Checksum"].Value = File.CalculatedChecksum;
             _cmdInsertFile.Parameters["@Size"].Value = File.Size;
             _cmdInsertFile.Parameters["@RoleID"].Value = File.RoleID;
             _cmdInsertFile.Parameters["@ExtractUnreadable"].Value = File.ExtractUnreadable;
@@ -182,7 +184,7 @@ namespace ArtContentManager.Static.DatabaseAgents
 
             _cmdInsertDefaultFileRelativeLocations.Transaction = ArtContentManager.Static.Database.CurrentTransaction(Database.TransactionType.Active);
             _cmdInsertDefaultFileRelativeLocations.Parameters["@FileID"].Value = File.ID;
-            _cmdInsertDefaultFileRelativeLocations.Parameters["@RelativeLocation"].Value = File.RelativeInstallationPath;
+            _cmdInsertDefaultFileRelativeLocations.Parameters["@RelativeLocation"].Value = File.DefaultRelativeInstallationPath;
 
             try
             {
@@ -452,7 +454,7 @@ namespace ArtContentManager.Static.DatabaseAgents
             _cmdUpdateFile.Parameters["@FileID"].Value = File.ID;
             _cmdUpdateFile.Parameters["@FileName"].Value = File.Name;
             _cmdUpdateFile.Parameters["@Extension"].Value = File.Extension;
-            _cmdUpdateFile.Parameters["@Checksum"].Value = File.Checksum;
+            _cmdUpdateFile.Parameters["@Checksum"].Value = File.CalculatedChecksum;
             _cmdUpdateFile.Parameters["@Size"].Value = File.Size;
             _cmdUpdateFile.Parameters["@RoleID"].Value = File.RoleID;
             _cmdUpdateFile.Parameters["@ParentID"].Value = File.ParentID;

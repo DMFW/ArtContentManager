@@ -24,11 +24,12 @@ namespace ArtContentManager.Content
         private string _Location;
         private int _RoleID;
         private long _Size;
-        private string _Checksum = "";
+        private string _StoredChecksum = "";
+        private string _CalculatedChecksum = "";
         private int _ID;
         private List<File> _ChildFiles;
 
-        private string _RelativeInstallationPath;
+        private string _DefaultRelativeInstallationPath;
         private string _WorkingExtractDirectory;
         private bool _ExtractUnreadable;
         private bool _reAnalyseZipFiles;
@@ -54,11 +55,11 @@ namespace ArtContentManager.Content
 
             if (parentFile != null)
             {
-                _RelativeInstallationPath = _ActivePathAndName.Substring(parentFile.WorkingExtractDirectory.Length + 1);
+                _DefaultRelativeInstallationPath = fi.DirectoryName.Substring(parentFile.WorkingExtractDirectory.Length + 1);
             }
             else
             {
-                _RelativeInstallationPath = "";
+                _DefaultRelativeInstallationPath = "";
             }
 
             // Make a provisional stab at deriving a role ID
@@ -94,16 +95,22 @@ namespace ArtContentManager.Content
 
         }
 
+        public File ParentFile
+        {
+            get { return _parentFile; }
+            set { _parentFile = value; }
+        }
+
         public string ActivePathAndName
         {
             get { return _ActivePathAndName; }
             set { _ActivePathAndName = value; }
         }
 
-        public string RelativeInstallationPath
+        public string DefaultRelativeInstallationPath
         {
-            get { return _RelativeInstallationPath; }
-            set { _RelativeInstallationPath = value; }
+            get { return _DefaultRelativeInstallationPath; }
+            set { _DefaultRelativeInstallationPath = value; }
         }
 
         public string WorkingExtractDirectory
@@ -170,20 +177,26 @@ namespace ArtContentManager.Content
         {
             get { return _ChildFiles;  }
         }
+ 
+        public string StoredChecksum
+        {
+            get { return _StoredChecksum; }
+            set { _StoredChecksum = value; }
+        }
 
-        public string Checksum
+        public string CalculatedChecksum
         {
             get
             {
-                if (_Checksum == "")
+                if (_CalculatedChecksum == "")
                 {
-                    _Checksum = GetChecksum(_ActivePathAndName);
+                    _CalculatedChecksum = CalculateChecksum(_ActivePathAndName);
                 }
-                return _Checksum;
+                return _CalculatedChecksum;
             }
         }
 
-        private string GetChecksum(string file)
+        private string CalculateChecksum(string file)
         {
 
             if (file == null) { return ""; }

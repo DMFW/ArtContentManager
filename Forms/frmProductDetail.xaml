@@ -8,8 +8,8 @@
         mc:Ignorable="d"
         Title="frmProductDetail" Height="855.218" Width="1061.605">
     <Viewbox>
-        <TabControl x:Name="tabCtrlProduct" HorizontalAlignment="Left" Height="763" Margin="10,10,0,0" VerticalAlignment="Top" Width="990">
-            <TabItem Header="Product Name" Height="22" VerticalAlignment="Bottom">
+        <TabControl x:Name="tabProduct" HorizontalAlignment="Left" Height="763" Margin="10,10,0,0" VerticalAlignment="Top" Width="990">
+            <TabItem x:Name="tabProduct_tiName" Header="Product Name" Height="22" VerticalAlignment="Bottom">
                 <Grid Background="#FFE5E5E5" Margin="0,0,0,-1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="409*"/>
@@ -50,14 +50,14 @@
                     <Button x:Name="btnSelectCreators" Content="Select Creator(s)" HorizontalAlignment="Left" Height="20" Margin="291,476,0,0" VerticalAlignment="Top" Width="98" Click="btnSelectCreators_Click"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="tiPromotionImages" Header="Promotional Images">
+            <TabItem x:Name="tabProduct_tiPromotionImages" Header="Promotional Images">
                 <Grid Background="#FFE5E5E5">
                     <ScrollViewer x:Name="svPromotionImages" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsTabStop="False" CanContentScroll="True">
                         <StackPanel x:Name="splPromotionImages" HorizontalAlignment="Left" Height="733" VerticalAlignment="Top" Width="974" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Orientation="Vertical"/>
                     </ScrollViewer>
                 </Grid>
             </TabItem>
-            <TabItem Header="Details">
+            <TabItem x:Name="tabProduct_tiDetails" Header="Details">
                 <Grid Background="#FFE5E5E5" Margin="0,1,0,-1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="50*"/>
@@ -78,19 +78,38 @@
                     <ComboBox x:Name="cboCurrency" HorizontalAlignment="Left" Height="28" Margin="273,81,0,0" VerticalAlignment="Top" Width="190" DisplayMemberPath="Currency" SelectedValuePath="Currency" Grid.Column="2"/>
                     <TextBox x:Name="txtPrice" HorizontalAlignment="Left" Height="27" Margin="273,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="190" Text="{Binding Price, StringFormat='#.00'}"  Grid.Column="2"/>
                     <Label x:Name="lblPrice" Content="Price :" HorizontalAlignment="Left" Height="27" Margin="59.806,133,0,0" VerticalAlignment="Top" Width="63" Grid.Column="2"/>
-                    <TextBox x:Name="txtProductNotes" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="148" Margin="10,575,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="964"/>
-                    <DataGrid x:Name="dgInstallationFiles" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="160" Margin="10,255,0,0" VerticalAlignment="Top" Width="964"/>
-                    <Button x:Name="btnBrowse" Content="Add Installation File" HorizontalAlignment="Left" Height="25" Margin="10,212,0,0" VerticalAlignment="Top" Width="136" Grid.ColumnSpan="2"/>
+                    <TextBox x:Name="txtProductNotes" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="278" Margin="10,445,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="964" Text="{Binding Notes}"/>
+                    <DataGrid x:Name="dgInstallationFiles" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="160" Margin="10,188,0,0" VerticalAlignment="Top" Width="964" ItemsSource="{Binding Path=InstallationFiles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}"  Width="Auto" />
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="Auto" />
+                            <DataGridTextColumn Header="Checksum" Binding="{Binding StoredChecksum}" Width="Auto" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Button x:Name="btnBrowse" Content="Add Installation File" HorizontalAlignment="Left" Height="25" Margin="10,365,0,0" VerticalAlignment="Top" Width="136" Grid.ColumnSpan="2"/>
+                    <Label x:Name="lblInstallationFies" Content="Installation Files :-" HorizontalAlignment="Left" Height="28" Margin="10,155,0,0" VerticalAlignment="Top" Width="198" Grid.ColumnSpan="2"/>
+                    <Label x:Name="lblNotes" Content="Notes :-" HorizontalAlignment="Left" Height="29" Margin="10,411,0,0" VerticalAlignment="Top" Width="91" Grid.ColumnSpan="2"/>
 
 
                 </Grid>
             </TabItem>
-            <TabItem Header="Files">
-                <Grid Background="#FFE5E5E5"/>
-            </TabItem>
-            <TabItem Header="Text Files">
+            <TabItem x:Name="tabProduct_tiContentFiles" Header="Content Files">
                 <Grid Background="#FFE5E5E5">
-                    <TabControl x:Name="tabCtrlProductTextFiles" HorizontalAlignment="Left" Height="732" Margin="10,10,0,-7" VerticalAlignment="Top" Width="964">
+                    <DataGrid x:Name="dgFiles" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" ItemsSource="{Binding Path=ContentFiles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Installation File" Binding="{Binding ParentFile.Name}"  Width="Auto" />
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}"  Width="Auto" />
+                            <DataGridTextColumn Header="Extension" Binding="{Binding Extension}"  Width="Auto" />
+                            <DataGridTextColumn Header="Default Location" Binding="{Binding DefaultRelativeInstallationPath}" Width="Auto" />
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="Auto" />
+                            <DataGridTextColumn Header="Checksum" Binding="{Binding StoredChecksum}" Width="Auto" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="tabProduct_tiTextFiles" Header="Text Files">
+                <Grid Background="#FFE5E5E5">
+                    <TabControl x:Name="tabProductTextFiles" HorizontalAlignment="Left" Height="732" Margin="10,10,0,-7" VerticalAlignment="Top" Width="964">
                         <TabItem Header="Read Me">
                             <ScrollViewer>
                                 <TextBlock Background="#FFE5E5E5" />
@@ -99,10 +118,10 @@
                     </TabControl>
                 </Grid>
             </TabItem>
-            <TabItem Header="Support Products">
+            <TabItem x:Name="tabProduct_tiSupportProducts" Header="Support Products">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
-            <TabItem Header="Personal Art">
+            <TabItem x:Name="tabProduct_tiArt" Header="Personal Art">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
         </TabControl>
