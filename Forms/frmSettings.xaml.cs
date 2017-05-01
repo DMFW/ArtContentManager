@@ -183,6 +183,14 @@ namespace ArtContentManager.Forms
 
         }
 
-
+        private void btnTruncateDBLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (Static.Database.TruncateLog())
+                MessageBox.Show("Database log truncated successfully");
+            else
+            {
+                MessageBox.Show("Database log truncation failed");
+            }
+        }
     }
 }

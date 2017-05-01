@@ -1,0 +1,18 @@
+﻿<Window x:Class="ArtContentManager.Forms.frmTagDetail"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ArtContentManager.Forms"
+        mc:Ignorable="d"
+        Title="frmTagDetail" Height="326.048" Width="366.467">
+    <Grid>
+        <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Height="19" Margin="20,266,0,0" VerticalAlignment="Top" Width="46"/>
+        <Button x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Left" Height="19" Margin="306,266,0,0" VerticalAlignment="Top" Width="42"/>
+        <TextBox x:Name="txtTagCode" HorizontalAlignment="Left" Height="30" Margin="237,49,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="102"/>
+        <Label x:Name="lblTagCode" Content="Tag Code" HorizontalAlignment="Left" Height="30" Margin="237,14,0,0" VerticalAlignment="Top" Width="70"/>
+        <Label x:Name="lblTagID" Content="Tag ID" HorizontalAlignment="Left" Height="30" Margin="20,10,0,0" VerticalAlignment="Top" Width="54"/>
+        <TextBox x:Name="txtTagID" HorizontalAlignment="Left" Height="30" Margin="20,49,0,0" TextWrapping="Wrap" Text="Tag ID" VerticalAlignment="Top" Width="63"/>
+
+    </Grid>
+</Window>

@@ -13,6 +13,9 @@ namespace ArtContentManager.Static
     public static class Database
     {
 
+        private static string _DBConnectionString;
+        private static string _DBInitialCatalog;
+
         private static SqlConnection _DBActive;
         private static SqlTransaction _trnActive;
 
@@ -36,7 +39,7 @@ namespace ArtContentManager.Static
         }
 
         // Static dictionaries loaded for performance purposes during scanning
-         
+
         public static Dictionary<string, int> ProcessRoleExtensionsPrimary;
         public static Dictionary<string, int> ProcessRoles;
         public static Dictionary<string, string> ExcludedFiles;
@@ -54,17 +57,30 @@ namespace ArtContentManager.Static
             get { return _DBReadOnly; }
         }
 
-
         public static bool Open()
         {
+
+            // Open with the default connection string
+            string dbConnection = Properties.Settings.Default.DatabaseConnection;
+            return Open(dbConnection);
+             
+        }
+
+        public static bool Open(string connectionString)
+        {
+            // Open with any specified connection string
+
             try
             {
-                string dbConnection = Properties.Settings.Default.DatabaseConnection;
 
-                _DBActive = new SqlConnection(dbConnection);
+                _DBConnectionString = connectionString;
+                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(_DBConnectionString);
+                _DBInitialCatalog = builder.InitialCatalog;
+
+                _DBActive = new SqlConnection(_DBConnectionString);
                 _DBActive.Open();
 
-                _DBReadOnly = new SqlConnection(dbConnection);
+                _DBReadOnly = new SqlConnection(_DBConnectionString);
                 _DBReadOnly.Open();
 
                 Trace.WriteLine("Database opened");
@@ -77,6 +93,7 @@ namespace ArtContentManager.Static
                 return false;
             }
         }
+
 
         public static bool Close()
         {
@@ -714,6 +731,22 @@ namespace ArtContentManager.Static
             {
                 MessageBox.Show(e.ToString());
                 Trace.WriteLine(e.ToString());
+            }
+        }
+
+        public static bool TruncateLog()
+        {
+            try
+            {
+                string sqlTruncateLog = "BACKUP LOG " + _DBInitialCatalog + "; DBCC SHRINKFILE (" + _DBInitialCatalog + "_Log, 1);";
+                SqlCommand cmdTruncateLog = new SqlCommand(sqlTruncateLog);
+                return true;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                Trace.WriteLine(e.ToString());
+                return false;
             }
         }
     }

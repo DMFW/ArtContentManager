@@ -82,6 +82,9 @@
     <Compile Include="Forms\frmProductDetail.xaml.cs">
       <DependentUpon>frmProductDetail.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Forms\frmTagDetail.xaml.cs">
+      <DependentUpon>frmTagDetail.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Forms\frmTools.xaml.cs">
       <DependentUpon>frmTools.xaml</DependentUpon>
     </Compile>
@@ -160,6 +163,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Forms\frmProductReview.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Forms\frmTagDetail.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

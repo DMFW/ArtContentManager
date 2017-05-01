@@ -20,7 +20,8 @@
         <TabControl x:Name="tabControl" HorizontalAlignment="Left" Margin="23,31,0,15" Width="924">
             <TabItem x:Name="tabMarketPlaces" Header="Market Places">
                 <Grid Background="#FFE5E5E5" Margin="0,0,-2,0">
-                    <DataGrid x:Name="dgMarketPlaces" AutoGenerateColumns="True" HorizontalAlignment="Left" Height="678" Margin="10,19,0,0" VerticalAlignment="Top" Width="900" ItemsSource="{Binding}"/>
+                    <DataGrid x:Name="dgMarketPlaces" AutoGenerateColumns="True" HorizontalAlignment="Left" Height="639" Margin="10,19,0,0" VerticalAlignment="Top" Width="900" ItemsSource="{Binding}"/>
+                    <Button x:Name="btnAddMarketplace" Content="Add Marketplace" HorizontalAlignment="Left" Height="25" Margin="10,672,0,0" VerticalAlignment="Top" Width="108" RenderTransformOrigin="-2.264,0.48"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tabContentCreators" Header="Content Creators">
